@@ -1,0 +1,21 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "static/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "videos"
+    label: "旅遊影片清單"
+    file: "data/videos.json"
+    format: "json"
+    fields:
+      - name: "videos"
+        label: "影片清單"
+        widget: "list"
+        fields:
+          - { label: "標題", name: "title", widget: "string" }
+          - { label: "說明", name: "description", widget: "text" }
+          - { label: "影片網址", name: "url", widget: "string" }
+          - { label: "分類", name: "category", widget: "string" }
