@@ -11,8 +11,8 @@ collections:
     file: "data/videos.json"
     format: "json"
     fields:
-      - label: "影片清單"
-        name: "videos"
+      - name: "videos"
+        label: "影片清單"
         widget: "list"
         fields:
           - { label: "標題", name: "title", widget: "string" }
