@@ -1,0 +1,19 @@
+backend:
+  name: github
+  repo: sammyzomb/travel-video-site
+  branch: main
+
+media_folder: "uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "videos"
+    label: "旅遊影片"
+    folder: "videos"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "標題", name: "title", widget: "string" }
+      - { label: "說明", name: "description", widget: "text" }
+      - { label: "影片網址", name: "url", widget: "string" }
+      - { label: "分類", name: "category", widget: "list", default: ["亞洲"] }
