@@ -14,24 +14,30 @@
       position: sticky;
       top: 0;
       background: white;
-      padding: 16px 5%;
+      padding: 6px 4%; /* padding縮小 */
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       z-index: 100;
+      min-height: 40px;
     }
     .navbar .logo {
       font-weight: bold;
-      font-size: 1.4rem;
+      font-size: 1rem;
       color: #28445e;
       text-decoration: none;
     }
+    .navbar .logo img {
+      height: 34px; /* LOGO更小 */
+    }
     .navbar nav a {
-      margin-left: 28px;
+      margin-left: 18px;
       text-decoration: none;
       color: #28445e;
       font-weight: 500;
+      font-size: 1rem; /* 導航文字更小 */
+      letter-spacing: 0.5px;
     }
     .navbar nav a:hover {
       color: #72bbf7;
@@ -40,9 +46,9 @@
     .hero {
       position: relative;
       width: 100vw;
-      height: 60vh;
-      min-height: 320px;
-      max-height: 480px;
+      height: 80vh;            /* 更高 */
+      min-height: 440px;       /* 最小高度提升 */
+      max-height: 760px;       /* 最大高度提升 */
       overflow: hidden;
       margin-bottom: 0;
       background: #222;
@@ -66,7 +72,6 @@
       pointer-events: none;
       background: #222;
     }
-    /* --- HERO 主標永遠置中，白色字體，縮小10% (2.25rem→2.025rem) --- */
     .hero-main-title {
       position: absolute;
       top: 50%; left: 50%;
@@ -82,7 +87,7 @@
       box-shadow: none;
       border-radius: 0;
       padding: 0;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.25); /* 可讓白字更清楚 */
+      text-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
     .hero-main-title p {
       font-size: 1.062rem;
@@ -91,11 +96,9 @@
       color: #fff;
       text-shadow: 0 2px 16px rgba(0,0,0,0.23);
     }
-    /* 右下角說明區（無背景）字體再小20% */
     .hero-caption {
       position: absolute;
       right: 32px; bottom: 32px;
-      /* background: rgba(0,0,0,0.46); */ /* <-- 移除背景 */
       color: #fff;
       z-index: 10;
       padding: 10px 10px 8px 16px;
@@ -107,7 +110,7 @@
       pointer-events: none;
       transform: translateY(60px);
       transition: opacity .7s, transform .7s;
-      font-size: 0.94rem; /* 1.17 * 0.8 ≒ 0.94 */
+      font-size: 0.94rem;
       display: flex;
       flex-direction: column;
       gap: 0.3em;
@@ -119,33 +122,45 @@
       transform: translateY(0);
     }
     .hero-caption .cap-title {
-      font-size: 0.98em; /* 原本 1.22，縮小 20% */
+      font-size: 0.98em;
       font-weight: 700;
       margin-bottom: 4px;
       color: #fff;
       letter-spacing: 1px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.12); /* 讓白字更清楚 */
+      text-shadow: 0 2px 10px rgba(0,0,0,0.12);
     }
     .hero-caption .cap-desc {
-      font-size: 0.8em;  /* 原本 1em，縮小 20% */
+      font-size: 0.8em;
       color: #e9f6fd;
       font-weight: 400;
       text-shadow: 0 1px 8px rgba(0,0,0,0.14);
+    }
+    @media (max-width: 1200px) {
+      .hero {height: 66vh; min-height: 260px; max-height: 460px;}
+      .hero-main-title {font-size: 1.08rem;}
+      .hero-main-title p {font-size: 0.72rem;}
+      .hero-caption {font-size: 0.74rem;}
+      .navbar {padding: 4px 2%;}
+      .navbar .logo img {height: 28px;}
+      .navbar nav a {font-size: 0.92rem;}
     }
     @media (max-width: 768px) {
       .hero {height: 44vh; min-height: 180px;}
       .yt-bg-wrapper {width: 140vw; height: 140vh;}
       #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
-      .hero-main-title {font-size: 1.15rem;}
-      .hero-main-title p {font-size: 0.68rem;}
-      .hero-caption {right: 10px; bottom: 12px; padding: 6px 6px 6px 12px; font-size: 0.7rem;}
+      .hero-main-title {font-size: 0.95rem;}
+      .hero-main-title p {font-size: 0.62rem;}
+      .hero-caption {right: 6px; bottom: 8px; padding: 6px 6px 6px 12px; font-size: 0.7rem;}
+      .navbar {padding: 3px 2%;}
+      .navbar .logo img {height: 20px;}
+      .navbar nav a {font-size: 0.85rem;}
     }
   </style>
 </head>
 <body>
   <div class="navbar">
     <a class="logo" href="index.html">
-      <img src="logo.png" alt="航向世界旅遊台 LOGO" height="44" />
+      <img src="logo.png" alt="航向世界旅遊台 LOGO" />
     </a>
     <nav>
       <a href="index.html">首頁</a>
@@ -170,7 +185,7 @@
     let videos = [];
     let current = 0, player;
 
-    // 載入 hero.json
+    // hero.json 載入
     fetch('hero.json')
       .then(res => res.json())
       .then(data => {
@@ -179,9 +194,8 @@
       });
 
     function initHero() {
-      showCaption(false); // 預設隱藏右下說明
+      showCaption(false);
       showCaption(true);
-      // 載入影片
       if(window.YT && window.YT.Player){
         onYouTubeIframeAPIReady();
       } else {
@@ -189,6 +203,7 @@
       }
     }
 
+    // 重點：loop=1, playlist=所有ID
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
         width: '120vw',
@@ -201,8 +216,8 @@
           rel: 0,
           showinfo: 0,
           modestbranding: 1,
-          loop: 0,
-          playlist: videos[current].id
+          loop: 1,
+          playlist: videos.map(v => v.id).join(",")
         },
         events: {
           onReady: e => { e.target.mute(); e.target.playVideo(); },
