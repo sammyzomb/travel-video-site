@@ -69,6 +69,11 @@
       .navbar .logo img {height: 20px;}
       .navbar nav a, .login-btn {font-size: 0.85rem;}
       .login-btn {padding: 4px 12px;}
+      /* ✅ 新增這段為左右滿版 */
+#ytPlayer iframe {
+  transform: scale(1.25);
+  transform-origin: center;
+  transition: transform 0.4s ease-in-out;
     }
   </style>
 </head>
@@ -154,7 +159,10 @@
           playlist: videos.map(v => v.id).join(",")
         },
         events: {
-          onReady: e => { e.target.mute(); e.target.playVideo(); updateCaption(0); },
+          onReady: e => { e.target.mute();
+                         e.target.setPlaybackQuality('hd1440'); // ✅ 預設最高為1440解析度
+                         e.target.playVideo();
+                         updateCaption(0); },
           onStateChange: onPlayerStateChange
         }
       });
