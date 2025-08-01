@@ -14,7 +14,7 @@
       position: sticky;
       top: 0;
       background: white;
-      padding: 6px 4%; /* padding縮小 */
+      padding: 6px 4%;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -29,26 +29,58 @@
       text-decoration: none;
     }
     .navbar .logo img {
-      height: 34px; /* LOGO更小 */
+      height: 34px;
+    }
+    .navbar nav {
+      display: flex;
+      align-items: center;
     }
     .navbar nav a {
       margin-left: 18px;
       text-decoration: none;
       color: #28445e;
       font-weight: 500;
-      font-size: 1rem; /* 導航文字更小 */
+      font-size: 1rem;
       letter-spacing: 0.5px;
+      border: none;
+      background: none;
+      transition: color 0.17s;
+      line-height: 1;
+      padding: 0 3px;
+      border-radius: 4px;
+      outline: none;
+      position: relative;
+      top: 0;
     }
-    .navbar nav a:hover {
-      color: #72bbf7;
-      text-decoration: underline;
+    .navbar nav a:hover:not(.login-btn) {
+      color: #2b71d2;
+      background: #e8f3ff;
+    }
+    .login-btn {
+      margin-left: 26px;
+      padding: 7px 22px;
+      border-radius: 24px;
+      background: #2b71d2;
+      color: #fff !important;
+      font-weight: 700;
+      box-shadow: 0 1px 8px 0 rgba(44,70,180,.06);
+      transition: background 0.18s;
+      border: none;
+      text-decoration: none;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      display: inline-block;
+    }
+    .login-btn:hover, .login-btn:focus {
+      background: #1956a3;
+      color: #fff !important;
     }
     .hero {
       position: relative;
       width: 100vw;
-      height: 80vh;            /* 更高 */
-      min-height: 440px;       /* 最小高度提升 */
-      max-height: 760px;       /* 最大高度提升 */
+      height: 80vh;
+      min-height: 440px;
+      max-height: 760px;
       overflow: hidden;
       margin-bottom: 0;
       background: #222;
@@ -142,7 +174,7 @@
       .hero-caption {font-size: 0.74rem;}
       .navbar {padding: 4px 2%;}
       .navbar .logo img {height: 28px;}
-      .navbar nav a {font-size: 0.92rem;}
+      .navbar nav a, .login-btn {font-size: 0.92rem;}
     }
     @media (max-width: 768px) {
       .hero {height: 44vh; min-height: 180px;}
@@ -153,7 +185,8 @@
       .hero-caption {right: 6px; bottom: 8px; padding: 6px 6px 6px 12px; font-size: 0.7rem;}
       .navbar {padding: 3px 2%;}
       .navbar .logo img {height: 20px;}
-      .navbar nav a {font-size: 0.85rem;}
+      .navbar nav a, .login-btn {font-size: 0.85rem;}
+      .login-btn {padding: 4px 14px;}
     }
   </style>
 </head>
@@ -164,9 +197,12 @@
     </a>
     <nav>
       <a href="index.html">首頁</a>
+      <a href="latest.html">最新影片</a>
       <a href="program.html">節目表</a>
+      <a href="themes.html">主題探索</a>
       <a href="vod.html">隨選影片</a>
       <a href="category.html">世界分區</a>
+      <a href="login.html" class="login-btn">會員登入</a>
     </nav>
   </div>
   <div class="hero">
@@ -203,7 +239,7 @@
       }
     }
 
-    // 重點：loop=1, playlist=所有ID
+    // loop=1, playlist=所有ID
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
         width: '120vw',
