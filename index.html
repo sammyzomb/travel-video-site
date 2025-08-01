@@ -11,7 +11,6 @@
     .navbar nav { display: flex; align-items: center; }
     .navbar nav a { margin-left: 18px; text-decoration: none; color: #28445e; font-weight: 500; font-size: 1rem; letter-spacing: 0.5px; border: none; background: none; transition: color 0.17s; line-height: 1; padding: 0 3px; border-radius: 4px; outline: none; position: relative; top: 0; display: inline-block; }
     .navbar nav a:hover:not(.login-btn) { color: #2b71d2; background: #e8f3ff; }
-    /* 最新會員登入按鈕風格（漸層藍膠囊+用戶icon） */
     .login-btn {
       margin-left: 32px;
       padding: 10px 32px;
@@ -38,8 +37,27 @@
       transform: translateY(-1px) scale(1.03);
     }
     .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
-    .yt-bg-wrapper { position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; overflow: hidden; }
-    #ytPlayer, #ytPlayer > div, #ytPlayer iframe { position: absolute !important; width: 120vw !important; height: 120vh !important; left: 0; top: 0; border: none; z-index: 1; pointer-events: none; background: #222; }
+    .yt-bg-wrapper {
+      position: absolute; left: 50%; top: 50%;
+      width: 160vw; height: 130vh;
+      transform: translate(-50%, -50%);
+      z-index: 1; pointer-events: none; overflow: hidden;
+    }
+    #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
+      position: absolute !important;
+      width: 160vw !important;
+      height: 130vh !important;
+      left: 0; top: 0;
+      border: none;
+      z-index: 1;
+      pointer-events: none;
+      background: #222;
+    }
+    #ytPlayer iframe {
+      transform: scale(1.25);
+      transform-origin: center;
+      transition: transform 0.4s ease-in-out;
+    }
     #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
     #heroMask.show { opacity: 0.66; }
     .hero-main-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.1rem; letter-spacing: 2px; background: none; box-shadow: none; border-radius: 0; padding: 0; text-shadow: 0 2px 16px rgba(0,0,0,0.25);}
@@ -48,36 +66,6 @@
     .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0);}
     .hero-caption .cap-title { font-size: 1em; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.12);}
     .hero-caption .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; text-shadow: 0 1px 8px rgba(0,0,0,0.14);}
-    @media (max-width: 1200px) {
-      .hero {height: 66vh; min-height: 260px; max-height: 460px;}
-      .hero-main-title {font-size: 1.55rem;}
-      .hero-main-title p {font-size: 0.92rem;}
-      .hero-caption {font-size: 0.86rem;}
-      .navbar {padding: 4px 2%;}
-      .navbar .logo img {height: 28px;}
-      .navbar nav a, .login-btn {font-size: 0.97rem;}
-      .login-btn {padding: 8px 20px;}
-    }
-    @media (max-width: 768px) {
-      .hero {height: 44vh; min-height: 180px;}
-      .yt-bg-wrapper {width: 140vw; height: 140vh;}
-      #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
-      .hero-main-title {font-size: 1.02rem;}
-      .hero-main-title p {font-size: 0.66rem;}
-      .hero-caption {right: 6px; bottom: 8px; padding: 6px 6px 6px 12px; font-size: 0.7rem;}
-      .navbar {padding: 3px 2%;}
-      .navbar .logo img {height: 20px;}
-      .navbar nav a, .login-btn {font-size: 0.85rem;}
-      .login-btn {padding: 4px 12px;}
-      /* ✅ 以下新增這段為左右滿版 */
-#ytPlayer iframe {
-  width: 140vw !important;
-  height: 120vh !important;
-  transform: scale(1.25);
-  transform-origin: center;
-  transition: transform 0.4s ease-in-out;
-}
-
   </style>
 </head>
 <body>
@@ -92,9 +80,8 @@
       <a href="themes.html">主題探索</a>
       <a href="vod.html">隨選影片</a>
       <a href="category.html">世界分區</a>
-      <!-- 會員登入按鈕：膠囊漸層+用戶icon -->
       <a href="login.html" class="login-btn">
-        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;" xmlns="http://www.w3.org/2000/svg">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="10" cy="7" r="4.5" stroke="white" stroke-width="2"/>
           <ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="white" stroke-width="2"/>
         </svg>
@@ -113,30 +100,25 @@
     </div>
     <div class="hero-caption" id="heroCaption"></div>
   </div>
-
-  <!-- YouTube Iframe Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let videos = [];
     let current = 0, player;
     let ytIdToIndex = {};
-
     fetch('hero.json')
       .then(res => res.json())
       .then(data => {
-        shuffleArray(data); // 亂數排序
+        shuffleArray(data);
         videos = data;
         videos.forEach((v, i) => ytIdToIndex[v.id] = i);
         initHero();
       });
-
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
     }
-
     function initHero() {
       showCaption(true);
       if(window.YT && window.YT.Player){
@@ -145,11 +127,10 @@
         window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
       }
     }
-
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
-        width: '120vw',
-        height: '120vh',
+        width: '100%',
+        height: '100%',
         videoId: videos[0].id,
         playerVars: {
           autoplay: 1,
@@ -162,15 +143,16 @@
           playlist: videos.map(v => v.id).join(",")
         },
         events: {
-          onReady: e => { e.target.mute();
-                         e.target.setPlaybackQuality('hd1440'); // ✅ 預設最高為1440解析度
-                         e.target.playVideo();
-                         updateCaption(0); },
+          onReady: e => {
+            e.target.mute();
+            e.target.setPlaybackQuality('hd2160');
+            e.target.playVideo();
+            updateCaption(0);
+          },
           onStateChange: onPlayerStateChange
         }
       });
     }
-
     function onPlayerStateChange(event) {
       const mask = document.getElementById('heroMask');
       if (event.data === YT.PlayerState.BUFFERING) {
@@ -185,13 +167,10 @@
         }
       }
     }
-
     function updateCaption(idx) {
       const cap = document.getElementById('heroCaption');
       if (videos[idx]) {
-        cap.innerHTML =
-          `<div class="cap-title">${videos[idx].title || ""}</div>
-           <div class="cap-desc">${videos[idx].desc || ""}</div>`;
+        cap.innerHTML = `<div class="cap-title">${videos[idx].title || ""}</div><div class="cap-desc">${videos[idx].desc || ""}</div>`;
         cap.classList.add('visible');
       }
     }
