@@ -66,7 +66,7 @@
       pointer-events: none;
       background: #222;
     }
-    /* HERO 主標動畫（無背景/無陰影/更小字體/更滑順動畫） */
+    /* 永遠置中的主標 */
     .hero-main-title {
       position: absolute;
       top: 50%; left: 50%;
@@ -75,26 +75,11 @@
       z-index: 4;
       text-align: center;
       width: 100%;
-      transition: all 1.6s cubic-bezier(.83,0,.17,1);
       font-weight: 800;
       font-size: 1.5rem;
       background: none;
       box-shadow: none;
       border-radius: 0;
-      padding: 0;
-    }
-    .hero-main-title.mini {
-      top: auto; left: 36px; bottom: 36px; right: auto;
-      transform: none;
-      width: 320px;
-      max-width: 80vw;
-      font-size: 0.8rem;
-      color: #244;
-      text-align: left;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
-      opacity: 0.96;
       padding: 0;
     }
     .hero-caption {
@@ -139,7 +124,6 @@
       .yt-bg-wrapper {width: 140vw; height: 140vh;}
       #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
       .hero-main-title {font-size: 1.02rem;}
-      .hero-main-title.mini {width: 90vw; left: 8px; bottom: 12px; padding: 0;}
       .hero-caption {right: 10px; bottom: 12px; padding: 10px 12px 10px 12px; font-size: 1em;}
     }
   </style>
@@ -160,7 +144,6 @@
     <div class="yt-bg-wrapper">
       <div id="ytPlayer"></div>
     </div>
-    <!-- <div class="hero-overlay"></div> 已移除 -->
     <div class="hero-main-title" id="heroMainTitle">
       <h1 style="margin:0 0 10px 0; font-size:1em; font-weight:900;">探索世界，從這裡開始</h1>
       <p style="font-size:0.78em; font-weight:500; margin:0;">Live 世界旅遊新視野</p>
@@ -172,7 +155,6 @@
   <script>
     let videos = [];
     let current = 0, player;
-    let miniTitle = false;
 
     // 載入 hero.json
     fetch('hero.json')
@@ -184,13 +166,8 @@
 
     function initHero() {
       showCaption(false); // 預設隱藏右下說明
-      setTimeout(()=>{
-        // 10秒後主標縮小滑到左下角
-        document.getElementById('heroMainTitle').classList.add('mini');
-        miniTitle = true;
-        showCaption(true);
-      }, 10000); // 10 秒
-
+      // 直接顯示，不需動畫與縮小
+      showCaption(true);
       // 載入影片
       if(window.YT && window.YT.Player){
         onYouTubeIframeAPIReady();
@@ -252,9 +229,9 @@
       }
     }
 
-    // 每次輪播自動顯示標題
+    // 保持字幕同步
     setInterval(() => {
-      if (miniTitle && player) {
+      if (player) {
         showCaption(true);
       }
     }, 6000);
