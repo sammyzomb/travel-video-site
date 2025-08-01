@@ -11,8 +11,32 @@
     .navbar nav { display: flex; align-items: center; }
     .navbar nav a { margin-left: 18px; text-decoration: none; color: #28445e; font-weight: 500; font-size: 1rem; letter-spacing: 0.5px; border: none; background: none; transition: color 0.17s; line-height: 1; padding: 0 3px; border-radius: 4px; outline: none; position: relative; top: 0; display: inline-block; }
     .navbar nav a:hover:not(.login-btn) { color: #2b71d2; background: #e8f3ff; }
-    .login-btn { margin-left: 32px; padding: 10px 28px; border-radius: 24px; background: #2969da; color: #fff !important; font-weight: 700; font-size: 1.08rem; letter-spacing: 1px; text-decoration: none; box-shadow: 0 2px 10px 0 rgba(44,70,180,.07); border: none; transition: background 0.18s, box-shadow 0.18s; display: inline-block; outline: none; cursor: pointer; }
-    .login-btn:hover, .login-btn:focus { background: #174ba1; color: #fff !important; box-shadow: 0 3px 18px 0 rgba(41,105,218,0.15); }
+    /* 最新會員登入按鈕風格（漸層藍膠囊+用戶icon） */
+    .login-btn {
+      margin-left: 32px;
+      padding: 10px 32px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #256ad8 0%, #27c0fa 100%);
+      color: #fff !important;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      border: none;
+      box-shadow: 0 3px 18px 0 rgba(30,110,230,0.14);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.21s, box-shadow 0.18s, transform 0.12s;
+      min-width: 120px;
+    }
+    .login-btn:hover, .login-btn:focus {
+      background: linear-gradient(90deg, #1a47aa 0%, #35b2fa 100%);
+      box-shadow: 0 5px 32px 0 rgba(30,110,230,0.19);
+      transform: translateY(-1px) scale(1.03);
+    }
     .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
     .yt-bg-wrapper { position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; overflow: hidden; }
     #ytPlayer, #ytPlayer > div, #ytPlayer iframe { position: absolute !important; width: 120vw !important; height: 120vh !important; left: 0; top: 0; border: none; z-index: 1; pointer-events: none; background: #222; }
@@ -60,14 +84,14 @@
       <a href="themes.html">主題探索</a>
       <a href="vod.html">隨選影片</a>
       <a href="category.html">世界分區</a>
+      <!-- 會員登入按鈕：膠囊漸層+用戶icon -->
       <a href="login.html" class="login-btn">
-  <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="10" cy="7" r="4.5" stroke="white" stroke-width="2"/>
-    <ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="white" stroke-width="2"/>
-  </svg>
-  <span style="margin-left:6px;">會員登入</span>
-</a>
-
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="7" r="4.5" stroke="white" stroke-width="2"/>
+          <ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="white" stroke-width="2"/>
+        </svg>
+        <span style="margin-left:6px;">會員登入</span>
+      </a>
     </nav>
   </div>
   <div class="hero">
