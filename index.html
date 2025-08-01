@@ -22,12 +22,6 @@
       z-index: 100;
       min-height: 40px;
     }
-    .navbar .logo {
-      font-weight: bold;
-      font-size: 1rem;
-      color: #28445e;
-      text-decoration: none;
-    }
     .navbar .logo img {
       height: 34px;
     }
@@ -215,7 +209,7 @@
       <div id="ytPlayer"></div>
     </div>
     <div class="hero-main-title" id="heroMainTitle">
-      <h1 style="margin:0 0 10px 0;">探索世界  從這裡開始</h1>
+      <h1 style="margin:0 0 10px 0;">探索世界，從這裡開始</h1>
       <p>Live 世界旅遊新視野</p>
     </div>
     <div class="hero-caption" id="heroCaption"></div>
@@ -225,7 +219,6 @@
   <script>
     let videos = [];
     let current = 0, player;
-
     // hero.json 載入
     fetch('hero.json')
       .then(res => res.json())
@@ -235,7 +228,6 @@
       });
 
     function initHero() {
-      showCaption(false);
       showCaption(true);
       if(window.YT && window.YT.Player){
         onYouTubeIframeAPIReady();
@@ -244,7 +236,6 @@
       }
     }
 
-    // loop=1, playlist=所有ID
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
         width: '120vw',
@@ -265,27 +256,15 @@
           onStateChange: onPlayerStateChange
         }
       });
+      updateCaption();
     }
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.ENDED) {
-        showVideo((current + 1) % videos.length);
-      }
-    }
-
-    function showVideo(idx) {
-      current = idx;
-      player.loadVideoById(videos[idx].id);
-      updateCaption();
-    }
-
-    function showCaption(visible = true) {
-      const cap = document.getElementById('heroCaption');
-      if (visible) {
+        // 切換下一個影片
+        current = (current + 1) % videos.length;
+        player.loadVideoById(videos[current].id);
         updateCaption();
-        cap.classList.add('visible');
-      } else {
-        cap.classList.remove('visible');
       }
     }
 
@@ -295,14 +274,24 @@
         cap.innerHTML =
           `<div class="cap-title">${videos[current].title || ""}</div>
            <div class="cap-desc">${videos[current].desc || ""}</div>`;
+        cap.classList.add('visible');
       }
     }
-
-    setInterval(() => {
-      if (player) {
-        showCaption(true);
+    // 如果要手動切換影片，可直接呼叫 showVideo(idx)
+    function showVideo(idx) {
+      current = idx;
+      player.loadVideoById(videos[idx].id);
+      updateCaption();
+    }
+    function showCaption(visible = true) {
+      const cap = document.getElementById('heroCaption');
+      if (visible) {
+        updateCaption();
+        cap.classList.add('visible');
+      } else {
+        cap.classList.remove('visible');
       }
-    }, 6000);
+    }
   </script>
 </body>
 </html>
