@@ -66,21 +66,30 @@
       pointer-events: none;
       background: #222;
     }
-    /* 永遠置中的主標 */
+    /* --- HERO 主標永遠置中，白色字體，放大50% --- */
     .hero-main-title {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      color: #222;
+      color: #fff;
       z-index: 4;
       text-align: center;
       width: 100%;
       font-weight: 800;
-      font-size: 1.5rem;
+      font-size: 2.25rem;
+      letter-spacing: 2px;
       background: none;
       box-shadow: none;
       border-radius: 0;
       padding: 0;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.25); /* 可讓白字更清楚 */
+    }
+    .hero-main-title p {
+      font-size: 1.18rem;
+      font-weight: 400;
+      margin: 0;
+      color: #fff;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.23);
     }
     .hero-caption {
       position: absolute;
@@ -123,7 +132,8 @@
       .hero {height: 44vh; min-height: 180px;}
       .yt-bg-wrapper {width: 140vw; height: 140vh;}
       #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
-      .hero-main-title {font-size: 1.02rem;}
+      .hero-main-title {font-size: 1.28rem;}
+      .hero-main-title p {font-size: 0.82rem;}
       .hero-caption {right: 10px; bottom: 12px; padding: 10px 12px 10px 12px; font-size: 1em;}
     }
   </style>
@@ -145,8 +155,8 @@
       <div id="ytPlayer"></div>
     </div>
     <div class="hero-main-title" id="heroMainTitle">
-      <h1 style="margin:0 0 10px 0; font-size:1em; font-weight:900;">探索世界，從這裡開始</h1>
-      <p style="font-size:0.78em; font-weight:500; margin:0;">Live 世界旅遊新視野</p>
+      <h1 style="margin:0 0 10px 0;">探索世界，從這裡開始</h1>
+      <p>Live 世界旅遊新視野</p>
     </div>
     <div class="hero-caption" id="heroCaption"></div>
   </div>
@@ -166,7 +176,6 @@
 
     function initHero() {
       showCaption(false); // 預設隱藏右下說明
-      // 直接顯示，不需動畫與縮小
       showCaption(true);
       // 載入影片
       if(window.YT && window.YT.Player){
@@ -229,7 +238,6 @@
       }
     }
 
-    // 保持字幕同步
     setInterval(() => {
       if (player) {
         showCaption(true);
