@@ -102,6 +102,16 @@
       pointer-events: none;
       background: #222;
     }
+    #heroMask {
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: #121821;
+      opacity: 0;
+      z-index: 3;
+      pointer-events: none;
+      transition: opacity 0.38s;
+    }
+    #heroMask.show { opacity: 0.66; }
     .hero-main-title {
       position: absolute;
       top: 50%; left: 50%;
@@ -207,6 +217,7 @@
   <div class="hero">
     <div class="yt-bg-wrapper">
       <div id="ytPlayer"></div>
+      <div id="heroMask"></div>
     </div>
     <div class="hero-main-title" id="heroMainTitle">
       <h1 style="margin:0 0 10px 0;">探索世界，從這裡開始</h1>
@@ -262,8 +273,14 @@
     }
 
     function onPlayerStateChange(event) {
-      // 每次新影片開始播放時，根據現正播放的ID，對應更換右下標題
+      const mask = document.getElementById('heroMask');
+      // 出現黑頻或正在切換時，顯示遮罩
+      if (event.data === YT.PlayerState.BUFFERING) {
+        mask.classList.add('show');
+      }
+      // 影片準備好開始播放時，淡出遮罩並換右下角標題
       if (event.data === YT.PlayerState.PLAYING) {
+        mask.classList.remove('show');
         let vid = player.getVideoData().video_id;
         if (ytIdToIndex.hasOwnProperty(vid)) {
           current = ytIdToIndex[vid];
