@@ -5,176 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>航向世界旅遊頻道</title>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #f0f4f9;
-    }
-    .navbar {
-      position: sticky;
-      top: 0;
-      background: white;
-      padding: 6px 4%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      z-index: 100;
-      min-height: 40px;
-    }
-    .navbar .logo img {
-      height: 34px;
-    }
-    .navbar nav {
-      display: flex;
-      align-items: center;
-    }
-    .navbar nav a {
-      margin-left: 18px;
-      text-decoration: none;
-      color: #28445e;
-      font-weight: 500;
-      font-size: 1rem;
-      letter-spacing: 0.5px;
-      border: none;
-      background: none;
-      transition: color 0.17s;
-      line-height: 1;
-      padding: 0 3px;
-      border-radius: 4px;
-      outline: none;
-      position: relative;
-      top: 0;
-      display: inline-block;
-    }
-    .navbar nav a:hover:not(.login-btn) {
-      color: #2b71d2;
-      background: #e8f3ff;
-    }
-    .login-btn {
-      margin-left: 32px;
-      padding: 10px 28px;
-      border-radius: 24px;
-      background: #2969da;
-      color: #fff !important;
-      font-weight: 700;
-      font-size: 1.08rem;
-      letter-spacing: 1px;
-      text-decoration: none;
-      box-shadow: 0 2px 10px 0 rgba(44,70,180,.07);
-      border: none;
-      transition: background 0.18s, box-shadow 0.18s;
-      display: inline-block;
-      outline: none;
-      cursor: pointer;
-    }
-    .login-btn:hover, .login-btn:focus {
-      background: #174ba1;
-      color: #fff !important;
-      box-shadow: 0 3px 18px 0 rgba(41,105,218,0.15);
-    }
-    .hero {
-      position: relative;
-      width: 100vw;
-      height: 80vh;
-      min-height: 440px;
-      max-height: 760px;
-      overflow: hidden;
-      margin-bottom: 0;
-      background: #222;
-    }
-    .yt-bg-wrapper {
-      position: absolute;
-      left: 50%; top: 50%;
-      width: 120vw; height: 120vh;
-      transform: translate(-50%, -50%);
-      z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
-      position: absolute !important;
-      width: 120vw !important;
-      height: 120vh !important;
-      left: 0; top: 0;
-      border: none;
-      z-index: 1;
-      pointer-events: none;
-      background: #222;
-    }
-    #heroMask {
-      position: absolute;
-      left: 0; top: 0; right: 0; bottom: 0;
-      background: #121821;
-      opacity: 0;
-      z-index: 3;
-      pointer-events: none;
-      transition: opacity 0.38s;
-    }
+    body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
+    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; min-height: 40px; }
+    .navbar .logo img { height: 34px; }
+    .navbar nav { display: flex; align-items: center; }
+    .navbar nav a { margin-left: 18px; text-decoration: none; color: #28445e; font-weight: 500; font-size: 1rem; letter-spacing: 0.5px; border: none; background: none; transition: color 0.17s; line-height: 1; padding: 0 3px; border-radius: 4px; outline: none; position: relative; top: 0; display: inline-block; }
+    .navbar nav a:hover:not(.login-btn) { color: #2b71d2; background: #e8f3ff; }
+    .login-btn { margin-left: 32px; padding: 10px 28px; border-radius: 24px; background: #2969da; color: #fff !important; font-weight: 700; font-size: 1.08rem; letter-spacing: 1px; text-decoration: none; box-shadow: 0 2px 10px 0 rgba(44,70,180,.07); border: none; transition: background 0.18s, box-shadow 0.18s; display: inline-block; outline: none; cursor: pointer; }
+    .login-btn:hover, .login-btn:focus { background: #174ba1; color: #fff !important; box-shadow: 0 3px 18px 0 rgba(41,105,218,0.15); }
+    .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
+    .yt-bg-wrapper { position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; overflow: hidden; }
+    #ytPlayer, #ytPlayer > div, #ytPlayer iframe { position: absolute !important; width: 120vw !important; height: 120vh !important; left: 0; top: 0; border: none; z-index: 1; pointer-events: none; background: #222; }
+    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
     #heroMask.show { opacity: 0.66; }
-    .hero-main-title {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      z-index: 4;
-      text-align: center;
-      width: 100%;
-      font-weight: 800;
-      font-size: 2.7rem;
-      letter-spacing: 2px;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.25);
-    }
-    .hero-main-title p {
-      font-size: 1.22rem;
-      font-weight: 400;
-      margin: 0;
-      color: #fff;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.23);
-    }
-    .hero-caption {
-      position: absolute;
-      right: 32px; bottom: 32px;
-      color: #fff;
-      z-index: 10;
-      padding: 10px 10px 8px 16px;
-      border-radius: 0;
-      box-shadow: none;
-      min-width: 220px;
-      min-height: 38px;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(60px);
-      transition: opacity .7s, transform .7s;
-      font-size: 1.04rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3em;
-      text-align: right;
-    }
-    .hero-caption.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-    .hero-caption .cap-title {
-      font-size: 1em;
-      font-weight: 700;
-      margin-bottom: 4px;
-      color: #fff;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.12);
-    }
-    .hero-caption .cap-desc {
-      font-size: 0.88em;
-      color: #e9f6fd;
-      font-weight: 400;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.14);
-    }
+    .hero-main-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.7rem; letter-spacing: 2px; background: none; box-shadow: none; border-radius: 0; padding: 0; text-shadow: 0 2px 16px rgba(0,0,0,0.25);}
+    .hero-main-title p { font-size: 1.22rem; font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23);}
+    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; border-radius: 0; box-shadow: none; min-width: 220px; min-height: 38px; opacity: 0; pointer-events: none; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;}
+    .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0);}
+    .hero-caption .cap-title { font-size: 1em; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.12);}
+    .hero-caption .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; text-shadow: 0 1px 8px rgba(0,0,0,0.14);}
     @media (max-width: 1200px) {
       .hero {height: 66vh; min-height: 260px; max-height: 460px;}
       .hero-main-title {font-size: 1.55rem;}
@@ -236,10 +85,18 @@
     fetch('hero.json')
       .then(res => res.json())
       .then(data => {
+        shuffleArray(data); // 亂數排序
         videos = data;
         videos.forEach((v, i) => ytIdToIndex[v.id] = i);
         initHero();
       });
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
 
     function initHero() {
       showCaption(true);
@@ -274,11 +131,9 @@
 
     function onPlayerStateChange(event) {
       const mask = document.getElementById('heroMask');
-      // 出現黑頻或正在切換時，顯示遮罩
       if (event.data === YT.PlayerState.BUFFERING) {
         mask.classList.add('show');
       }
-      // 影片準備好開始播放時，淡出遮罩並換右下角標題
       if (event.data === YT.PlayerState.PLAYING) {
         mask.classList.remove('show');
         let vid = player.getVideoData().video_id;
