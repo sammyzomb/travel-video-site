@@ -71,34 +71,84 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(255,255,255,0.24);
+      background: rgba(255,255,255,0.18);
       z-index: 2;
     }
-    .hero-text {
+    /* 主標動畫 */
+    .hero-main-title {
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       color: #222;
-      z-index: 3;
+      z-index: 4;
       text-align: center;
       width: 100%;
-    }
-    .hero-text h1 {
-      font-size: 2.2rem;
-      margin-bottom: 0.5rem;
+      transition: all 1s cubic-bezier(.6,0,.4,1);
+      background: rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 20px 0 12px 0;
+      box-shadow: 0 6px 32px 2px rgba(0,0,0,0.08);
       font-weight: 800;
-      letter-spacing: 2px;
     }
-    .hero-text p {
-      font-size: 1.16rem;
-      color: #333;
+    .hero-main-title.mini {
+      top: auto; left: 36px; bottom: 36px; right: auto;
+      transform: none;
+      width: 380px;
+      max-width: 82vw;
+      font-size: 1.12rem;
+      padding: 8px 22px 8px 22px;
+      background: rgba(255,255,255,0.5);
+      color: #244;
+      text-align: left;
+      box-shadow: 0 4px 16px 2px rgba(0,0,0,0.08);
+      opacity: 0.96;
+      border-radius: 12px;
+    }
+    /* HERO 右下角影片標題浮出 */
+    .hero-caption {
+      position: absolute;
+      right: 32px; bottom: 32px;
+      background: rgba(0,0,0,0.46);
+      color: #fff;
+      z-index: 10;
+      padding: 18px 32px 18px 24px;
+      border-radius: 16px 16px 16px 32px;
+      box-shadow: 0 8px 32px 2px rgba(0,0,0,0.13);
+      min-width: 220px;
+      min-height: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(60px);
+      transition: opacity .7s, transform .7s;
+      font-size: 1.17rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+    .hero-caption.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .hero-caption .cap-title {
+      font-size: 1.22em;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .hero-caption .cap-desc {
+      font-size: 1em;
+      color: #e9f6fd;
+      font-weight: 400;
     }
     @media (max-width: 768px) {
       .hero {height: 44vh; min-height: 180px;}
-      .hero-text h1 {font-size: 1.1rem;}
       .yt-bg-wrapper {width: 140vw; height: 140vh;}
       #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
+      .hero-main-title {font-size: 1.06rem;}
+      .hero-main-title.mini {width: 96vw; left: 8px; bottom: 12px; padding: 8px;}
+      .hero-caption {right: 10px; bottom: 12px; padding: 10px 12px 10px 12px; font-size: 1em;}
     }
   </style>
 </head>
@@ -119,38 +169,49 @@
       <div id="ytPlayer"></div>
     </div>
     <div class="hero-overlay"></div>
-    <div class="hero-text">
-      <h1>探索世界，從這裡開始</h1>
-      <p>Live 世界旅遊新視野</p>
+    <div class="hero-main-title" id="heroMainTitle">
+      <h1 style="margin:0 0 10px 0; font-size:2.2em; font-weight:900;">探索世界，從這裡開始</h1>
+      <p style="font-size:1.16em; font-weight:500; margin:0;">Live 世界旅遊新視野</p>
     </div>
-    <!-- 小圓圈已移除 -->
+    <div class="hero-caption" id="heroCaption"></div>
   </div>
 
-  <!-- 引入 YouTube Iframe Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    const videoIds = [
-      "3GZCJfIOg_k",
-      "ylVxw3sQCiY",
-      "i2bhyjD2OJY",
-      "LcdGhVwS3gw",
-      "VW_Pl9sFGVU",
-      "nmXaW525rUU",
-      "1SARBs2zWLI",
-      "25Fmx1G-C3k",
-      "u4XvG8jkToY",
-      "l4A6f7fKglc",
-      "BuFuQBNj4x4",
-      "DM9qdIs9O70",
-      "QR3T7s-gsNY",
-      "jLNBKAFgtNU"
-    ];
+    let videos = [];
     let current = 0, player;
+    let miniTitle = false;
+
+    // 載入 hero.json
+    fetch('hero.json')
+      .then(res => res.json())
+      .then(data => {
+        videos = data;
+        initHero();
+      });
+
+    function initHero() {
+      showCaption(false); // 預設隱藏右下說明
+      setTimeout(()=>{
+        // 10秒後主標縮小滑到左下角
+        document.getElementById('heroMainTitle').classList.add('mini');
+        miniTitle = true;
+        showCaption(true);
+      }, 10000); // 10 秒
+
+      // 載入影片
+      if(window.YT && window.YT.Player){
+        onYouTubeIframeAPIReady();
+      } else {
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      }
+    }
+
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
         width: '120vw',
         height: '120vh',
-        videoId: videoIds[current],
+        videoId: videos[current].id,
         playerVars: {
           autoplay: 1,
           mute: 1,
@@ -159,32 +220,52 @@
           showinfo: 0,
           modestbranding: 1,
           loop: 0,
-          playlist: videoIds[current]
+          playlist: videos[current].id
         },
         events: {
           onReady: e => { e.target.mute(); e.target.playVideo(); },
           onStateChange: onPlayerStateChange
         }
       });
-      // renderDots(); 已移除
     }
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.ENDED) {
-        showVideo((current + 1) % videoIds.length);
+        showVideo((current + 1) % videos.length);
       }
     }
 
     function showVideo(idx) {
       current = idx;
-      player.loadVideoById(videoIds[idx]);
-      // updateDots(); 已移除
+      player.loadVideoById(videos[idx].id);
+      updateCaption();
     }
 
-    // 以下 dot 相關功能已完全移除
-    // function renderDots() {...}
-    // function updateDots() {...}
+    function showCaption(visible = true) {
+      const cap = document.getElementById('heroCaption');
+      if (visible) {
+        updateCaption();
+        cap.classList.add('visible');
+      } else {
+        cap.classList.remove('visible');
+      }
+    }
+
+    function updateCaption() {
+      const cap = document.getElementById('heroCaption');
+      if (videos[current]) {
+        cap.innerHTML =
+          `<div class="cap-title">${videos[current].title || ""}</div>
+           <div class="cap-desc">${videos[current].desc || ""}</div>`;
+      }
+    }
+
+    // 每次輪播自動顯示標題
+    setInterval(() => {
+      if (miniTitle && player) {
+        showCaption(true);
+      }
+    }, 6000);
   </script>
 </body>
 </html>
-
