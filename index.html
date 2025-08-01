@@ -215,15 +215,18 @@
     <div class="hero-caption" id="heroCaption"></div>
   </div>
 
+  <!-- YouTube Iframe Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let videos = [];
     let current = 0, player;
-    // hero.json 載入
+    let ytIdToIndex = {};
+
     fetch('hero.json')
       .then(res => res.json())
       .then(data => {
         videos = data;
+        videos.forEach((v, i) => ytIdToIndex[v.id] = i);
         initHero();
       });
 
@@ -240,7 +243,7 @@
       player = new YT.Player('ytPlayer', {
         width: '120vw',
         height: '120vh',
-        videoId: videos[current].id,
+        videoId: videos[0].id,
         playerVars: {
           autoplay: 1,
           mute: 1,
@@ -252,41 +255,36 @@
           playlist: videos.map(v => v.id).join(",")
         },
         events: {
-          onReady: e => { e.target.mute(); e.target.playVideo(); },
+          onReady: e => { e.target.mute(); e.target.playVideo(); updateCaption(0); },
           onStateChange: onPlayerStateChange
         }
       });
-      updateCaption();
     }
 
     function onPlayerStateChange(event) {
-      if (event.data === YT.PlayerState.ENDED) {
-        // 切換下一個影片
-        current = (current + 1) % videos.length;
-        player.loadVideoById(videos[current].id);
-        updateCaption();
+      // 每次新影片開始播放時，根據現正播放的ID，對應更換右下標題
+      if (event.data === YT.PlayerState.PLAYING) {
+        let vid = player.getVideoData().video_id;
+        if (ytIdToIndex.hasOwnProperty(vid)) {
+          current = ytIdToIndex[vid];
+          updateCaption(current);
+        }
       }
     }
 
-    function updateCaption() {
+    function updateCaption(idx) {
       const cap = document.getElementById('heroCaption');
-      if (videos[current]) {
+      if (videos[idx]) {
         cap.innerHTML =
-          `<div class="cap-title">${videos[current].title || ""}</div>
-           <div class="cap-desc">${videos[current].desc || ""}</div>`;
+          `<div class="cap-title">${videos[idx].title || ""}</div>
+           <div class="cap-desc">${videos[idx].desc || ""}</div>`;
         cap.classList.add('visible');
       }
-    }
-    // 如果要手動切換影片，可直接呼叫 showVideo(idx)
-    function showVideo(idx) {
-      current = idx;
-      player.loadVideoById(videos[idx].id);
-      updateCaption();
     }
     function showCaption(visible = true) {
       const cap = document.getElementById('heroCaption');
       if (visible) {
-        updateCaption();
+        updateCaption(current);
         cap.classList.add('visible');
       } else {
         cap.classList.remove('visible');
