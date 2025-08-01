@@ -66,15 +66,7 @@
       pointer-events: none;
       background: #222;
     }
-    .hero-overlay {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(255,255,255,0.18);
-      z-index: 2;
-    }
-    /* 主標動畫 */
+    /* HERO 主標動畫（無背景/無陰影/更小字體/更滑順動畫） */
     .hero-main-title {
       position: absolute;
       top: 50%; left: 50%;
@@ -83,28 +75,28 @@
       z-index: 4;
       text-align: center;
       width: 100%;
-      transition: all 1s cubic-bezier(.6,0,.4,1);
-      background: rgba(255,255,255,0.14);
-      border-radius: 14px;
-      padding: 20px 0 12px 0;
-      box-shadow: 0 6px 32px 2px rgba(0,0,0,0.08);
+      transition: all 1.6s cubic-bezier(.83,0,.17,1);
       font-weight: 800;
+      font-size: 1.5rem;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
     }
     .hero-main-title.mini {
       top: auto; left: 36px; bottom: 36px; right: auto;
       transform: none;
-      width: 380px;
-      max-width: 82vw;
-      font-size: 1.12rem;
-      padding: 8px 22px 8px 22px;
-      background: rgba(255,255,255,0.5);
+      width: 320px;
+      max-width: 80vw;
+      font-size: 0.8rem;
       color: #244;
       text-align: left;
-      box-shadow: 0 4px 16px 2px rgba(0,0,0,0.08);
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
       opacity: 0.96;
-      border-radius: 12px;
+      padding: 0;
     }
-    /* HERO 右下角影片標題浮出 */
     .hero-caption {
       position: absolute;
       right: 32px; bottom: 32px;
@@ -146,8 +138,8 @@
       .hero {height: 44vh; min-height: 180px;}
       .yt-bg-wrapper {width: 140vw; height: 140vh;}
       #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
-      .hero-main-title {font-size: 1.06rem;}
-      .hero-main-title.mini {width: 96vw; left: 8px; bottom: 12px; padding: 8px;}
+      .hero-main-title {font-size: 1.02rem;}
+      .hero-main-title.mini {width: 90vw; left: 8px; bottom: 12px; padding: 0;}
       .hero-caption {right: 10px; bottom: 12px; padding: 10px 12px 10px 12px; font-size: 1em;}
     }
   </style>
@@ -168,10 +160,10 @@
     <div class="yt-bg-wrapper">
       <div id="ytPlayer"></div>
     </div>
-    <div class="hero-overlay"></div>
+    <!-- <div class="hero-overlay"></div> 已移除 -->
     <div class="hero-main-title" id="heroMainTitle">
-      <h1 style="margin:0 0 10px 0; font-size:2.2em; font-weight:900;">探索世界，從這裡開始</h1>
-      <p style="font-size:1.16em; font-weight:500; margin:0;">Live 世界旅遊新視野</p>
+      <h1 style="margin:0 0 10px 0; font-size:1em; font-weight:900;">探索世界，從這裡開始</h1>
+      <p style="font-size:0.78em; font-weight:500; margin:0;">Live 世界旅遊新視野</p>
     </div>
     <div class="hero-caption" id="heroCaption"></div>
   </div>
