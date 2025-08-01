@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>影片播放｜航向世界旅遊頻道</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html">航向世界旅遊頻道</a></h1>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="vod.html">隨選影片</a>
+      <a href="program.html">節目表</a>
+    </nav>
+  </header>
+  <main>
+    <section id="video-section">
+      <div id="video-player"></div>
+      <div id="video-info"></div>
+      <a id="vod-link" href="vod.html" style="display:inline-block;margin-top:16px;">← 返回隨選影片</a>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 航向世界旅遊頻道 All rights reserved.
+  </footer>
+  <script>
+    // 取得 id
+    const params = new URLSearchParams(location.search);
+    const vid = params.get('id');
+    fetch('videos.json').then(res=>res.json()).then(videos=>{
+      let v = videos.find(vv=>vv.id==vid);
+      if(!v) {
+        document.getElementById('video-player').innerHTML = '<p>找不到此影片</p>';
+        document.getElementById('video-info').innerHTML = '';
+        return;
+      }
+      let player = '';
+      if(v.type === 'youtube') {
+        player = `<iframe width="100%" height="400" src="https://www.youtube.com/embed/${v.ytid}?autoplay=1&controls=1" allowfullscreen></iframe>`;
+      } else if(v.type === 'mp4') {
+        player = `<video width="100%" height="400" controls autoplay><source src="${v.src}" type="video/mp4"></video>`;
+      }
+      document.getElementById('video-player').innerHTML = player;
+      document.getElementById('video-info').innerHTML = `
+        <h2>${v.title}</h2>
+        <div class="meta">${v.region}｜${v.country}｜${v.category}</div>
+        <p>${v.desc||''}</p>
+      `;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "iceaurora",
+    "title": "冰島環島極光 10 天",
+    "desc": "跟隨旅人腳步，圍繞冰島一圈，探索黑沙灘、瀑布、極光夜。",
+    "type": "youtube",
+    "ytid": "RD2r1J5N2K4E",
+    "thumb": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
+    "region": "歐洲",
+    "country": "冰島",
+    "category": "極地探險"
+  },
+  {
+    "id": "machupicchu",
+    "title": "秘魯馬丘比丘雲端奇觀",
+    "desc": "走進失落的印加古城，欣賞馬丘比丘的日出與神秘傳說。",
+    "type": "youtube",
+    "ytid": "E2j-j8AjcVU",
+    "thumb": "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=400&q=80",
+    "region": "南美洲",
+    "country": "秘魯",
+    "category": "世界遺產"
+  },
+  {
+    "id": "amazon",
+    "title": "亞馬遜叢林探險",
+    "desc": "深入南美最大熱帶雨林，感受原始部落與珍奇動植物。",
+    "type": "mp4",
+    "src": "https://www.w3schools.com/html/mov_bbb.mp4",
+    "thumb": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80",
+    "region": "南美洲",
+    "country": "巴西",
+    "category": "自然生態"
+  },
+  {
+    "id": "hokkaido",
+    "title": "北海道雪國紀行",
+    "desc": "冬季限定，雪地鐵道、溫泉、流冰、北海道限定美食一次體驗。",
+    "type": "youtube",
+    "ytid": "MDekWGHhFfA",
+    "thumb": "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80",
+    "region": "亞洲",
+    "country": "日本",
+    "category": "四季旅行"
+  },
+  {
+    "id": "nordic",
+    "title": "北歐極光追蹤",
+    "desc": "芬蘭、挪威極圈追光旅程，與馴鹿共舞，住進冰屋。",
+    "type": "mp4",
+    "src": "https://www.w3schools.com/html/movie.mp4",
+    "thumb": "https://images.unsplash.com/photo-1454023492550-5696f8ff10e1?auto=format&fit=crop&w=400&q=80",
+    "region": "歐洲",
+    "country": "芬蘭",
+    "category": "極地探險"
+  },
+  {
+    "id": "taiwan",
+    "title": "台灣經典環島",
+    "desc": "用10天走遍台灣山海城鄉，探索美食、文化與絕美風景。",
+    "type": "youtube",
+    "ytid": "rQdBhzL2c8M",
+    "thumb": "https://images.unsplash.com/photo-1518684079-4f7c2f1d1b99?auto=format&fit=crop&w=400&q=80",
+    "region": "亞洲",
+    "country": "台灣",
+    "category": "文化深度"
+  }
+]

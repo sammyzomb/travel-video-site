@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>隨選影片｜航向世界旅遊頻道</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html">航向世界旅遊頻道</a></h1>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="program.html">節目表</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>隨選影片（VOD）</h2>
+      <form id="filter-form" class="filter-bar">
+        <select id="region-filter">
+          <option value="">全部洲別</option>
+          <option value="亞洲">亞洲</option>
+          <option value="歐洲">歐洲</option>
+          <option value="美洲">美洲</option>
+          <option value="非洲">非洲</option>
+          <option value="大洋洲">大洋洲</option>
+          <option value="極地">極地</option>
+        </select>
+        <input type="text" id="country-filter" placeholder="輸入國家關鍵字">
+        <select id="category-filter">
+          <option value="">全部主題</option>
+        </select>
+        <input type="text" id="search" placeholder="搜尋標題/簡介">
+      </form>
+      <div id="vod-list" class="vod-cards"></div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 航向世界旅遊頻道 All rights reserved.
+  </footer>
+  <script>
+    let videos = [];
+    fetch('videos.json').then(res=>res.json()).then(data=>{
+      videos = data;
+      // 動態填入分類
+      let cats = [...new Set(videos.map(v=>v.category))];
+      cats.forEach(c=>{
+        document.getElementById('category-filter').innerHTML += `<option value="${c}">${c}</option>`;
+      });
+      render();
+    });
+    // filter
+    document.getElementById('filter-form').oninput = render;
+    function render() {
+      let region = document.getElementById('region-filter').value;
+      let country = document.getElementById('country-filter').value.trim();
+      let cat = document.getElementById('category-filter').value;
+      let search = document.getElementById('search').value.trim();
+
+      let list = videos.filter(v=>{
+        let cond = true;
+        if(region) cond &= v.region===region;
+        if(country) cond &= v.country.includes(country);
+        if(cat) cond &= v.category===cat;
+        if(search) cond &= (v.title.includes(search)||v.desc.includes(search));
+        return cond;
+      });
+      let html = '';
+      if(list.length==0) html = '<p style="text-align:center;">查無影片，請調整條件。</p>';
+      list.forEach(v=>{
+        html += `<div class="vod-card" onclick="location.href='video.html?id=${v.id}'">
+          <div class="thumb" style="background-image:url('${v.thumb}')"></div>
+          <div class="vod-info">
+            <h3>${v.title}</h3>
+            <div class="meta">
+              <span>${v.region}｜${v.country}</span>
+              <span>｜${v.category}</span>
+            </div>
+            <p>${v.desc}</p>
+          </div>
+        </div>`;
+      });
+      document.getElementById('vod-list').innerHTML = html;
+    }
+    // 若帶 query string 自動篩選
+    window.onload = function() {
+      let params = new URLSearchParams(location.search);
+      if(params.get('region')) document.getElementById('region-filter').value=params.get('region');
+      if(params.get('category')) document.getElementById('category-filter').value=params.get('category');
+      render();
+    }
+  </script>
+</body>
+</html>

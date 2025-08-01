@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>節目表｜航向世界旅遊頻道</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html">航向世界旅遊頻道</a></h1>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="vod.html">隨選影片</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>本日節目表</h2>
+      <div id="program-table"></div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 航向世界旅遊頻道 All rights reserved.
+  </footer>
+  <script>
+    let videos = [];
+    fetch('videos.json').then(res=>res.json()).then(data=>{
+      videos = data;
+      fetch('program.json').then(res=>res.json()).then(program=>{
+        let html = '<table class="prog-table"><tr><th>開始</th><th>節目名稱</th><th>主題</th><th>地區</th></tr>';
+        program.forEach((p,i)=>{
+          let v = videos.find(vv=>vv.id===p.vid);
+          if(!v) return;
+          html += `<tr onclick="location.href='video.html?id=${v.id}'" style="cursor:pointer;">
+            <td>${p.start}</td>
+            <td>${p.title}</td>
+            <td>${v.category||''}</td>
+            <td>${v.region||''}｜${v.country||''}</td>
+          </tr>`;
+        });
+        html += '</table>';
+        document.getElementById('program-table').innerHTML = html;
+      });
+    });
+  </script>
+</body>
+</html>

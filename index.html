@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>航向世界旅遊頻道</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0f4f9;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 16px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    .navbar .logo {
+      font-weight: bold;
+      font-size: 1.4rem;
+      color: #28445e;
+      text-decoration: none;
+    }
+    .navbar nav a {
+      margin-left: 28px;
+      text-decoration: none;
+      color: #28445e;
+      font-weight: 500;
+    }
+    .navbar nav a:hover {
+      color: #72bbf7;
+      text-decoration: underline;
+    }
+    .hero {
+      position: relative;
+      width: 100vw;
+      height: 60vh;
+      min-height: 320px;
+      max-height: 480px;
+      overflow: hidden;
+      margin-bottom: 0;
+      background: #222;
+    }
+    .yt-bg-wrapper {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 120vw; height: 120vh;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
+      position: absolute !important;
+      width: 120vw !important;
+      height: 120vh !important;
+      left: 0; top: 0;
+      border: none;
+      z-index: 1;
+      pointer-events: none;
+      background: #222;
+    }
+    .hero-overlay {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255,255,255,0.24);
+      z-index: 2;
+    }
+    .hero-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #222;
+      z-index: 3;
+      text-align: center;
+      width: 100%;
+    }
+    .hero-text h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+    .hero-text p {
+      font-size: 1.16rem;
+      color: #333;
+    }
+    .yt-carousel-dots {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+    }
+    .yt-dot {
+      width: 12px;
+      height: 12px;
+      background: #eee;
+      border-radius: 50%;
+      border: 1.5px solid #aaa;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: background 0.2s, border 0.2s;
+    }
+    .yt-dot.active {
+      background: #72bbf7;
+      border: 2px solid #28445e;
+      opacity: 1;
+    }
+    @media (max-width: 768px) {
+      .hero {height: 44vh; min-height: 180px;}
+      .hero-text h1 {font-size: 1.1rem;}
+      .yt-bg-wrapper {width: 140vw; height: 140vh;}
+      #ytPlayer, #ytPlayer > div, #ytPlayer iframe {width: 140vw !important; height: 140vh !important;}
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a class="logo" href="index.html">
+      <img src="logo.png" alt="航向世界旅遊台 LOGO" height="44" />
+    </a>
+    <nav>
+      <a href="index.html">首頁</a>
+      <a href="program.html">節目表</a>
+      <a href="vod.html">隨選影片</a>
+      <a href="category.html">世界分區</a>
+    </nav>
+  </div>
+  <div class="hero">
+    <div class="yt-bg-wrapper">
+      <div id="ytPlayer"></div>
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-text">
+      <h1>探索世界，從這裡開始</h1>
+      <p>Live 世界旅遊新視野</p>
+    </div>
+    <div class="yt-carousel-dots" id="ytCarouselDots"></div>
+  </div>
+
+  <!-- 引入 YouTube Iframe Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    const videoIds = [
+      "VW_Pl9sFGVU",
+      "LcdGhVwS3gw",
+      "i2bhyjD2OJY",
+      "ylVxw3sQCiY"
+    ];
+    let current = 0, player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('ytPlayer', {
+        width: '120vw',
+        height: '120vh',
+        videoId: videoIds[current],
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          controls: 0,
+          rel: 0,
+          showinfo: 0,
+          modestbranding: 1,
+          loop: 0,
+          playlist: videoIds[current]
+        },
+        events: {
+          onReady: e => { e.target.mute(); e.target.playVideo(); },
+          onStateChange: onPlayerStateChange
+        }
+      });
+      renderDots();
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.ENDED) {
+        showVideo((current + 1) % videoIds.length);
+      }
+    }
+
+    function showVideo(idx) {
+      current = idx;
+      player.loadVideoById(videoIds[idx]);
+      updateDots();
+    }
+
+    // Dot control
+    function renderDots() {
+      const dots = document.getElementById('ytCarouselDots');
+      dots.innerHTML = "";
+      videoIds.forEach((v,i)=>{
+        let d=document.createElement('div');
+        d.className='yt-dot'+(i===current?' active':'');
+        d.onclick=()=>showVideo(i);
+        dots.appendChild(d);
+      });
+    }
+    function updateDots() {
+      const dots = document.querySelectorAll('.yt-dot');
+      dots.forEach((dot,i)=>dot.classList.toggle("active",i===current));
+    }
+  </script>
+</body>
+</html>
