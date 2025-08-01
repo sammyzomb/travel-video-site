@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -95,30 +94,6 @@
       font-size: 1.16rem;
       color: #333;
     }
-    .yt-carousel-dots {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-    }
-    .yt-dot {
-      width: 12px;
-      height: 12px;
-      background: #eee;
-      border-radius: 50%;
-      border: 1.5px solid #aaa;
-      cursor: pointer;
-      opacity: 0.8;
-      transition: background 0.2s, border 0.2s;
-    }
-    .yt-dot.active {
-      background: #72bbf7;
-      border: 2px solid #28445e;
-      opacity: 1;
-    }
     @media (max-width: 768px) {
       .hero {height: 44vh; min-height: 180px;}
       .hero-text h1 {font-size: 1.1rem;}
@@ -148,27 +123,27 @@
       <h1>探索世界，從這裡開始</h1>
       <p>Live 世界旅遊新視野</p>
     </div>
-    <div class="yt-carousel-dots" id="ytCarouselDots"></div>
+    <!-- 小圓圈已移除 -->
   </div>
 
   <!-- 引入 YouTube Iframe Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     const videoIds = [
-  "3GZCJfIOg_k",
-  "ylVxw3sQCiY",
-  "i2bhyjD2OJY",
-  "LcdGhVwS3gw",
-  "VW_Pl9sFGVU",
-  "nmXaW525rUU",
-  "1SARBs2zWLI",
-  "25Fmx1G-C3k",
-  "u4XvG8jkToY",
-  "l4A6f7fKglc",
-  "BuFuQBNj4x4",
-  "DM9qdIs9O70",
-  "QR3T7s-gsNY",
-  "jLNBKAFgtNU"
+      "3GZCJfIOg_k",
+      "ylVxw3sQCiY",
+      "i2bhyjD2OJY",
+      "LcdGhVwS3gw",
+      "VW_Pl9sFGVU",
+      "nmXaW525rUU",
+      "1SARBs2zWLI",
+      "25Fmx1G-C3k",
+      "u4XvG8jkToY",
+      "l4A6f7fKglc",
+      "BuFuQBNj4x4",
+      "DM9qdIs9O70",
+      "QR3T7s-gsNY",
+      "jLNBKAFgtNU"
     ];
     let current = 0, player;
     function onYouTubeIframeAPIReady() {
@@ -191,7 +166,7 @@
           onStateChange: onPlayerStateChange
         }
       });
-      renderDots();
+      // renderDots(); 已移除
     }
 
     function onPlayerStateChange(event) {
@@ -203,24 +178,13 @@
     function showVideo(idx) {
       current = idx;
       player.loadVideoById(videoIds[idx]);
-      updateDots();
+      // updateDots(); 已移除
     }
 
-    // Dot control
-    function renderDots() {
-      const dots = document.getElementById('ytCarouselDots');
-      dots.innerHTML = "";
-      videoIds.forEach((v,i)=>{
-        let d=document.createElement('div');
-        d.className='yt-dot'+(i===current?' active':'');
-        d.onclick=()=>showVideo(i);
-        dots.appendChild(d);
-      });
-    }
-    function updateDots() {
-      const dots = document.querySelectorAll('.yt-dot');
-      dots.forEach((dot,i)=>dot.classList.toggle("active",i===current));
-    }
+    // 以下 dot 相關功能已完全移除
+    // function renderDots() {...}
+    // function updateDots() {...}
   </script>
 </body>
 </html>
+
