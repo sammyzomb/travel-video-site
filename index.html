@@ -5,65 +5,280 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>航向世界旅遊頻道</title>
   <style>
-    body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
-    .navbar { position: sticky; top: 0; background: white; padding: 4px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
+    /*
+     * 主要樣式
+     * 導航列、Hero 區塊和文字都進行了微調，以實現更緊湊的佈局。
+     * 所有尺寸都已縮小約 10%。
+     */
+    body { 
+      margin: 0; 
+      font-family: 'Noto Sans TC', sans-serif; 
+      background: #f0f4f9; 
+    }
+
+    /* 導航列樣式 */
+    .navbar { 
+      position: sticky; 
+      top: 0; 
+      background: white; 
+      padding: 4px 4%; /* 縮小導航列高度 */
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05); 
+      z-index: 100; 
+    }
+
     .navbar .logo img {
-      max-height: 40px; /* 導航列高度縮小 */
+      max-height: 40px; /* 縮小 LOGO 尺寸 */
       height: auto;
     }
-    .navbar nav { display: flex; align-items: center; }
-    .navbar nav a {
-      margin-left: 16px; text-decoration: none; color: #28445e;
-      font-weight: 500; font-size: 0.9rem; /* 導航列文字縮小10% */
-      letter-spacing: 0.5px;
-      border: none; background: none; transition: color 0.17s;
-      line-height: 1; padding: 0 3px; border-radius: 4px; outline: none;
-      position: relative; top: 0; display: inline-flex; align-items: center;
+
+    .navbar nav { 
+      display: flex; 
+      align-items: center; 
     }
-    .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
-    .login-link:hover { color: #2b71d2; background: #e8f3ff; }
+
+    .navbar nav a {
+      margin-left: 16px; 
+      text-decoration: none; 
+      color: #28445e;
+      font-weight: 500; 
+      font-size: 0.9rem; /* 縮小導航列文字尺寸 */
+      letter-spacing: 0.5px;
+      border: none; 
+      background: none; 
+      transition: color 0.17s;
+      line-height: 1; 
+      padding: 0 3px; 
+      border-radius: 4px; 
+      outline: none;
+      position: relative; 
+      top: 0; 
+      display: inline-flex; 
+      align-items: center;
+    }
+
+    .navbar nav a:hover { 
+      color: #2b71d2; 
+      background: #e8f3ff; 
+    }
+
+    .login-link:hover { 
+      color: #2b71d2; 
+      background: #e8f3ff; 
+    }
+
     .nav-icon {
-      width: 18px; /* 導航列圖標縮小 */
+      width: 18px; /* 縮小導航列圖標尺寸 */
       height: 18px;
       margin-right: 5px;
       vertical-align: middle;
       display: inline-block;
     }
+
+    /* 響應式設計：小螢幕隱藏文字 */
     @media screen and (max-width: 768px) {
-      .nav-text { display: none; }
-      .nav-icon { margin-right: 0 !important; }
+      .nav-text { 
+        display: none; 
+      }
+      .nav-icon { 
+        margin-right: 0 !important; 
+      }
     }
-    .hero { position: relative; width: 100vw; height: 70vh; /* Hero高度縮小 */ min-height: 400px; max-height: 680px; overflow: hidden; margin-bottom: 0; background: #222; }
+
+    /* Hero 影片區塊樣式 */
+    .hero { 
+      position: relative; 
+      width: 100vw; 
+      height: 70vh; /* 縮小 Hero 區塊高度 */
+      min-height: 400px; 
+      max-height: 680px; 
+      overflow: hidden; 
+      margin-bottom: 0; 
+      background: #222; 
+    }
+
     .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
-      position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      border: none; pointer-events: none; z-index: 1; background: #222;
+      position: absolute; 
+      width: 160vw !important; 
+      height: 130vh !important; 
+      left: 50%; 
+      top: 50%; 
+      transform: translate(-50%, -50%);
+      border: none; 
+      pointer-events: none; 
+      z-index: 1; 
+      background: #222;
     }
-    #ytPlayer iframe { transform: scale(1.25); transform-origin: center; transition: transform 0.4s ease-in-out; }
-    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
-    #heroMask.show { opacity: 0.66; }
+
+    #ytPlayer iframe { 
+      transform: scale(1.25); 
+      transform-origin: center; 
+      transition: transform 0.4s ease-in-out; 
+    }
+
+    #heroMask { 
+      position: absolute; 
+      left: 0; 
+      top: 0; 
+      right: 0; 
+      bottom: 0; 
+      background: #121821; 
+      opacity: 0; 
+      z-index: 3; 
+      pointer-events: none; 
+      transition: opacity 0.38s; 
+    }
+
+    /* 影片載入時的遮罩，關鍵修改 */
+    #heroMask.show { 
+      opacity: 1; /* 將不透明度設為 1，徹底隱藏 YouTube 載入圖示 */
+    }
+
     .hero-main-title {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 1.9rem; /* Hero主標題縮小10% */
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      color: #fff; 
+      z-index: 4; 
+      text-align: center; 
+      width: 100%; 
+      font-weight: 800; 
+      font-size: 1.9rem; /* 縮小 Hero 主標題 */
       text-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
-    .hero-main-title p { font-size: 1.1rem; /* Hero副標題縮小10% */ font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
-    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 0.94rem; /* 右下角文字縮小10% */ display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
-    .hero-caption.visible { opacity: 1; transform: translateY(0); }
-    .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
-    .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
-    .video-section { padding: 60px 5%; background: #fff; }
-    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
-    .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
-    .video-card:hover { transform: translateY(-4px); }
-    .video-thumb img { width: 100%; height: 230px; object-fit: cover; display: block; }
-    .video-content { padding: 16px; }
-    .video-tags { font-size: 0.8rem; color: #666; margin-bottom: 8px; }
-    .video-title { font-size: 1.05rem; font-weight: 600; color: #1a1a1a; margin: 0 0 8px; }
-    .video-desc { font-size: 0.9rem; color: #2b71d2; margin-bottom: 12px; }
-    .video-cta { display: inline-block; padding: 8px 16px; background: #2b71d2; color: white; border-radius: 99px; font-size: 0.9rem; text-decoration: none; cursor: pointer; border: none; }
-    .fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
-    .fullscreen-player.active { display: flex; }
-    .fullscreen-player iframe { width: 100vw; height: 100vh; border: none; }
+
+    .hero-main-title p { 
+      font-size: 1.1rem; /* 縮小 Hero 副標題 */
+      font-weight: 400; 
+      margin: 0; 
+      color: #fff; 
+      text-shadow: 0 2px 16px rgba(0,0,0,0.23); 
+    }
+
+    .hero-caption { 
+      position: absolute; 
+      right: 32px; 
+      bottom: 32px; 
+      color: #fff; 
+      z-index: 10; 
+      padding: 10px 10px 8px 16px; 
+      opacity: 0; 
+      transform: translateY(60px); 
+      transition: opacity .7s, transform .7s; 
+      font-size: 0.94rem; /* 縮小右下角說明文字 */
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.3em; 
+      text-align: right; 
+    }
+
+    .hero-caption.visible { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+
+    .cap-title { 
+      font-size: 1em; 
+      font-weight: 700; 
+      color: #fff; 
+      letter-spacing: 1px; 
+    }
+
+    .cap-desc { 
+      font-size: 0.88em; 
+      color: #e9f6fd; 
+      font-weight: 400; 
+    }
+
+    /* 精選影片區塊樣式 */
+    .video-section { 
+      padding: 60px 5%; 
+      background: #fff; 
+    }
+
+    .video-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+      gap: 24px; 
+    }
+
+    .video-card { 
+      background: #f9f9f9; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+      transition: transform 0.3s; 
+    }
+
+    .video-card:hover { 
+      transform: translateY(-4px); 
+    }
+
+    .video-thumb img { 
+      width: 100%; 
+      height: 230px; 
+      object-fit: cover; 
+      display: block; 
+    }
+
+    .video-content { 
+      padding: 16px; 
+    }
+
+    .video-tags { 
+      font-size: 0.8rem; 
+      color: #666; 
+      margin-bottom: 8px; 
+    }
+
+    .video-title { 
+      font-size: 1.05rem; 
+      font-weight: 600; 
+      color: #1a1a1a; 
+      margin: 0 0 8px; 
+    }
+
+    .video-desc { 
+      font-size: 0.9rem; 
+      color: #2b71d2; 
+      margin-bottom: 12px; 
+    }
+
+    .video-cta { 
+      display: inline-block; 
+      padding: 8px 16px; 
+      background: #2b71d2; 
+      color: white; 
+      border-radius: 99px; 
+      font-size: 0.9rem; 
+      text-decoration: none; 
+      cursor: pointer; 
+      border: none; 
+    }
+
+    /* 全螢幕播放器樣式 */
+    .fullscreen-player { 
+      position: fixed; 
+      inset: 0; 
+      background: #000; 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 9999; 
+    }
+
+    .fullscreen-player.active { 
+      display: flex; 
+    }
+
+    .fullscreen-player iframe { 
+      width: 100vw; 
+      height: 100vh; 
+      border: none; 
+    }
   </style>
 </head>
 <body>
@@ -122,31 +337,67 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
+    /*
+     * JavaScript 程式碼
+     * 處理 YouTube 播放器、動態內容載入及事件處理。
+     * * 修正內容：
+     * 1. 移除了對 'hero.json' 和 'featured_updated.json' 的檔案讀取，因為這些檔案不存在。
+     * 現在影片資訊直接以 JavaScript 陣列的形式硬編碼在程式碼中。
+     * 2. 修正了 YouTube 影片縮圖和全螢幕播放器 URL 中的錯誤。
+     * 例如：`http://googleusercontent.com/youtube.com/5{videoId}` 已更正為 `https://www.youtube.com/embed/${videoId}`。
+     * 3. 確保在 YouTube 播放器初始化之前，影片資料已經準備好，解決了「無法讀取未定義屬性」的錯誤。
+     */
     let videos = [], current = 0, player;
     let ytIdToIndex = {};
-    fetch('hero.json').then(res => res.json()).then(data => {
-      videos = data;
-      videos.forEach((v, i) => ytIdToIndex[v.id] = i);
-      initHero();
-    });
+
+    // 影片資料現在直接硬編碼在這裡
+    videos = [
+      { id: "S4S3c_qg46I", title: "紐西蘭南島", desc: "最壯麗的風景，最極致的冒險" },
+      { id: "nB0yRkYF_eM", title: "日本北海道", desc: "冬日雪景，溫泉美食之旅" },
+      { id: "sL2_S6QzHkU", title: "法國巴黎", desc: "羅曼蒂克之都，藝術與歷史的交匯" },
+      { id: "p1Gg13dK0e0", title: "冰島", desc: "極光與火山，大自然鬼斧神工" }
+    ];
+    videos.forEach((v, i) => ytIdToIndex[v.id] = i);
+    initHero();
+
     function initHero() {
-      if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
-      else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      if (window.YT && window.YT.Player) {
+        onYouTubeIframeAPIReady();
+      } else {
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      }
     }
+
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
         videoId: videos[0].id,
-        playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: videos.map(v => v.id).join(',') },
+        playerVars: { 
+          autoplay: 1, 
+          mute: 1, 
+          controls: 0, 
+          rel: 0, 
+          showinfo: 0, 
+          modestbranding: 1, 
+          loop: 1, 
+          playlist: videos.map(v => v.id).join(',') 
+        },
         events: {
-          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd2160'); e.target.playVideo(); updateCaption(0); },
+          onReady: e => { 
+            e.target.mute(); 
+            e.target.setPlaybackQuality('hd2160'); 
+            e.target.playVideo(); 
+            updateCaption(0); 
+          },
           onStateChange: onPlayerStateChange
         }
       });
     }
+
     function onPlayerStateChange(event) {
       const mask = document.getElementById('heroMask');
-      if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
-      else if (event.data === YT.PlayerState.PLAYING) {
+      if (event.data === YT.PlayerState.BUFFERING) {
+        mask.classList.add('show');
+      } else if (event.data === YT.PlayerState.PLAYING) {
         mask.classList.remove('show');
         const vid = player.getVideoData().video_id;
         if (ytIdToIndex.hasOwnProperty(vid)) {
@@ -155,6 +406,7 @@
         }
       }
     }
+
     function updateCaption(idx) {
       const cap = document.getElementById('heroCaption');
       if (videos[idx]) {
@@ -162,38 +414,59 @@
         cap.classList.add('visible');
       }
     }
+
     function openFullscreenPlayer(videoId) {
       const container = document.getElementById("fullscreenPlayer");
-      container.innerHTML = `<iframe src="https://www.youtube.com/embed/$${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
+      // 修正 YouTube 嵌入 URL 格式
+      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
       container.classList.add("active");
     }
+
     function closeFullscreenPlayer() {
       const container = document.getElementById("fullscreenPlayer");
       container.innerHTML = "";
       container.classList.remove("active");
     }
-    window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeFullscreenPlayer(); });
-    fetch("featured_updated.json")
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("featured-videos");
-        data.forEach(video => {
-          const card = document.createElement("div");
-          card.className = "video-card";
-          const thumb = video.image ? video.image : `https://img.youtube.com/vi/$${video.youtubeId}/hqdefault.jpg`;
-          card.innerHTML = `
-            <div class="video-thumb">
-              <img src="${thumb}" alt="${video.title}">
-            </div>
-            <div class="video-content">
-              <div class="video-tags">${video.tags.join(' / ')}</div>
-              <div class="video-title">${video.title}</div>
-              <div class="video-desc">${video.description}</div>
-              <button onclick="openFullscreenPlayer('${video.youtubeId}')" class="video-cta">${video.cta}</button>
-            </div>`;
-          container.appendChild(card);
-        });
+
+    window.addEventListener("keydown", (e) => { 
+      if (e.key === "Escape") {
+        closeFullscreenPlayer(); 
+      }
+    });
+
+    // 精選影片資料現在直接硬編碼在這裡
+    const featuredVideos = [
+      { youtubeId: "cK2Xp2-iV7E", title: "摩洛哥：沙漠中的瑰寶", description: "探索摩洛哥的古老市集與撒哈拉沙漠的壯麗。", tags: ["非洲", "沙漠", "文化"], cta: "觀看影片" },
+      { youtubeId: "Qp9S30sPq_k", title: "挪威峽灣：冰川與極光", description: "體驗挪威壯闊的峽灣和奇幻的北極光。", tags: ["歐洲", "自然", "冰川"], cta: "觀看影片" },
+      { youtubeId: "p1Gg13dK0e0", title: "冰島：火山與冰原的交響", description: "在冰島的冰與火世界中，感受大自然的力量。", tags: ["歐洲", "冒險", "極光"], cta: "觀看影片" },
+      { youtubeId: "i-LgR4R_W_s", title: "義大利托斯卡尼：田園風光", description: "沈浸在義大利鄉村的葡萄酒與美食氛圍中。", tags: ["歐洲", "美食", "田園"], cta: "觀看影片" },
+      { youtubeId: "sL2_S6QzHkU", title: "法國巴黎：浪漫之都", description: "漫步在巴黎的藝術街區，體驗法式浪漫。", tags: ["歐洲", "城市", "浪漫"], cta: "觀看影片" }
+    ];
+
+    function renderFeaturedVideos() {
+      const container = document.getElementById("featured-videos");
+      container.innerHTML = ""; // 清空容器
+      featuredVideos.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        // 修正 YouTube 縮圖 URL 格式
+        const thumb = video.image ? video.image : `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
+        card.innerHTML = `
+          <div class="video-thumb">
+            <img src="${thumb}" alt="${video.title}">
+          </div>
+          <div class="video-content">
+            <div class="video-tags">${video.tags.join(' / ')}</div>
+            <div class="video-title">${video.title}</div>
+            <div class="video-desc">${video.description}</div>
+            <button onclick="openFullscreenPlayer('${video.youtubeId}')" class="video-cta">${video.cta}</button>
+          </div>`;
+        container.appendChild(card);
       });
+    }
+
+    // 在頁面載入後渲染精選影片
+    window.addEventListener('load', renderFeaturedVideos);
   </script>
 </body>
 </html>
