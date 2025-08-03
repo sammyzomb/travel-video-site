@@ -6,13 +6,9 @@
   <title>航向世界旅遊頻道</title>
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
-    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
-    .navbar .logo img {
-    max-height: 48px;
-    height: auto;
-    }
-
-    .navbar nav { display: flex; align-items: center; }
+    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; max-width: 100vw; overflow-x: hidden; }
+    .navbar .logo img { max-height: 48px; height: auto; }
+    .navbar nav { display: flex; align-items: center; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
     .navbar nav a {
       margin-left: 18px; text-decoration: none; color: #28445e;
       font-weight: 500; font-size: 1rem; letter-spacing: 0.5px;
@@ -22,16 +18,12 @@
     }
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
-    .nav-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 6px;
-      vertical-align: middle;
-      display: inline-block;
-    }
+    .nav-icon { width: 20px; height: 20px; margin-right: 6px; vertical-align: middle; display: inline-block; }
     @media screen and (max-width: 768px) {
       .nav-text { display: none; }
       .nav-icon { margin-right: 0 !important; }
+      .hero-main-title { font-size: 1.4rem; padding: 0 12px; }
+      .hero-main-title p { font-size: 1rem; }
     }
     .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
     .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
@@ -70,34 +62,13 @@
   <div class="navbar">
     <a class="logo" href="index.html"><img src="logo.png" alt="LOGO" /></a>
     <nav>
-      <a href="index.html">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9L12 2L21 9V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span class="nav-text">首頁</span>
-      </a>
-      <a href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg>
-        <span class="nav-text">最新影片</span>
-      </a>
-      <a href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span class="nav-text">節目表</span>
-      </a>
-      <a href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span class="nav-text">主題探索</span>
-      </a>
-      <a href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg>
-        <span class="nav-text">隨選影片</span>
-      </a>
-      <a href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="nav-text">世界分區</span>
-      </a>
-      <a href="#" class="login-link">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg>
-        <span class="nav-text">會員登入</span>
-      </a>
+      <a href="index.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9L12 2L21 9V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">首頁</span></a>
+      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg><span class="nav-text">最新影片</span></a>
+      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-text">節目表</span></a>
+      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-text">主題探索</span></a>
+      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg><span class="nav-text">隨選影片</span></a>
+      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="nav-text">世界分區</span></a>
+      <a href="#" class="login-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg><span class="nav-text">會員登入</span></a>
     </nav>
   </div>
 
