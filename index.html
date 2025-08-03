@@ -43,7 +43,6 @@
       .hero-main-title h1 { font-size: 1.5rem; line-height: 1.13; margin-bottom: 8px; word-break: break-all; }
       .hero-main-title p { font-size: 0.98rem; line-height: 1.2; margin-bottom: 7px; margin-top: 0; }
       .hero { height: 46vh; min-height: 200px; max-height: 340px; }
-      .hero-subtitle { font-size: 0.91rem; }
     }
     .hero {
       position: relative; width: 100vw; height: 80vh;
@@ -67,14 +66,17 @@
     }
     .hero-main-title h1, .hero-main-title p { margin-top: 0; margin-bottom: 0; }
     .hero-main-title p { font-size: 1.22rem; font-weight: 400; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); margin-bottom: 8px; }
-    .hero-subtitle {
-      font-size: 1.05rem; color: #e9f6fd; margin-top: 7px; text-shadow: 0 1px 8px rgba(0,0,0,0.14);
-      font-weight: 400; line-height: 1.28;
+    .hero-caption {
+      position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10;
+      padding: 12px 18px 10px 22px; border-radius: 8px; background: rgba(0,0,0,0.33);
+      min-width: 200px; min-height: 38px; opacity: 0;
+      pointer-events: none; transform: translateY(60px); transition: opacity .7s, transform .7s;
+      font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     }
-    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
-    .hero-caption.visible { opacity: 1; transform: translateY(0); }
-    .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
-    .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
+    .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .cap-title { font-size: 1.17em; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.13); }
+    .cap-desc { font-size: 0.98em; color: #e9f6fd; font-weight: 400; text-shadow: 0 1px 8px rgba(0,0,0,0.17); }
     .video-section { padding: 60px 5%; background: #fff; }
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
@@ -113,7 +115,6 @@
     <div class="hero-main-title">
       <h1>探索世界，從這裡開始</h1>
       <p>Live 世界旅遊新視野</p>
-      <div class="hero-subtitle" id="heroSubtitle">走進俄羅斯歷史心臟，宏偉紅場</div>
     </div>
     <div class="hero-caption" id="heroCaption"></div>
   </div>
@@ -161,14 +162,19 @@
       }
     }
     function updateHeroText(idx) {
-      // 這裡根據 hero.json 可動態切換標題
+      // 中央大標題
       const mainTitle = document.querySelector('.hero-main-title h1');
       const mainDesc = document.querySelector('.hero-main-title p');
-      const subtitle = document.getElementById('heroSubtitle');
+      // 右下角說明
+      const cap = document.getElementById('heroCaption');
       if (videos[idx]) {
-        mainTitle.textContent = videos[idx].title || '探索世界，從這裡開始';
-        mainDesc.textContent = videos[idx].desc || 'Live 世界旅遊新視野';
-        subtitle.textContent = videos[idx].subtitle || '';
+        // 保持中央大標題不變，只顯示固定文字
+        // mainTitle.textContent = videos[idx].title || '探索世界，從這裡開始';
+        // mainDesc.textContent = videos[idx].desc || 'Live 世界旅遊新視野';
+
+        // 右下角影片標題/說明（舊版樣式）
+        cap.innerHTML = `<div class="cap-title">${videos[idx].title || ''}</div><div class="cap-desc">${videos[idx].desc || ''}</div>`;
+        cap.classList.add('visible');
       }
     }
     function openFullscreenPlayer(videoId) {
