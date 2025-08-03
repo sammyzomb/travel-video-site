@@ -6,20 +6,13 @@
   <title>航向世界旅遊頻道</title>
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
+    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
+    .navbar .logo img {
+    max-height: 48px;
+    height: auto;
+    }
 
-    /* Navbar */
-    .navbar {
-      position: sticky; top: 0; background: white;
-      padding: 2px 4%; /* 導航列更窄 */
-      display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; max-width: 100vw; overflow-x: hidden;
-      min-height: 54px;
-    }
-    .navbar .logo img { max-height: 44px; height: auto; }
-    .navbar nav {
-      display: flex; align-items: center; overflow-x: auto;
-      flex-wrap: nowrap; -webkit-overflow-scrolling: touch; position: relative;
-    }
+    .navbar nav { display: flex; align-items: center; }
     .navbar nav a {
       margin-left: 18px; text-decoration: none; color: #28445e;
       font-weight: 500; font-size: 1rem; letter-spacing: 0.5px;
@@ -29,76 +22,36 @@
     }
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
-    .nav-icon { width: 20px; height: 20px; margin-right: 6px; vertical-align: middle; display: inline-block; }
-    /* 手機導航陰影指示 */
-    .nav-scroll-shadow {
-      position: absolute; right: 0; top: 0; height: 100%; width: 24px;
-      pointer-events: none;
-      background: linear-gradient(to right, rgba(255,255,255,0) 0%, #fff 95%);
-      z-index: 201;
-      display: none;
-      opacity: 0.95;
-    }
-    @media (max-width: 1100px) {
-      .navbar .nav-scroll-shadow { display: block; }
-    }
-    @media (min-width: 1101px) {
-      .navbar .nav-scroll-shadow { display: none !important; }
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 6px;
+      vertical-align: middle;
+      display: inline-block;
     }
     @media screen and (max-width: 768px) {
       .nav-text { display: none; }
       .nav-icon { margin-right: 0 !important; }
-      .hero-main-title { font-size: 1.13rem; padding: 0 8px; max-width: 98vw; }
-      .hero-main-title h1 { font-size: 2rem; line-height: 1.18; margin-bottom: 10px; word-break: break-all; }
-      .hero-main-title p { font-size: 1.07rem; line-height: 1.3; margin: 0; }
     }
-    @media screen and (max-width: 600px) {
-      .hero-main-title { font-size: 1rem; line-height: 1.17; padding: 0 4px; }
-      .hero-main-title h1 { font-size: 1.45rem; line-height: 1.13; margin-bottom: 7px; }
-      .hero { height: 44vh; min-height: 180px; max-height: 320px; }
-      .hero-caption { right: 12px; bottom: 12px; font-size: 0.97rem; min-width: 0; padding: 7px 10px 5px 14px;}
-    }
-    /* Hero 影片區 */
-    .hero {
-      position: relative; width: 100vw; height: 64vh;
-      min-height: 320px; max-height: 520px; overflow: hidden;
-      margin-bottom: 0; background: #222;
-    }
-    .yt-bg-wrapper,
-    #ytPlayer,
-    #ytPlayer > div,
-    #ytPlayer iframe {
-      position: absolute;
-      width: 110vw !important;   /* 不要過大不卡頓 */
-      height: 100vh !important;
-      left: 50%; top: 50%; transform: translate(-50%, -50%);
+    .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
+    .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
+      position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
       border: none; pointer-events: none; z-index: 1; background: #222;
     }
-    #ytPlayer iframe { transform: scale(1.13); transform-origin: center; transition: transform 0.3s; }
-    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.36s; }
-    #heroMask.show { opacity: 0.65; }
+    #ytPlayer iframe { transform: scale(1.25); transform-origin: center; transition: transform 0.4s ease-in-out; }
+    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
+    #heroMask.show { opacity: 0.66; }
     .hero-main-title {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.0rem;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.22);
+      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.1rem;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
-    .hero-main-title h1, .hero-main-title p { margin:0; }
-    .hero-main-title p { font-size: 1.18rem; font-weight: 400; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.21);}
-    /* 右下角影片說明，無黑色遮罩 */
-    .hero-caption {
-      position: absolute; right: 32px; bottom: 30px; color: #fff; z-index: 10;
-      min-width: 200px;
-      opacity: 0; pointer-events: none;
-      transform: translateY(60px); transition: opacity .7s, transform .7s;
-      font-size: 1.09rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      padding: 0; /* 無邊框、無黑色背景 */
-    }
-    .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .cap-title { font-size: 1.15em; font-weight: 700; margin-bottom: 3px; color: #fff; letter-spacing: 1px;}
-    .cap-desc { font-size: 0.98em; color: #e9f6fd; font-weight: 400;}
-    /* 推薦影片區塊 */
-    .video-section { padding: 54px 5% 60px 5%; background: #fff; }
+    .hero-main-title p { font-size: 1.22rem; font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
+    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
+    .hero-caption.visible { opacity: 1; transform: translateY(0); }
+    .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
+    .video-section { padding: 60px 5%; background: #fff; }
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
@@ -146,7 +99,6 @@
         <span class="nav-text">會員登入</span>
       </a>
     </nav>
-    <div class="nav-scroll-shadow"></div>
   </div>
 
   <div class="hero">
@@ -155,14 +107,14 @@
       <div id="heroMask"></div>
     </div>
     <div class="hero-main-title">
-      <h1>探索世界，從這裡開始</h1>
+      <h1 style="margin:0 0 10px 0;">探索世界，從這裡開始</h1>
       <p>Live 世界旅遊新視野</p>
     </div>
     <div class="hero-caption" id="heroCaption"></div>
   </div>
 
   <section class="video-section">
-    <h2 style="font-size:1.7rem; margin-bottom:24px; color:#222;">精選節目推薦</h2>
+    <h2 style="font-size:1.8rem; margin-bottom:24px; color:#222;">精選節目推薦</h2>
     <div class="video-grid" id="featured-videos"></div>
   </section>
 
@@ -242,17 +194,6 @@
           container.appendChild(card);
         });
       });
-    // 手機陰影感：自動檢查是否可滑動
-    function updateNavShadow() {
-      const nav = document.querySelector('.navbar nav');
-      const shadow = document.querySelector('.nav-scroll-shadow');
-      if (!nav || !shadow) return;
-      // 只在手機寬度顯示，且內容超過才顯示
-      const needShadow = nav.scrollWidth > nav.clientWidth && window.innerWidth <= 1100;
-      shadow.style.display = needShadow ? 'block' : 'none';
-    }
-    window.addEventListener('resize', updateNavShadow);
-    window.addEventListener('DOMContentLoaded', updateNavShadow);
   </script>
 </body>
 </html>
