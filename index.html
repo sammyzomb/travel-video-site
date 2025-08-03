@@ -6,49 +6,29 @@
   <title>航向世界旅遊頻道</title>
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
-    .navbar {
-      position: sticky; top: 0; background: white; padding: 6px 4%;
-      display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100;
-      max-width: 100vw; overflow-x: hidden;
-    }
+    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; max-width: 100vw; overflow-x: hidden; }
     .navbar .logo img { max-height: 48px; height: auto; }
-    .navbar nav {
-      display: flex; align-items: center; overflow-x: auto; flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch; position: relative;
-      scrollbar-width: none; /* Firefox */
-    }
-    .navbar nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    .navbar nav { display: flex; align-items: center; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; position: relative; }
     .navbar nav a {
       margin-left: 18px; text-decoration: none; color: #28445e;
       font-weight: 500; font-size: 1rem; letter-spacing: 0.5px;
       border: none; background: none; transition: color 0.17s;
       line-height: 1; padding: 0 3px; border-radius: 4px; outline: none;
       position: relative; top: 0; display: inline-flex; align-items: center;
-      white-space: nowrap;
     }
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
     .nav-icon { width: 20px; height: 20px; margin-right: 6px; vertical-align: middle; display: inline-block; }
-    /* ====== 手機版導航滑動指示（右側加強陰影含箭頭） ====== */
+    /* ====== 手機版導航滑動指示（右側陰影） ====== */
     .nav-scroll-shadow {
-      position: absolute; right: 0; top: 0; height: 100%; width: 36px;
+      position: absolute; right: 0; top: 0; height: 100%; width: 32px;
       pointer-events: none;
-      background: linear-gradient(to right, rgba(255,255,255,0) 0%, #e2e8f0 72%, #fff 92%);
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, #fff 88%);
       z-index: 201;
       display: none;
-      transition: opacity 0.22s;
-    }
-    .nav-scroll-shadow svg {
-      position: absolute; right: 8px; top: 50%;
-      transform: translateY(-50%);
-      opacity: .66;
     }
     @media screen and (max-width: 1050px) {
       .navbar .nav-scroll-shadow { display: block; }
-    }
-    @media screen and (min-width: 1051px) {
-      .navbar .nav-scroll-shadow { display: none !important; }
     }
     @media screen and (max-width: 768px) {
       .nav-text { display: none; }
@@ -91,7 +71,9 @@
       min-width: 200px; min-height: 38px; opacity: 0;
       pointer-events: none; transform: translateY(60px); transition: opacity .7s, transform .7s;
       font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      background: rgba(20,24,28,0.17); /* 淡淡黑色背景不卡又美觀 */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      will-change: opacity, transform;
     }
     .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
     .cap-title { font-size: 1.17em; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.13); }
@@ -123,12 +105,7 @@
       <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="nav-text">世界分區</span></a>
       <a href="#" class="login-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg><span class="nav-text">會員登入</span></a>
     </nav>
-    <div class="nav-scroll-shadow">
-      <!-- 可加小箭頭SVG： -->
-      <svg width="16" height="32" viewBox="0 0 16 32" fill="none">
-        <polyline points="5,8 11,16 5,24" stroke="#a0aec0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
+    <div class="nav-scroll-shadow"></div>
   </div>
 
   <div class="hero">
@@ -186,14 +163,9 @@
       }
     }
     function updateHeroText(idx) {
-      // 中央大標題
-      const mainTitle = document.querySelector('.hero-main-title h1');
-      const mainDesc = document.querySelector('.hero-main-title p');
-      // 右下角說明
+      // 中央大標題不跟著影片變
       const cap = document.getElementById('heroCaption');
       if (videos[idx]) {
-        // mainTitle.textContent = videos[idx].title || '探索世界，從這裡開始';
-        // mainDesc.textContent = videos[idx].desc || 'Live 世界旅遊新視野';
         cap.innerHTML = `<div class="cap-title">${videos[idx].title || ''}</div><div class="cap-desc">${videos[idx].desc || ''}</div>`;
         cap.classList.add('visible');
       }
