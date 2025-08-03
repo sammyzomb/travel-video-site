@@ -6,16 +6,16 @@
   <title>航向世界旅遊頻道</title>
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
-    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
+    .navbar { position: sticky; top: 0; background: white; padding: 4px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
     .navbar .logo img {
-    max-height: 48px;
-    height: auto;
+      max-height: 40px; /* 導航列高度縮小 */
+      height: auto;
     }
-
     .navbar nav { display: flex; align-items: center; }
     .navbar nav a {
-      margin-left: 18px; text-decoration: none; color: #28445e;
-      font-weight: 500; font-size: 1rem; letter-spacing: 0.5px;
+      margin-left: 16px; text-decoration: none; color: #28445e;
+      font-weight: 500; font-size: 0.9rem; /* 導航列文字縮小10% */
+      letter-spacing: 0.5px;
       border: none; background: none; transition: color 0.17s;
       line-height: 1; padding: 0 3px; border-radius: 4px; outline: none;
       position: relative; top: 0; display: inline-flex; align-items: center;
@@ -23,9 +23,9 @@
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
     .nav-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 6px;
+      width: 18px; /* 導航列圖標縮小 */
+      height: 18px;
+      margin-right: 5px;
       vertical-align: middle;
       display: inline-block;
     }
@@ -33,7 +33,7 @@
       .nav-text { display: none; }
       .nav-icon { margin-right: 0 !important; }
     }
-    .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
+    .hero { position: relative; width: 100vw; height: 70vh; /* Hero高度縮小 */ min-height: 400px; max-height: 680px; overflow: hidden; margin-bottom: 0; background: #222; }
     .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
       position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
       border: none; pointer-events: none; z-index: 1; background: #222;
@@ -43,11 +43,11 @@
     #heroMask.show { opacity: 0.66; }
     .hero-main-title {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.1rem;
+      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 1.9rem; /* Hero主標題縮小10% */
       text-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
-    .hero-main-title p { font-size: 1.22rem; font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
-    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
+    .hero-main-title p { font-size: 1.1rem; /* Hero副標題縮小10% */ font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
+    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 0.94rem; /* 右下角文字縮小10% */ display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
     .hero-caption.visible { opacity: 1; transform: translateY(0); }
     .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
@@ -164,7 +164,7 @@
     }
     function openFullscreenPlayer(videoId) {
       const container = document.getElementById("fullscreenPlayer");
-      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
+      container.innerHTML = `<iframe src="https://www.youtube.com/embed/$${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
       container.classList.add("active");
     }
     function closeFullscreenPlayer() {
@@ -180,7 +180,7 @@
         data.forEach(video => {
           const card = document.createElement("div");
           card.className = "video-card";
-          const thumb = video.image ? video.image : `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
+          const thumb = video.image ? video.image : `https://img.youtube.com/vi/$${video.youtubeId}/hqdefault.jpg`;
           card.innerHTML = `
             <div class="video-thumb">
               <img src="${thumb}" alt="${video.title}">
