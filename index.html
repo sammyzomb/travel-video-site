@@ -7,28 +7,19 @@
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
 
-    .navbar { position: sticky; top: 0; background: white; padding: 6px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; max-width: 100vw; overflow-x: hidden; }
-    .navbar .logo img { max-height: 48px; height: auto; }
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; background: white;
+      padding: 2px 4%; /* 導航列更窄 */
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; max-width: 100vw; overflow-x: hidden;
+      min-height: 54px;
+    }
+    .navbar .logo img { max-height: 44px; height: auto; }
     .navbar nav {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-@media screen and (max-width: 1050px) {
-  .navbar nav {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-@media screen and (min-width: 1051px) {
-  .navbar nav {
-    overflow-x: visible !important;
-  }
-}
-
+      display: flex; align-items: center; overflow-x: auto;
+      flex-wrap: nowrap; -webkit-overflow-scrolling: touch; position: relative;
+    }
     .navbar nav a {
       margin-left: 18px; text-decoration: none; color: #28445e;
       font-weight: 500; font-size: 1rem; letter-spacing: 0.5px;
@@ -39,71 +30,75 @@
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
     .nav-icon { width: 20px; height: 20px; margin-right: 6px; vertical-align: middle; display: inline-block; }
-
-    /* 手機版陰影指示 */
+    /* 手機導航陰影指示 */
     .nav-scroll-shadow {
-      display: none;
-      position: absolute; right: 0; top: 0; height: 100%; width: 30px;
+      position: absolute; right: 0; top: 0; height: 100%; width: 24px;
       pointer-events: none;
-      background: linear-gradient(to right, rgba(255,255,255,0) 0%, #fff 100%);
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, #fff 95%);
       z-index: 201;
+      display: none;
+      opacity: 0.95;
     }
-    @media screen and (max-width: 1050px) {
+    @media (max-width: 1100px) {
       .navbar .nav-scroll-shadow { display: block; }
     }
-    @media screen and (min-width: 1051px) {
+    @media (min-width: 1101px) {
       .navbar .nav-scroll-shadow { display: none !important; }
     }
     @media screen and (max-width: 768px) {
       .nav-text { display: none; }
       .nav-icon { margin-right: 0 !important; }
-      .hero-main-title { font-size: 1.15rem; padding: 0 8px; max-width: 98vw; }
-      .hero-main-title h1 { font-size: 2rem; line-height: 1.18; margin-bottom: 12px; word-break: break-all; }
-      .hero-main-title p { font-size: 1.07rem; line-height: 1.3; margin-bottom: 10px; margin-top: 0; }
-      .nav-scroll-shadow { display: block; }
+      .hero-main-title { font-size: 1.13rem; padding: 0 8px; max-width: 98vw; }
+      .hero-main-title h1 { font-size: 2rem; line-height: 1.18; margin-bottom: 10px; word-break: break-all; }
+      .hero-main-title p { font-size: 1.07rem; line-height: 1.3; margin: 0; }
     }
     @media screen and (max-width: 600px) {
-      .hero-main-title { font-size: 1.05rem; line-height: 1.17; padding: 0 4px; }
-      .hero-main-title h1 { font-size: 1.5rem; line-height: 1.13; margin-bottom: 8px; word-break: break-all; }
-      .hero-main-title p { font-size: 0.98rem; line-height: 1.2; margin-bottom: 7px; margin-top: 0; }
-      .hero { height: 46vh; min-height: 200px; max-height: 340px; }
+      .hero-main-title { font-size: 1rem; line-height: 1.17; padding: 0 4px; }
+      .hero-main-title h1 { font-size: 1.45rem; line-height: 1.13; margin-bottom: 7px; }
+      .hero { height: 44vh; min-height: 180px; max-height: 320px; }
+      .hero-caption { right: 12px; bottom: 12px; font-size: 0.97rem; min-width: 0; padding: 7px 10px 5px 14px;}
     }
-
-    .hero { position: relative; width: 100vw; height: 80vh; min-height: 440px; max-height: 760px; overflow: hidden; margin-bottom: 0; background: #222; }
+    /* Hero 影片區 */
+    .hero {
+      position: relative; width: 100vw; height: 64vh;
+      min-height: 320px; max-height: 520px; overflow: hidden;
+      margin-bottom: 0; background: #222;
+    }
     .yt-bg-wrapper,
     #ytPlayer,
     #ytPlayer > div,
     #ytPlayer iframe {
-      position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      position: absolute;
+      width: 110vw !important;   /* 不要過大不卡頓 */
+      height: 100vh !important;
+      left: 50%; top: 50%; transform: translate(-50%, -50%);
       border: none; pointer-events: none; z-index: 1; background: #222;
     }
-    #ytPlayer iframe { transform: scale(1.25); transform-origin: center; transition: transform 0.4s ease-in-out; }
-    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
-    #heroMask.show { opacity: 0.66; }
-
+    #ytPlayer iframe { transform: scale(1.13); transform-origin: center; transition: transform 0.3s; }
+    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.36s; }
+    #heroMask.show { opacity: 0.65; }
     .hero-main-title {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.1rem;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.25);
+      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 2.0rem;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.22);
     }
-    .hero-main-title h1, .hero-main-title p { margin-top: 0; margin-bottom: 0; }
-    .hero-main-title p { font-size: 1.22rem; font-weight: 400; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); margin-bottom: 8px; }
-
-    /* HERO 右下角說明 － 取消黑色遮罩 */
+    .hero-main-title h1, .hero-main-title p { margin:0; }
+    .hero-main-title p { font-size: 1.18rem; font-weight: 400; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.21);}
+    /* 右下角影片說明，無黑色遮罩 */
     .hero-caption {
-      position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10;
-      padding: 10px 12px 7px 16px; min-width: 200px; min-height: 38px;
-      opacity: 0; pointer-events: none; transform: translateY(60px);
-      transition: opacity .7s, transform .7s;
-      font-size: 1.04rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;
-      background: none !important;
-      box-shadow: none !important;
+      position: absolute; right: 32px; bottom: 30px; color: #fff; z-index: 10;
+      min-width: 200px;
+      opacity: 0; pointer-events: none;
+      transform: translateY(60px); transition: opacity .7s, transform .7s;
+      font-size: 1.09rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      padding: 0; /* 無邊框、無黑色背景 */
     }
     .hero-caption.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .cap-title { font-size: 1.17em; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.13); }
-    .cap-desc { font-size: 0.98em; color: #e9f6fd; font-weight: 400; text-shadow: 0 1px 8px rgba(0,0,0,0.17); }
-
-    .video-section { padding: 60px 5%; background: #fff; }
+    .cap-title { font-size: 1.15em; font-weight: 700; margin-bottom: 3px; color: #fff; letter-spacing: 1px;}
+    .cap-desc { font-size: 0.98em; color: #e9f6fd; font-weight: 400;}
+    /* 推薦影片區塊 */
+    .video-section { padding: 54px 5% 60px 5%; background: #fff; }
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
@@ -121,16 +116,37 @@
 <body>
   <div class="navbar">
     <a class="logo" href="index.html"><img src="logo.png" alt="LOGO" /></a>
-    <nav id="mainNav">
-      <a href="index.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9L12 2L21 9V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">首頁</span></a>
-      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg><span class="nav-text">最新影片</span></a>
-      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-text">節目表</span></a>
-      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-text">主題探索</span></a>
-      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg><span class="nav-text">隨選影片</span></a>
-      <a href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="nav-text">世界分區</span></a>
-      <a href="#" class="login-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg><span class="nav-text">會員登入</span></a>
+    <nav>
+      <a href="index.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9L12 2L21 9V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nav-text">首頁</span>
+      </a>
+      <a href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        <span class="nav-text">最新影片</span>
+      </a>
+      <a href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-text">節目表</span>
+      </a>
+      <a href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="nav-text">主題探索</span>
+      </a>
+      <a href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg>
+        <span class="nav-text">隨選影片</span>
+      </a>
+      <a href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="nav-text">世界分區</span>
+      </a>
+      <a href="#" class="login-link">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg>
+        <span class="nav-text">會員登入</span>
+      </a>
     </nav>
-    <div class="nav-scroll-shadow" id="navShadow"></div>
+    <div class="nav-scroll-shadow"></div>
   </div>
 
   <div class="hero">
@@ -146,7 +162,7 @@
   </div>
 
   <section class="video-section">
-    <h2 style="font-size:1.8rem; margin-bottom:24px; color:#222;">精選節目推薦</h2>
+    <h2 style="font-size:1.7rem; margin-bottom:24px; color:#222;">精選節目推薦</h2>
     <div class="video-grid" id="featured-videos"></div>
   </section>
 
@@ -154,7 +170,6 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    // ===== HERO 載入 YouTube 背景影片（不卡頓，不顯示 loading）=====
     let videos = [], current = 0, player;
     let ytIdToIndex = {};
     fetch('hero.json').then(res => res.json()).then(data => {
@@ -171,52 +186,30 @@
         videoId: videos[0].id,
         playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: videos.map(v => v.id).join(',') },
         events: {
-          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd2160'); e.target.playVideo(); updateHeroText(0); },
+          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd2160'); e.target.playVideo(); updateCaption(0); },
           onStateChange: onPlayerStateChange
         }
       });
     }
     function onPlayerStateChange(event) {
       const mask = document.getElementById('heroMask');
-      // 完全移除 loading 狀態顯示
-      mask.classList.remove('show');
-      // -- 保持影片切換不卡 --
-      if (event.data === YT.PlayerState.PLAYING) {
+      if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
+      else if (event.data === YT.PlayerState.PLAYING) {
+        mask.classList.remove('show');
         const vid = player.getVideoData().video_id;
         if (ytIdToIndex.hasOwnProperty(vid)) {
           current = ytIdToIndex[vid];
-          updateHeroText(current);
+          updateCaption(current);
         }
       }
     }
-    function updateHeroText(idx) {
-      // 保持中央主標、副標固定
+    function updateCaption(idx) {
       const cap = document.getElementById('heroCaption');
       if (videos[idx]) {
         cap.innerHTML = `<div class="cap-title">${videos[idx].title || ''}</div><div class="cap-desc">${videos[idx].desc || ''}</div>`;
         cap.classList.add('visible');
       }
     }
-
-    // 手機版導航陰影指示
-    function updateNavShadow() {
-      const nav = document.getElementById('mainNav');
-      const shadow = document.getElementById('navShadow');
-      if (window.innerWidth <= 1050) {
-        // 只在內容溢出時顯示
-        if (nav.scrollWidth > nav.clientWidth + 4) {
-          shadow.style.display = 'block';
-        } else {
-          shadow.style.display = 'none';
-        }
-      } else {
-        shadow.style.display = 'none';
-      }
-    }
-    window.addEventListener('resize', updateNavShadow);
-    window.addEventListener('DOMContentLoaded', updateNavShadow);
-
-    // ===== 影片推薦區塊 =====
     function openFullscreenPlayer(videoId) {
       const container = document.getElementById("fullscreenPlayer");
       container.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
@@ -228,7 +221,6 @@
       container.classList.remove("active");
     }
     window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeFullscreenPlayer(); });
-
     fetch("featured_updated.json")
       .then(res => res.json())
       .then(data => {
@@ -250,6 +242,17 @@
           container.appendChild(card);
         });
       });
+    // 手機陰影感：自動檢查是否可滑動
+    function updateNavShadow() {
+      const nav = document.querySelector('.navbar nav');
+      const shadow = document.querySelector('.nav-scroll-shadow');
+      if (!nav || !shadow) return;
+      // 只在手機寬度顯示，且內容超過才顯示
+      const needShadow = nav.scrollWidth > nav.clientWidth && window.innerWidth <= 1100;
+      shadow.style.display = needShadow ? 'block' : 'none';
+    }
+    window.addEventListener('resize', updateNavShadow);
+    window.addEventListener('DOMContentLoaded', updateNavShadow);
   </script>
 </body>
 </html>
