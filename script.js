@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- 全螢幕播放器邏輯 (已更新) ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
-  let fullscreenPlayerObject = null; // 新增：用來存放播放器實體
+  let fullscreenPlayerObject = null;
 
   document.body.addEventListener('click', function(event) {
     if (event.target && event.target.classList.contains('video-cta')) {
@@ -136,6 +136,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function openFullscreenPlayer(videoId) {
     if (!fullscreenPlayerEl) return;
+
+    // 新增：禁止背景捲動
+    document.body.style.overflow = 'hidden';
     
     fullscreenPlayerEl.innerHTML = `
       <button class="close-player-btn" title="關閉">&times;</button>
@@ -160,12 +163,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function onPlayerReady(event) {
-    event.target.setPlaybackQuality('highres'); // 設定最高畫質
+    event.target.setPlaybackQuality('highres');
     event.target.playVideo();
   }
 
   function closeFullscreenPlayer() {
     if (!fullscreenPlayerEl) return;
+
+    // 新增：恢復背景捲動
+    document.body.style.overflow = '';
     
     if (fullscreenPlayerObject && typeof fullscreenPlayerObject.destroy === 'function') {
         fullscreenPlayerObject.destroy();
