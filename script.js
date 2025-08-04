@@ -22,30 +22,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const themeIconSun = document.getElementById('theme-icon-sun');
   const themeIconMoon = document.getElementById('theme-icon-moon');
 
-  // 檢查 localStorage 中是否已存有主題偏好
   const savedTheme = localStorage.getItem('theme');
-  
-  if (savedTheme) { // 如果使用者有手動選擇過
+  if (savedTheme) {
     body.classList.add(savedTheme);
-  } else { // 如果是第一次訪問，根據時間自動設定
+  } else {
     const currentHour = new Date().getHours();
-    // 晚上 6 點 (18) 到早上 6 點 (6) 之間，預設為黑金模式
     if (currentHour >= 18 || currentHour < 6) {
       body.classList.add('dark-theme');
-      localStorage.setItem('theme', 'dark-theme'); // 同時為使用者儲存這個預設選擇
+      localStorage.setItem('theme', 'dark-theme');
     }
   }
-  // 根據最終的 body class 來更新圖示
   updateThemeIcon(body.classList.contains('dark-theme') ? 'dark-theme' : '');
-
 
   themeSwitcher.addEventListener('click', (e) => {
     e.preventDefault();
     body.classList.toggle('dark-theme');
-    
     let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
-    
-    localStorage.setItem('theme', currentTheme); // 儲存使用者手動的選擇
+    localStorage.setItem('theme', currentTheme);
     updateThemeIcon(currentTheme);
   });
 
@@ -143,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
     
-  // --- 節目表預告邏輯 ---
+  // --- 節目表預告邏輯 (已更新為圖片卡片) ---
   Promise.all([
     fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
     fetch('videos.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 videos.json'))
@@ -158,13 +151,17 @@ document.addEventListener('DOMContentLoaded', function() {
     spotlightPrograms.forEach(item => {
       const videoInfo = videosMap.get(item.vid);
       if (videoInfo) {
-        const scheduleItem = document.createElement('div');
-        scheduleItem.className = 'schedule-item';
-        scheduleItem.innerHTML = `
-          <div class="schedule-time">${item.start}</div>
-          <div class="schedule-title">${item.title}</div>
+        const scheduleCard = document.createElement('a');
+        scheduleCard.href = `video.html?id=${videoInfo.id}`;
+        scheduleCard.className = 'schedule-card';
+        scheduleCard.innerHTML = `
+          <img src="${videoInfo.thumb}" alt="${item.title}" class="schedule-card-img">
+          <div class="schedule-card-overlay">
+            <div class="schedule-card-time">${item.start}</div>
+            <div class="schedule-card-title">${item.title}</div>
+          </div>
         `;
-        container.appendChild(scheduleItem);
+        container.appendChild(scheduleCard);
       }
     });
   })
