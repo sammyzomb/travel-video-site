@@ -188,6 +188,9 @@ body {
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   transition: transform 0.3s;
+  /* --- 新增：將卡片設為 Flex 容器 --- */
+  display: flex;
+  flex-direction: column;
 }
 .video-card:hover {
   transform: translateY(-4px);
@@ -198,7 +201,13 @@ body {
   object-fit: cover;
   display: block;
 }
-.video-content { padding: 16px; }
+.video-content {
+  padding: 16px;
+  /* --- 新增：讓內容區塊填滿剩餘空間 --- */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
 .video-tags {
   font-size: 0.8rem;
   color: #666;
@@ -225,6 +234,9 @@ body {
   text-decoration: none;
   cursor: pointer;
   border: none;
+  /* --- 新增：將按鈕推至底部 --- */
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 /* --- 全螢幕播放器 --- */
