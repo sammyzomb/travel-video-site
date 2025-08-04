@@ -1,16 +1,31 @@
 // 確保整個網頁 DOM 都載入完成後，再執行我們的程式碼
 document.addEventListener('DOMContentLoaded', function() {
 
+  // --- 漢堡選單邏輯 ---
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const sideMenu = document.getElementById('side-menu');
+  const menuOverlay = document.getElementById('menu-overlay');
+  const body = document.body;
+
+  function toggleMenu() {
+    sideMenu.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+    body.classList.toggle('menu-open');
+  }
+
+  hamburgerBtn.addEventListener('click', toggleMenu);
+  menuOverlay.addEventListener('click', toggleMenu);
+
+
   // --- 主題切換邏輯 ---
   const themeSwitcher = document.getElementById('theme-switcher');
   const themeIconSun = document.getElementById('theme-icon-sun');
   const themeIconMoon = document.getElementById('theme-icon-moon');
-  const body = document.body;
 
   // 檢查 localStorage 中是否已存有主題偏好
   const savedTheme = localStorage.getItem('theme');
   
-  if (savedTheme !== null && savedTheme !== "") { // 如果使用者有手動選擇過
+  if (savedTheme) { // 如果使用者有手動選擇過
     body.classList.add(savedTheme);
   } else { // 如果是第一次訪問，根據時間自動設定
     const currentHour = new Date().getHours();
