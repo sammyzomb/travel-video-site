@@ -38,5 +38,22 @@
     "tags": ["雅加達", "火山", "溫泉"],
     "description": "接地氣又療癒",
     "cta": "立即觀看"
+  },
+  {
+    "title": "雅加達有個地方像是走進歐洲老城？",
+    "youtubeId": "IVDlsVlVRas",
+    "image": "https://i.ytimg.com/vi/IVDlsVlVRas/hqdefault.jpg",
+    "tags": ["雅加達", "老城", "建築"],
+    "description": "探索歐風老城區",
+    "cta": "立即觀看"
+  },
+  {
+    "title": "印尼旅宿推薦 #森林別墅",
+    "youtubeId": "ErfRJVpVSX4",
+    "image": "https://i.ytimg.com/vi/ErfRJVpVSX4/hqdefault.jpg",
+    "tags": ["印尼", "旅宿", "自然"],
+    "description": "自然裡的療癒空間",
+    "cta": "立即觀看"
   }
+  
 ]
