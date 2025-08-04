@@ -9,10 +9,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 檢查 localStorage 中是否已存有主題偏好
   const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) {
+  
+  if (savedTheme !== null && savedTheme !== "") { // 如果使用者有手動選擇過
     body.classList.add(savedTheme);
-    updateThemeIcon(savedTheme);
+  } else { // 如果是第一次訪問，根據時間自動設定
+    const currentHour = new Date().getHours();
+    // 晚上 6 點 (18) 到早上 6 點 (6) 之間，預設為黑金模式
+    if (currentHour >= 18 || currentHour < 6) {
+      body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark-theme'); // 同時為使用者儲存這個預設選擇
+    }
   }
+  // 根據最終的 body class 來更新圖示
+  updateThemeIcon(body.classList.contains('dark-theme') ? 'dark-theme' : '');
+
 
   themeSwitcher.addEventListener('click', (e) => {
     e.preventDefault();
@@ -20,11 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
     
-    localStorage.setItem('theme', currentTheme); // 儲存選擇
+    localStorage.setItem('theme', currentTheme); // 儲存使用者手動的選擇
     updateThemeIcon(currentTheme);
   });
 
   function updateThemeIcon(theme) {
+    if (!themeIconSun || !themeIconMoon) return;
     if (theme === 'dark-theme') {
       themeIconSun.style.display = 'none';
       themeIconMoon.style.display = 'inline-block';
@@ -117,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
 
-  // --- 全螢幕播放器邏輯 (已更新) ---
+  // --- 全螢幕播放器邏輯 ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
   let fullscreenPlayerObject = null;
 
@@ -136,29 +147,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function openFullscreenPlayer(videoId) {
     if (!fullscreenPlayerEl) return;
-
-    // 新增：禁止背景捲動
     document.body.style.overflow = 'hidden';
-    
     fullscreenPlayerEl.innerHTML = `
       <button class="close-player-btn" title="關閉">&times;</button>
       <div id="main-player"></div>`;
-      
     fullscreenPlayerEl.classList.add("active");
-
     fullscreenPlayerObject = new YT.Player('main-player', {
         height: '100%',
         width: '100%',
         videoId: videoId,
-        playerVars: {
-            'autoplay': 1,
-            'controls': 1,
-            'rel': 0,
-            'modestbranding': 1
-        },
-        events: {
-            'onReady': onPlayerReady
-        }
+        playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1 },
+        events: { 'onReady': onPlayerReady }
     });
   }
 
@@ -169,15 +168,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function closeFullscreenPlayer() {
     if (!fullscreenPlayerEl) return;
-
-    // 新增：恢復背景捲動
     document.body.style.overflow = '';
-    
     if (fullscreenPlayerObject && typeof fullscreenPlayerObject.destroy === 'function') {
         fullscreenPlayerObject.destroy();
         fullscreenPlayerObject = null;
     }
-
     fullscreenPlayerEl.innerHTML = "";
     fullscreenPlayerEl.classList.remove("active");
   }
