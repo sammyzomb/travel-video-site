@@ -50,58 +50,116 @@ body {
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
 }
+body.menu-open {
+  overflow: hidden; /* 當選單打開時，禁止背景滾動 */
+}
 
 /* --- 導覽列 Navbar --- */
 .navbar {
-  position: sticky;
-  top: 0;
+  position: sticky; top: 0;
   background: var(--navbar-bg);
   backdrop-filter: blur(10px);
-  padding: 4px 4%;
+  padding: 8px 4%; /* 稍微增加上下 padding */
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 6px var(--shadow-color);
   border-bottom: 1px solid var(--navbar-border);
-  z-index: 100;
+  z-index: 1000;
   transition: background-color 0.3s, border-color 0.3s;
 }
 .navbar .logo img { max-height: 40px; height: auto; }
-.navbar nav { display: flex; align-items: center; }
-.navbar nav a {
-  margin-left: 16px;
+.desktop-nav { display: flex; align-items: center; } /* 桌面版導覽容器 */
+.desktop-nav a {
+  margin: 0 12px;
   text-decoration: none;
   color: var(--text-color);
   font-weight: 500;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
-  border: none;
-  background: none;
   transition: color 0.2s;
-  line-height: 1;
-  padding: 0 3px;
-  border-radius: 4px;
-  outline: none;
-  position: relative;
-  top: 0;
+  padding: 8px 4px;
+}
+.desktop-nav a:hover { color: var(--primary-color); }
+
+.nav-actions { display: flex; align-items: center; gap: 16px; }
+.nav-actions a {
+  color: var(--text-color);
   display: inline-flex;
   align-items: center;
+  text-decoration: none;
 }
-.navbar nav a:hover { color: var(--primary-color); background: none; }
 .nav-icon {
-  width: 18px; height: 18px;
-  margin-right: 5px;
-  vertical-align: middle;
-  display: inline-block;
+  width: 22px; height: 22px; /* 稍微放大圖示 */
   stroke: var(--text-color);
   transition: stroke 0.2s;
 }
-.navbar nav a:hover .nav-icon { stroke: var(--primary-color); }
+.nav-actions a:hover .nav-icon { stroke: var(--primary-color); }
 
-/* --- 響應式設計 (手機版) --- */
-@media screen and (max-width: 768px) {
-  .nav-text { display: none; }
-  .nav-icon { margin-right: 0 !important; }
+/* --- 漢堡選單按鈕 --- */
+.hamburger-btn {
+  display: none; /* 預設隱藏 */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 1002;
+}
+.hamburger-btn rect {
+  fill: var(--text-color);
+  transition: fill 0.2s;
+}
+.hamburger-btn:hover rect { fill: var(--primary-color); }
+
+/* --- 側邊選單 --- */
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100%;
+  background: var(--navbar-bg);
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  padding-top: 80px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+.side-menu.active { transform: translateX(0); }
+.side-menu a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 16px 24px;
+  transition: color 0.2s, background-color 0.2s;
+}
+.side-menu a:hover {
+  color: var(--primary-color);
+  background-color: var(--primary-color-hover);
+}
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+.menu-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+/* --- 響應式設計 (手機/平板) --- */
+@media screen and (max-width: 900px) {
+  .desktop-nav { display: none; } /* 隱藏桌面版導覽 */
+  .hamburger-btn { display: block; } /* 顯示漢堡按鈕 */
+  .nav-actions .nav-text { display: none; } /* 隱藏會員登入文字 */
 }
 
 /* --- Hero 影片區塊 --- */
@@ -186,29 +244,14 @@ body {
 .fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
 .fullscreen-player.active { display: flex; }
 .fullscreen-player iframe { width: 100vw; height: 100vh; border: none; }
-
-/* --- 新增：關閉按鈕樣式 --- */
 .close-player-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: 2px solid white;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-family: sans-serif;
-  line-height: 1;
+  position: absolute; top: 20px; right: 20px;
+  width: 40px; height: 40px;
+  background: rgba(0, 0, 0, 0.5); color: white;
+  border: 2px solid white; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-family: sans-serif; line-height: 1;
   z-index: 10000;
   transition: transform 0.2s, background-color 0.2s;
 }
-.close-player-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
+.close-player-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
