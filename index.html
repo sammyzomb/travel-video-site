@@ -47,7 +47,14 @@
     .hero-caption.visible { opacity: 1; transform: translateY(0); }
     .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
-    .video-section { padding: 20px 5%; background: #fff; }
+    .video-section {
+  background: #fff;
+  padding: 40px 5% 60px 5%; /* 調整內部上下邊距 */
+  margin-top: -60px;          /* << 關鍵：使用負外邊距將整個區塊往上拉 */
+  position: relative;         /* 確保層級正確 */
+  border-top-left-radius: 20px; /* << 新增：讓上方左角變圓滑 */
+  border-top-right-radius: 20px;/* << 新增：讓上方右角變圓滑 */
+}
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
