@@ -48,13 +48,31 @@
     .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
     .video-section {
-  background: #fff;
-  padding: 50px 5%; /* 調整內部上下邊距上下均為 50px */
-  margin-top: -60px;          /* << 關鍵：使用負外邊距將整個區塊往上拉 */
-  position: relative;         /* 確保層級正確 */
-  border-top-left-radius: 20px; /* << 新增：讓上方左角變圓滑 */
-  border-top-right-radius: 20px;/* << 新增：讓上方右角變圓滑 */
-}
+      background: #fff;
+      padding: 50px 5%;
+      margin-top: -60px;
+      position: relative;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+    }
+    /* --- 新增的標題樣式 --- */
+    .section-title-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .section-title-container h2 {
+      font-size: 1.8rem;
+      color: #222;
+      margin: 0;
+    }
+    .section-title-container .title-icon {
+      width: 28px;
+      height: 28px;
+      stroke: #2b71d2;
+    }
+    /* --- 標題樣式結束 --- */
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
@@ -117,7 +135,12 @@
   </div>
 
   <section class="video-section">
-    <h2 style="font-size:1.8rem; margin-bottom:24px; color:#222;">精選節目推薦</h2>
+    <!-- --- 修改後的標題結構 --- -->
+    <div class="section-title-container">
+      <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg>
+      <h2>精選節目推薦</h2>
+    </div>
+    <!-- --- 標題結構結束 --- -->
     <div class="video-grid" id="featured-videos"></div>
   </section>
 
@@ -128,25 +151,19 @@
     let videos = [], current = 0, player;
     let ytIdToIndex = {};
     fetch('hero.json').then(res => res.json()).then(data => {
-  // --- 新增的洗牌邏輯 ---
-  // 使用 Fisher-Yates (aka Knuth) Shuffle 演算法將影片清單順序打亂
-  let currentIndex = data.length,  randomIndex;
-
-  // 當還有元素未洗牌時
-  while (currentIndex != 0) {
-    // 挑選一個剩餘的元素
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    // 然後與當前的元素交換
-    [data[currentIndex], data[randomIndex]] = [
-      data[randomIndex], data[currentIndex]];
-  }
-  // --- 洗牌邏輯結束 ---
-
-  videos = data; // 使用已經洗牌過的新清單
-  videos.forEach((v, i) => ytIdToIndex[v.id] = i);
-  initHero();
-});
+      // --- 修改後的洗牌邏輯 ---
+      let currentIndex = data.length,  randomIndex;
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [data[currentIndex], data[randomIndex]] = [
+          data[randomIndex], data[currentIndex]];
+      }
+      // --- 洗牌邏輯結束 ---
+      videos = data;
+      videos.forEach((v, i) => ytIdToIndex[v.id] = i);
+      initHero();
+    });
     function initHero() {
       if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
       else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
