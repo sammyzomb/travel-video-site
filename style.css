@@ -1,40 +1,83 @@
+/* --- Google 字體導入 --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+/* --- 主題顏色變數定義 --- */
+:root {
+  /* 預設：淺色主題 */
+  --bg-color: #f0f4f9;
+  --text-color: #28445e;
+  --text-color-light: #666;
+  --primary-color: #2b71d2;
+  --primary-color-hover: #e8f3ff;
+  --card-bg: #f9f9f9;
+  --navbar-bg: white;
+  --navbar-border: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(0,0,0,0.05);
+  --hero-title-font: 'Noto Sans TC', sans-serif;
+  --hero-title-size: 1.9rem;
+  --hero-title-shadow: rgba(0,0,0,0.25);
+  --section-bg: #fff;
+  --card-border: transparent;
+  --card-shadow-hover: rgba(0,0,0,0.1);
+  --cta-text-color: white;
+}
+
+body.dark-theme {
+  /* 黑金主題 */
+  --bg-color: #121821;
+  --text-color: #EAEAEA;
+  --text-color-light: #999;
+  --primary-color: #FFD700;
+  --primary-color-hover: #ffec80;
+  --card-bg: #1A222F;
+  --navbar-bg: rgba(18, 24, 33, 0.8);
+  --navbar-border: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0,0,0,0.2);
+  --hero-title-font: 'Montserrat', 'Noto Sans TC', sans-serif;
+  --hero-title-size: 2.2rem;
+  --hero-title-shadow: rgba(0,0,0,0.5);
+  --section-bg: #121821;
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-shadow-hover: rgba(255, 215, 0, 0.2);
+  --cta-text-color: #121821;
+}
+
 /* --- 全局與基本樣式 --- */
 body {
   margin: 0;
   font-family: 'Noto Sans TC', sans-serif;
-  background: #f0f4f9;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* --- 導覽列 Navbar --- */
 .navbar {
   position: sticky;
   top: 0;
-  background: white;
+  background: var(--navbar-bg);
+  backdrop-filter: blur(10px);
   padding: 4px 4%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px var(--shadow-color);
+  border-bottom: 1px solid var(--navbar-border);
   z-index: 100;
+  transition: background-color 0.3s, border-color 0.3s;
 }
-.navbar .logo img {
-  max-height: 40px;
-  height: auto;
-}
-.navbar nav {
-  display: flex;
-  align-items: center;
-}
+.navbar .logo img { max-height: 40px; height: auto; }
+.navbar nav { display: flex; align-items: center; }
 .navbar nav a {
   margin-left: 16px;
   text-decoration: none;
-  color: #28445e;
+  color: var(--text-color);
   font-weight: 500;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
   border: none;
   background: none;
-  transition: color 0.17s;
+  transition: color 0.2s;
   line-height: 1;
   padding: 0 3px;
   border-radius: 4px;
@@ -44,17 +87,16 @@ body {
   display: inline-flex;
   align-items: center;
 }
-.navbar nav a:hover, .login-link:hover {
-  color: #2b71d2;
-  background: #e8f3ff;
-}
+.navbar nav a:hover { color: var(--primary-color); background: none; }
 .nav-icon {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;
+  stroke: var(--text-color);
+  transition: stroke 0.2s;
 }
+.navbar nav a:hover .nav-icon { stroke: var(--primary-color); }
 
 /* --- 響應式設計 (手機版) --- */
 @media screen and (max-width: 768px) {
@@ -64,194 +106,83 @@ body {
 
 /* --- Hero 影片區塊 --- */
 .hero {
-  position: relative;
-  width: 100vw;
-  height: 70vh;
-  min-height: 400px;
-  max-height: 680px;
-  overflow: hidden;
-  margin-bottom: 0;
-  background: #222;
+  position: relative; width: 100vw; height: 70vh;
+  min-height: 400px; max-height: 680px;
+  overflow: hidden; margin-bottom: 0; background: #222;
 }
 .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
-  position: absolute;
-  width: 160vw !important;
-  height: 130vh !important;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  border: none;
-  pointer-events: none;
-  z-index: 1;
-  background: #222;
+  position: absolute; width: 160vw !important; height: 130vh !important;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  border: none; pointer-events: none; z-index: 1; background: #222;
 }
-#ytPlayer iframe {
-  transform: scale(1.25);
-  transform-origin: center;
-  transition: transform 0.4s ease-in-out;
-}
-#heroMask {
-  position: absolute;
-  inset: 0;
-  background: #121821;
-  opacity: 0;
-  z-index: 3;
-  pointer-events: none;
-  transition: opacity 0.38s;
-}
+#ytPlayer iframe { transform: scale(1.25); transform-origin: center; transition: transform 0.4s ease-in-out; }
+#heroMask { position: absolute; inset: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
 #heroMask.show { opacity: 0.66; }
 .hero-main-title {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  color: #fff;
-  z-index: 4;
-  text-align: center;
-  width: 100%;
-  font-weight: 800;
-  font-size: 1.9rem;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  color: #fff; z-index: 4; text-align: center; width: 100%;
+  font-family: var(--hero-title-font);
+  font-weight: 700; font-size: var(--hero-title-size);
+  text-shadow: 0 2px 20px var(--hero-title-shadow);
 }
 .hero-main-title p {
-  font-size: 1.1rem;
-  font-weight: 400;
-  margin: 0;
-  color: #fff;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.23);
+  font-size: 1.1rem; font-weight: 400; margin: 10px 0 0;
+  color: #fff; text-shadow: 0 2px 16px var(--hero-title-shadow);
 }
 .hero-caption {
-  position: absolute;
-  right: 32px;
-  bottom: 32px;
-  color: #fff;
-  z-index: 10;
-  padding: 10px 10px 8px 16px;
-  opacity: 0;
-  transform: translateY(60px);
-  transition: opacity .7s, transform .7s;
-  font-size: 0.94rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3em;
-  text-align: right;
+  position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10;
+  padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px);
+  transition: opacity .7s, transform .7s; font-size: 0.94rem;
+  display: flex; flex-direction: column; gap: 0.3em; text-align: right;
 }
-.hero-caption.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-.cap-title {
-  font-size: 1em;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-}
-.cap-desc {
-  font-size: 0.88em;
-  color: #e9f6fd;
-  font-weight: 400;
-}
+.hero-caption.visible { opacity: 1; transform: translateY(0); }
+.cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
+.cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
 
 /* --- 影片內容區塊 --- */
 .video-section {
-  background: #fff;
+  background: var(--section-bg);
   padding: 60px 5%;
   margin-top: -40px;
   position: relative;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
+  transition: background-color 0.3s;
 }
-.section-title-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
+.section-title-container { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
 .section-title-container h2 {
-  font-size: 1.8rem;
-  color: #222;
-  margin: 0;
+  font-family: var(--hero-title-font);
+  font-size: 1.8rem; color: var(--text-color); margin: 0;
 }
-.section-title-container .title-icon {
-  width: 28px;
-  height: 28px;
-  stroke: #2b71d2;
-}
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
+.section-title-container .title-icon { width: 28px; height: 28px; stroke: var(--primary-color); }
+.video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .video-card {
-  background: #f9f9f9;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform 0.3s;
-  /* --- 新增：將卡片設為 Flex 容器 --- */
-  display: flex;
-  flex-direction: column;
+  background: var(--card-bg);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--card-border);
 }
-.video-card:hover {
-  transform: translateY(-4px);
-}
-.video-thumb img {
-  width: 100%;
-  height: 230px;
-  object-fit: cover;
-  display: block;
-}
-.video-content {
-  padding: 16px;
-  /* --- 新增：讓內容區塊填滿剩餘空間 --- */
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-.video-tags {
-  font-size: 0.8rem;
-  color: #666;
-  margin-bottom: 8px;
-}
-.video-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 8px;
-}
-.video-desc {
-  font-size: 0.9rem;
-  color: #2b71d2;
-  margin-bottom: 12px;
-}
+.video-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px var(--card-shadow-hover); }
+.video-thumb img { width: 100%; height: 230px; object-fit: cover; display: block; }
+.video-content { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }
+.video-tags { font-size: 0.8rem; color: var(--text-color-light); margin-bottom: 8px; }
+.video-title { font-size: 1.05rem; font-weight: 600; color: var(--text-color); margin: 0 0 8px; }
+.video-desc { font-size: 0.9rem; color: var(--primary-color); margin-bottom: 12px; }
 .video-cta {
-  display: inline-block;
-  padding: 8px 16px;
-  background: #2b71d2;
-  color: white;
-  border-radius: 99px;
-  font-size: 0.9rem;
-  text-decoration: none;
-  cursor: pointer;
-  border: none;
-  /* --- 新增：將按鈕推至底部 --- */
-  margin-top: auto;
-  align-self: flex-start;
+  display: inline-block; padding: 8px 16px;
+  background: var(--primary-color);
+  color: var(--cta-text-color);
+  font-weight: 700; border-radius: 99px;
+  font-size: 0.9rem; text-decoration: none;
+  cursor: pointer; border: none; margin-top: auto;
+  align-self: flex-start; transition: background-color 0.2s;
 }
+.video-cta:hover { background: var(--primary-color-hover); }
 
 /* --- 全螢幕播放器 --- */
-.fullscreen-player {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+.fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
 .fullscreen-player.active { display: flex; }
-.fullscreen-player iframe {
-  width: 100vw;
-  height: 100vh;
-  border: none;
-}
+.fullscreen-player iframe { width: 100vw; height: 100vh; border: none; }
