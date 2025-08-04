@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- 全螢幕播放器邏輯 (已更新) ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
+  let fullscreenPlayerObject = null; // 新增：用來存放播放器實體
 
   document.body.addEventListener('click', function(event) {
     if (event.target && event.target.classList.contains('video-cta')) {
@@ -127,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // 新增：監聽播放器容器內的點擊，專門處理關閉按鈕
   fullscreenPlayerEl.addEventListener('click', function(event) {
     if (event.target && event.target.classList.contains('close-player-btn')) {
       closeFullscreenPlayer();
@@ -136,14 +136,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function openFullscreenPlayer(videoId) {
     if (!fullscreenPlayerEl) return;
+    
     fullscreenPlayerEl.innerHTML = `
       <button class="close-player-btn" title="關閉">&times;</button>
-      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      <div id="main-player"></div>`;
+      
     fullscreenPlayerEl.classList.add("active");
+
+    fullscreenPlayerObject = new YT.Player('main-player', {
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+            'autoplay': 1,
+            'controls': 1,
+            'rel': 0,
+            'modestbranding': 1
+        },
+        events: {
+            'onReady': onPlayerReady
+        }
+    });
+  }
+
+  function onPlayerReady(event) {
+    event.target.setPlaybackQuality('highres'); // 設定最高畫質
+    event.target.playVideo();
   }
 
   function closeFullscreenPlayer() {
     if (!fullscreenPlayerEl) return;
+    
+    if (fullscreenPlayerObject && typeof fullscreenPlayerObject.destroy === 'function') {
+        fullscreenPlayerObject.destroy();
+        fullscreenPlayerObject = null;
+    }
+
     fullscreenPlayerEl.innerHTML = "";
     fullscreenPlayerEl.classList.remove("active");
   }
