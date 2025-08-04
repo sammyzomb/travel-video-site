@@ -186,3 +186,29 @@ body {
 .fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
 .fullscreen-player.active { display: flex; }
 .fullscreen-player iframe { width: 100vw; height: 100vh; border: none; }
+
+/* --- 新增：關閉按鈕樣式 --- */
+.close-player-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-family: sans-serif;
+  line-height: 1;
+  z-index: 10000;
+  transition: transform 0.2s, background-color 0.2s;
+}
+.close-player-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
