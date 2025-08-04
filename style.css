@@ -218,7 +218,7 @@ body.menu-open {
 .video-cta:hover { background: var(--primary-color-hover); }
 
 
-/* --- 新增：節目表預告區塊 --- */
+/* --- 節目表預告區塊 (樣式更新) --- */
 .schedule-section {
   padding: 40px 5% 60px;
   background: var(--bg-color);
@@ -229,26 +229,44 @@ body.menu-open {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
-.schedule-item {
-  display: flex;
-  align-items: center;
-  background: var(--section-bg);
-  padding: 16px;
+.schedule-card {
+  display: block;
+  position: relative;
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--shadow-color);
-  border: 1px solid var(--card-border);
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-decoration: none;
 }
-.schedule-time {
+.schedule-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 30px var(--card-shadow-hover);
+}
+.schedule-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.schedule-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40px 16px 16px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  color: white;
+}
+.schedule-card-time {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-color);
-  margin-right: 16px;
   font-family: 'Montserrat', sans-serif;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
-.schedule-title {
+.schedule-card-title {
   font-size: 1rem;
   font-weight: 500;
-  color: var(--text-color);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 .section-cta-container {
   text-align: center;
