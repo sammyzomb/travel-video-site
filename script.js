@@ -18,12 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     body.classList.toggle('dark-theme');
     
-    let currentTheme;
-    if (body.classList.contains('dark-theme')) {
-      currentTheme = 'dark-theme';
-    } else {
-      currentTheme = ''; // 代表淺色主題
-    }
+    let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
     
     localStorage.setItem('theme', currentTheme); // 儲存選擇
     updateThemeIcon(currentTheme);
@@ -38,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
       themeIconMoon.style.display = 'none';
     }
   }
-
 
   // --- Hero 區塊邏輯 ---
   let heroVideos = [], currentHeroIndex = 0, heroPlayer;
@@ -123,8 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
 
-  // --- 全螢幕播放器邏輯 ---
+  // --- 全螢幕播放器邏輯 (已更新) ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
+
   document.body.addEventListener('click', function(event) {
     if (event.target && event.target.classList.contains('video-cta')) {
       const videoId = event.target.dataset.videoid;
@@ -132,9 +127,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // 新增：監聽播放器容器內的點擊，專門處理關閉按鈕
+  fullscreenPlayerEl.addEventListener('click', function(event) {
+    if (event.target && event.target.classList.contains('close-player-btn')) {
+      closeFullscreenPlayer();
+    }
+  });
+
   function openFullscreenPlayer(videoId) {
     if (!fullscreenPlayerEl) return;
-    fullscreenPlayerEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    fullscreenPlayerEl.innerHTML = `
+      <button class="close-player-btn" title="關閉">&times;</button>
+      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
     fullscreenPlayerEl.classList.add("active");
   }
 
