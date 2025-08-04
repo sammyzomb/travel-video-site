@@ -71,6 +71,8 @@ body.menu-open {
 .navbar .logo img { max-height: 40px; height: auto; }
 .desktop-nav { display: flex; align-items: center; } /* 桌面版導覽容器 */
 .desktop-nav a {
+  display: inline-flex; /* 新增：讓圖示與文字對齊 */
+  align-items: center;  /* 新增：讓圖示與文字對齊 */
   margin: 0 12px;
   text-decoration: none;
   color: var(--text-color);
@@ -81,6 +83,10 @@ body.menu-open {
   padding: 8px 4px;
 }
 .desktop-nav a:hover { color: var(--primary-color); }
+.desktop-nav a .nav-icon {
+    margin-right: 6px; /* 新增：圖示與文字的間距 */
+}
+
 
 .nav-actions { display: flex; align-items: center; gap: 16px; }
 .nav-actions a {
@@ -94,7 +100,9 @@ body.menu-open {
   stroke: var(--text-color);
   transition: stroke 0.2s;
 }
-.nav-actions a:hover .nav-icon { stroke: var(--primary-color); }
+.nav-actions a:hover .nav-icon, .desktop-nav a:hover .nav-icon { 
+    stroke: var(--primary-color); 
+}
 
 /* --- 漢堡選單按鈕 --- */
 .hamburger-btn {
