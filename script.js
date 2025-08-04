@@ -122,9 +122,16 @@ document.addEventListener('DOMContentLoaded', function() {
       data.forEach(video => {
         const card = document.createElement("div");
         card.className = "video-card";
-        const thumb = video.image ? video.image : `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
+        
+        // --- 圖片載入邏輯已更新 ---
+        const highResThumb = `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`;
+        const standardThumb = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
+        const thumb = video.image ? video.image : highResThumb;
+
         card.innerHTML = `
-          <div class="video-thumb"><img src="${thumb}" alt="${video.title}"></div>
+          <div class="video-thumb">
+            <img src="${thumb}" alt="${video.title}" onerror="this.onerror=null;this.src='${standardThumb}';">
+          </div>
           <div class="video-content">
             <div class="video-tags">${video.tags.join(' / ')}</div>
             <div class="video-title">${video.title}</div>
@@ -136,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
     
-  // --- 節目表預告邏輯 (已更新為圖片卡片) ---
+  // --- 節目表預告邏輯 ---
   Promise.all([
     fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
     fetch('videos.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 videos.json'))
@@ -146,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!container) return;
     
     const videosMap = new Map(videosData.map(video => [video.id, video]));
-    const spotlightPrograms = programData.slice(0, 3); // 只顯示前 3 個節目
+    const spotlightPrograms = programData.slice(0, 3);
 
     spotlightPrograms.forEach(item => {
       const videoInfo = videosMap.get(item.vid);
