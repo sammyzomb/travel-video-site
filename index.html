@@ -4,89 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>航向世界旅遊頻道</title>
+  
+  <!-- 連結外部 CSS 檔案 -->
+  <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
-  <style>
-    body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
-    .navbar { position: sticky; top: 0; background: white; padding: 4px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
-    .navbar .logo img { max-height: 40px; height: auto; }
-    .navbar nav { display: flex; align-items: center; }
-    .navbar nav a {
-      margin-left: 16px; text-decoration: none; color: #28445e;
-      font-weight: 500; font-size: 0.9rem; letter-spacing: 0.5px;
-      border: none; background: none; transition: color 0.17s;
-      line-height: 1; padding: 0 3px; border-radius: 4px; outline: none;
-      position: relative; top: 0; display: inline-flex; align-items: center;
-    }
-    .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
-    .login-link:hover { color: #2b71d2; background: #e8f3ff; }
-    .nav-icon {
-      width: 18px; height: 18px;
-      margin-right: 5px;
-      vertical-align: middle;
-      display: inline-block;
-    }
-    @media screen and (max-width: 768px) {
-      .nav-text { display: none; }
-      .nav-icon { margin-right: 0 !important; }
-    }
-    .hero { position: relative; width: 100vw; height: 70vh; min-height: 400px; max-height: 680px; overflow: hidden; margin-bottom: 0; background: #222; }
-    .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
-      position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      border: none; pointer-events: none; z-index: 1; background: #222;
-    }
-    #ytPlayer iframe { transform: scale(1.25); transform-origin: center; transition: transform 0.4s ease-in-out; }
-    #heroMask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #121821; opacity: 0; z-index: 3; pointer-events: none; transition: opacity 0.38s; }
-    #heroMask.show { opacity: 0.66; }
-    .hero-main-title {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 1.9rem;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.25);
-    }
-    .hero-main-title p { font-size: 1.1rem; font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
-    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 0.94rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
-    .hero-caption.visible { opacity: 1; transform: translateY(0); }
-    .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
-    .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
-    /* --- 間距已修正 --- */
-    .video-section {
-      background: #fff;
-      padding: 60px 5%; /* 增加內部上下邊距，確保對稱 */
-      margin-top: -40px; /* 減少負外邊距，讓區塊往下移，增加上方空間 */
-      position: relative;
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
-    }
-    .section-title-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .section-title-container h2 {
-      font-size: 1.8rem;
-      color: #222;
-      margin: 0;
-    }
-    .section-title-container .title-icon {
-      width: 28px;
-      height: 28px;
-      stroke: #2b71d2;
-    }
-    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
-    .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
-    .video-card:hover { transform: translateY(-4px); }
-    .video-thumb img { width: 100%; height: 230px; object-fit: cover; display: block; }
-    .video-content { padding: 16px; }
-    .video-tags { font-size: 0.8rem; color: #666; margin-bottom: 8px; }
-    .video-title { font-size: 1.05rem; font-weight: 600; color: #1a1a1a; margin: 0 0 8px; }
-    .video-desc { font-size: 0.9rem; color: #2b71d2; margin-bottom: 12px; }
-    .video-cta { display: inline-block; padding: 8px 16px; background: #2b71d2; color: white; border-radius: 99px; font-size: 0.9rem; text-decoration: none; cursor: pointer; border: none; }
-    .fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
-    .fullscreen-player.active { display: flex; }
-    .fullscreen-player iframe { width: 100vw; height: 100vh; border: none; }
-  </style>
 </head>
 <body>
+
+  <!-- 導覽列 -->
   <div class="navbar">
     <a class="logo" href="index.html"><img src="logo.png" alt="航向世界旅遊頻道 LOGO" /></a>
     <nav>
@@ -121,6 +46,7 @@
     </nav>
   </div>
 
+  <!-- Hero 影片背景 -->
   <div class="hero">
     <div class="yt-bg-wrapper">
       <div id="ytPlayer"></div>
@@ -133,98 +59,20 @@
     <div class="hero-caption" id="heroCaption"></div>
   </div>
 
+  <!-- 精選節目 -->
   <section class="video-section">
     <div class="section-title-container">
-      <!-- --- 圖示已更新 --- -->
       <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg>
       <h2>精選節目推薦</h2>
     </div>
     <div class="video-grid" id="featured-videos"></div>
   </section>
 
+  <!-- 全螢幕播放器容器 -->
   <div class="fullscreen-player" id="fullscreenPlayer"></div>
 
+  <!-- 外部 JavaScript 檔案 -->
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script>
-    let videos = [], current = 0, player;
-    let ytIdToIndex = {};
-    fetch('hero.json').then(res => res.json()).then(data => {
-      let currentIndex = data.length,  randomIndex;
-      while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [data[currentIndex], data[randomIndex]] = [
-          data[randomIndex], data[currentIndex]];
-      }
-      videos = data;
-      videos.forEach((v, i) => ytIdToIndex[v.id] = i);
-      initHero();
-    });
-    function initHero() {
-      if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
-      else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-    }
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('ytPlayer', {
-        videoId: videos[0].id,
-        playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: videos.map(v => v.id).join(',') },
-        events: {
-          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd1080'); e.target.playVideo(); updateCaption(0); },
-          onStateChange: onPlayerStateChange
-        }
-      });
-    }
-    function onPlayerStateChange(event) {
-      const mask = document.getElementById('heroMask');
-      if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
-      else if (event.data === YT.PlayerState.PLAYING) {
-        mask.classList.remove('show');
-        const vid = player.getVideoData().video_id;
-        if (ytIdToIndex.hasOwnProperty(vid)) {
-          current = ytIdToIndex[vid];
-          updateCaption(current);
-        }
-      }
-    }
-    function updateCaption(idx) {
-      const cap = document.getElementById('heroCaption');
-      if (videos[idx]) {
-        cap.innerHTML = `<div class="cap-title">${videos[idx].title || ''}</div><div class="cap-desc">${videos[idx].desc || ''}</div>`;
-        cap.classList.add('visible');
-      }
-    }
-    function openFullscreenPlayer(videoId) {
-      const container = document.getElementById("fullscreenPlayer");
-      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-      container.classList.add("active");
-    }
-    function closeFullscreenPlayer() {
-      const container = document.getElementById("fullscreenPlayer");
-      container.innerHTML = "";
-      container.classList.remove("active");
-    }
-    window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeFullscreenPlayer(); });
-    fetch("featured_updated.json")
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("featured-videos");
-        data.forEach(video => {
-          const card = document.createElement("div");
-          card.className = "video-card";
-          const thumb = video.image ? video.image : `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
-          card.innerHTML = `
-            <div class="video-thumb">
-              <img src="${thumb}" alt="${video.title}">
-            </div>
-            <div class="video-content">
-              <div class="video-tags">${video.tags.join(' / ')}</div>
-              <div class="video-title">${video.title}</div>
-              <div class="video-desc">${video.description}</div>
-              <button onclick="openFullscreenPlayer('${video.youtubeId}')" class="video-cta">${video.cta}</button>
-            </div>`;
-          container.appendChild(card);
-        });
-      });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
