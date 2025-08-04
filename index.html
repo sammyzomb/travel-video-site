@@ -4,18 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>航向世界旅遊頻道</title>
+  <link rel="icon" href="favicon.png" type="image/png">
   <style>
     body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #f0f4f9; }
     .navbar { position: sticky; top: 0; background: white; padding: 4px 4%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); z-index: 100; }
-    .navbar .logo img {
-      max-height: 40px; /* 導航列高度縮小 */
-      height: auto;
-    }
+    .navbar .logo img { max-height: 40px; height: auto; }
     .navbar nav { display: flex; align-items: center; }
     .navbar nav a {
       margin-left: 16px; text-decoration: none; color: #28445e;
-      font-weight: 500; font-size: 0.9rem; /* 導航列文字縮小10% */
-      letter-spacing: 0.5px;
+      font-weight: 500; font-size: 0.9rem; letter-spacing: 0.5px;
       border: none; background: none; transition: color 0.17s;
       line-height: 1; padding: 0 3px; border-radius: 4px; outline: none;
       position: relative; top: 0; display: inline-flex; align-items: center;
@@ -23,8 +20,7 @@
     .navbar nav a:hover { color: #2b71d2; background: #e8f3ff; }
     .login-link:hover { color: #2b71d2; background: #e8f3ff; }
     .nav-icon {
-      width: 18px; /* 導航列圖標縮小 */
-      height: 18px;
+      width: 18px; height: 18px;
       margin-right: 5px;
       vertical-align: middle;
       display: inline-block;
@@ -33,7 +29,7 @@
       .nav-text { display: none; }
       .nav-icon { margin-right: 0 !important; }
     }
-    .hero { position: relative; width: 100vw; height: 70vh; /* Hero高度縮小 */ min-height: 400px; max-height: 680px; overflow: hidden; margin-bottom: 0; background: #222; }
+    .hero { position: relative; width: 100vw; height: 70vh; min-height: 400px; max-height: 680px; overflow: hidden; margin-bottom: 0; background: #222; }
     .yt-bg-wrapper, #ytPlayer, #ytPlayer > div, #ytPlayer iframe {
       position: absolute; width: 160vw !important; height: 130vh !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
       border: none; pointer-events: none; z-index: 1; background: #222;
@@ -43,15 +39,15 @@
     #heroMask.show { opacity: 0.66; }
     .hero-main-title {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 1.9rem; /* Hero主標題縮小10% */
+      color: #fff; z-index: 4; text-align: center; width: 100%; font-weight: 800; font-size: 1.9rem;
       text-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
-    .hero-main-title p { font-size: 1.1rem; /* Hero副標題縮小10% */ font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
-    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 0.94rem; /* 右下角文字縮小10% */ display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
+    .hero-main-title p { font-size: 1.1rem; font-weight: 400; margin: 0; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,0.23); }
+    .hero-caption { position: absolute; right: 32px; bottom: 32px; color: #fff; z-index: 10; padding: 10px 10px 8px 16px; opacity: 0; transform: translateY(60px); transition: opacity .7s, transform .7s; font-size: 0.94rem; display: flex; flex-direction: column; gap: 0.3em; text-align: right; }
     .hero-caption.visible { opacity: 1; transform: translateY(0); }
     .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
-    .video-section { padding: 60px 5%; background: #fff; }
+    .video-section { padding: 20px 5%; background: #fff; }
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
@@ -68,33 +64,33 @@
 </head>
 <body>
   <div class="navbar">
-    <a class="logo" href="index.html"><img src="logo.png" alt="LOGO" /></a>
+    <a class="logo" href="index.html"><img src="logo.png" alt="航向世界旅遊頻道 LOGO" /></a>
     <nav>
       <a href="index.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9L12 2L21 9V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span class="nav-text">首頁</span>
       </a>
-      <a href="#">
+      <a href="latest.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg>
         <span class="nav-text">最新影片</span>
       </a>
-      <a href="#">
+      <a href="schedule.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span class="nav-text">節目表</span>
       </a>
-      <a href="#">
+      <a href="topics.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="nav-text">主題探索</span>
       </a>
-      <a href="#">
+      <a href="vod.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg>
         <span class="nav-text">隨選影片</span>
       </a>
-      <a href="#">
+      <a href="regions.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#28445e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span class="nav-text">世界分區</span>
       </a>
-      <a href="#" class="login-link">
+      <a href="login.html" class="login-link">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4.5" stroke="#28445e" stroke-width="2"/><ellipse cx="10" cy="15.2" rx="6.8" ry="3.2" stroke="#28445e" stroke-width="2"/></svg>
         <span class="nav-text">會員登入</span>
       </a>
@@ -138,7 +134,7 @@
         videoId: videos[0].id,
         playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: videos.map(v => v.id).join(',') },
         events: {
-          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd2160'); e.target.playVideo(); updateCaption(0); },
+          onReady: e => { e.target.mute(); e.target.setPlaybackQuality('hd1080'); e.target.playVideo(); updateCaption(0); },
           onStateChange: onPlayerStateChange
         }
       });
@@ -164,7 +160,7 @@
     }
     function openFullscreenPlayer(videoId) {
       const container = document.getElementById("fullscreenPlayer");
-      container.innerHTML = `<iframe src="https://www.youtube.com/embed/$${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&enablejsapi=1" allow="autoplay; fullscreen"></iframe>`;
+      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
       container.classList.add("active");
     }
     function closeFullscreenPlayer() {
@@ -180,7 +176,7 @@
         data.forEach(video => {
           const card = document.createElement("div");
           card.className = "video-card";
-          const thumb = video.image ? video.image : `https://img.youtube.com/vi/$${video.youtubeId}/hqdefault.jpg`;
+          const thumb = video.image ? video.image : `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
           card.innerHTML = `
             <div class="video-thumb">
               <img src="${thumb}" alt="${video.title}">
