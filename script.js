@@ -142,6 +142,34 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
+    
+  // --- 節目表預告邏輯 ---
+  Promise.all([
+    fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
+    fetch('videos.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 videos.json'))
+  ])
+  .then(([programData, videosData]) => {
+    const container = document.getElementById('schedule-spotlight');
+    if (!container) return;
+    
+    const videosMap = new Map(videosData.map(video => [video.id, video]));
+    const spotlightPrograms = programData.slice(0, 3); // 只顯示前 3 個節目
+
+    spotlightPrograms.forEach(item => {
+      const videoInfo = videosMap.get(item.vid);
+      if (videoInfo) {
+        const scheduleItem = document.createElement('div');
+        scheduleItem.className = 'schedule-item';
+        scheduleItem.innerHTML = `
+          <div class="schedule-time">${item.start}</div>
+          <div class="schedule-title">${item.title}</div>
+        `;
+        container.appendChild(scheduleItem);
+      }
+    });
+  })
+  .catch(error => console.error('處理節目表預告時發生錯誤:', error));
+
 
   // --- 全螢幕播放器邏輯 ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
