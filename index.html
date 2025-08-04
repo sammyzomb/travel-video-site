@@ -47,15 +47,15 @@
     .hero-caption.visible { opacity: 1; transform: translateY(0); }
     .cap-title { font-size: 1em; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .cap-desc { font-size: 0.88em; color: #e9f6fd; font-weight: 400; }
+    /* --- 間距已修正 --- */
     .video-section {
       background: #fff;
-      padding: 50px 5%;
-      margin-top: -60px;
+      padding: 60px 5%; /* 增加內部上下邊距，確保對稱 */
+      margin-top: -40px; /* 減少負外邊距，讓區塊往下移，增加上方空間 */
       position: relative;
       border-top-left-radius: 20px;
       border-top-right-radius: 20px;
     }
-    /* --- 新增的標題樣式 --- */
     .section-title-container {
       display: flex;
       align-items: center;
@@ -72,7 +72,6 @@
       height: 28px;
       stroke: #2b71d2;
     }
-    /* --- 標題樣式結束 --- */
     .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
     .video-card { background: #f9f9f9; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s; }
     .video-card:hover { transform: translateY(-4px); }
@@ -135,12 +134,11 @@
   </div>
 
   <section class="video-section">
-    <!-- --- 修改後的標題結構 --- -->
     <div class="section-title-container">
-      <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/></svg>
+      <!-- --- 圖示已更新 --- -->
+      <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8m-4-4v4"/></svg>
       <h2>精選節目推薦</h2>
     </div>
-    <!-- --- 標題結構結束 --- -->
     <div class="video-grid" id="featured-videos"></div>
   </section>
 
@@ -151,7 +149,6 @@
     let videos = [], current = 0, player;
     let ytIdToIndex = {};
     fetch('hero.json').then(res => res.json()).then(data => {
-      // --- 修改後的洗牌邏輯 ---
       let currentIndex = data.length,  randomIndex;
       while (currentIndex != 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
@@ -159,7 +156,6 @@
         [data[currentIndex], data[randomIndex]] = [
           data[randomIndex], data[currentIndex]];
       }
-      // --- 洗牌邏輯結束 ---
       videos = data;
       videos.forEach((v, i) => ytIdToIndex[v.id] = i);
       initHero();
