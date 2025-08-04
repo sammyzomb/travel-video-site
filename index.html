@@ -121,10 +121,25 @@
     let videos = [], current = 0, player;
     let ytIdToIndex = {};
     fetch('hero.json').then(res => res.json()).then(data => {
-      videos = data;
-      videos.forEach((v, i) => ytIdToIndex[v.id] = i);
-      initHero();
-    });
+  // --- 新增的洗牌邏輯 ---
+  // 使用 Fisher-Yates (aka Knuth) Shuffle 演算法將影片清單順序打亂
+  let currentIndex = data.length,  randomIndex;
+
+  // 當還有元素未洗牌時
+  while (currentIndex != 0) {
+    // 挑選一個剩餘的元素
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    // 然後與當前的元素交換
+    [data[currentIndex], data[randomIndex]] = [
+      data[randomIndex], data[currentIndex]];
+  }
+  // --- 洗牌邏輯結束 ---
+
+  videos = data; // 使用已經洗牌過的新清單
+  videos.forEach((v, i) => ytIdToIndex[v.id] = i);
+  initHero();
+});
     function initHero() {
       if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
       else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
