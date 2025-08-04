@@ -22,5 +22,12 @@
     "tags": ["加拿大", "黃刀鎮", "極光"],
     "description": "即刻播放",
     "cta": "立即觀看"
-  }
+  },
+   {
+    "title": "你有看過那一道光嗎?",
+    "youtubeId": "8vV4_5wlsYo",
+    "image": "https://i.ytimg.com/vi/8vV4_5wlsYo/hqdefault.jpg",
+    "tags": ["北歐", "羅浮敦群島", "極光"],
+    "description": "短影音",
+    "cta": "立即觀看"
 ]
