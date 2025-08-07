@@ -62,18 +62,22 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- Hero 區塊邏輯 ---
   let heroVideos = [], currentHeroIndex = 0, heroPlayer;
   let ytIdToIndex = {};
+  // --- 新增開始 ---
+  let heroTimer; // 用於存放計時器的變數
+  // --- 新增結束 ---
+
 
   contentfulClient.getEntries({
-  content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
-  'fields.isHero': true,         // 只抓首頁 HERO 勾選的
-  order: '-sys.updatedAt'          // 最新的在前面
+  content_type: 'video',          // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
+  'fields.isHero': true,          // 只抓首頁 HERO 勾選的
+  order: '-sys.updatedAt'         // 最新的在前面
 }).then(response => {
   // 把 Contentful 的資料轉成原本 hero.json 的結構
   const data = response.items.map(item => ({
-    id: item.fields.youTubeId || '',                                   // YouTube ID
-    title: item.fields.heroTitle || item.fields.title || '',           // 主題/標題
-    desc: item.fields.heroText || item.fields.description || '',       // 說明
-    thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
+    id: item.fields.youTubeId || '',                                  // YouTube ID
+    title: item.fields.heroTitle || item.fields.title || '',          // 主題/標題
+    desc: item.fields.heroText || item.fields.description || '',      // 說明
+    thumb: item.fields.thumbnail?.fields?.file?.url || '',            // 縮圖
   }));
     console.log('HERO 資料', data);
 
@@ -107,19 +111,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // --- 修改開始 ---
   function onPlayerStateChange(event) {
     const mask = document.getElementById('heroMask');
     if (!mask) return;
-    if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
-    else if (event.data === YT.PlayerState.PLAYING) {
+
+    // 每當影片狀態改變時，先清除舊的計時器
+    clearTimeout(heroTimer);
+
+    if (event.data === YT.PlayerState.BUFFERING) {
+      mask.classList.add('show');
+    } else if (event.data === YT.PlayerState.PLAYING) {
       mask.classList.remove('show');
       const currentVideoId = heroPlayer.getVideoData().video_id;
       if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
         currentHeroIndex = ytIdToIndex[currentVideoId];
         updateHeroCaption(currentHeroIndex);
       }
+
+      // 當影片開始播放，設定一個 12 秒的計時器來切換到下一個影片
+      heroTimer = setTimeout(() => {
+        // 確保播放器物件存在且有 nextVideo 方法
+        if (heroPlayer && typeof heroPlayer.nextVideo === 'function') {
+          heroPlayer.nextVideo();
+        }
+      }, 12000); // 12000 毫秒 = 12 秒
     }
   }
+  // --- 修改結束 ---
 
   function updateHeroCaption(index) {
     const captionEl = document.getElementById('heroCaption');
