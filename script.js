@@ -63,21 +63,31 @@ document.addEventListener('DOMContentLoaded', function() {
   let heroVideos = [], currentHeroIndex = 0, heroPlayer;
   let ytIdToIndex = {};
 
-  fetch('hero.json')
-    .then(res => res.ok ? res.json() : Promise.reject('無法載入 hero.json'))
-    .then(data => {
-      let currentIndex = data.length, randomIndex;
-      while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
-      }
-      heroVideos = data;
-      heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
-      if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
-      else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-    })
-    .catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
+  contentfulClient.getEntries({
+  content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
+  'fields.首頁HERO': true,         // 只抓首頁 HERO 勾選的
+  order: '-sys.updatedAt'          // 最新的在前面
+}).then(response => {
+  // 把 Contentful 的資料轉成原本 hero.json 的結構
+  const data = response.items.map(item => ({
+    id: item.fields.youtubeId || '',                                   // YouTube ID
+    title: item.fields.heroTitle || item.fields.title || '',           // 主題/標題
+    desc: item.fields.heroText || item.fields.description || '',       // 說明
+    thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
+  }));
+
+  // 這段和你原本邏輯一樣，亂數排序、初始化索引
+  let currentIndex = data.length, randomIndex;
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
+  }
+  heroVideos = data;
+  heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
+  if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
+  else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+}).catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
 
   function onYouTubeIframeAPIReady() {
     if (!heroVideos.length) return;
