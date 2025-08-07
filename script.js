@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }).then(response => {
   // 把 Contentful 的資料轉成原本 hero.json 的結構
   const data = response.items.map(item => ({
-    id: item.fields.youtubeId || '',                                   // YouTube ID
+    id: item.fields.youTubeId || '',                                   // YouTube ID
     title: item.fields.heroTitle || item.fields.title || '',           // 主題/標題
     desc: item.fields.heroText || item.fields.description || '',       // 說明
     thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
