@@ -1,3 +1,9 @@
+// 初始化 Contentful client
+const contentfulClient = contentful.createClient({
+  space: 'os5wf90ljenp',
+  accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+});
+
 // 確保整個網頁 DOM 都載入完成後，再執行我們的程式碼
 document.addEventListener('DOMContentLoaded', function() {
 
