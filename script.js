@@ -58,106 +58,76 @@ document.addEventListener('DOMContentLoaded', function() {
       themeIconMoon.style.display = 'none';
     }
   }
- // --- Hero 區塊邏輯 ---
-let heroVideos = [], currentHeroIndex = 0, heroPlayer, heroTimer;
-let ytIdToIndex = {};
 
-contentfulClient.getEntries({
-  content_type: 'video',
-  'fields.isHero': true,
-  order: '-sys.updatedAt'
+  // --- Hero 區塊邏輯 ---
+  let heroVideos = [], currentHeroIndex = 0, heroPlayer;
+  let ytIdToIndex = {};
+
+  contentfulClient.getEntries({
+  content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
+  'fields.isHero': true,         // 只抓首頁 HERO 勾選的
+  order: '-sys.updatedAt'          // 最新的在前面
 }).then(response => {
-  const data = response.items
-    .map(item => ({
-      id: item.fields.youTubeId || item.fields.youtubeId || '',
-      title: item.fields.heroTitle || item.fields.title || '',
-      desc: item.fields.heroText || item.fields.description || '',
-      thumb: item.fields.thumbnail?.fields?.file?.url || '',
-    }))
-    .filter(item => !!item.id);
-  heroVideos = shuffleArray(data); // 初次進來隨機
+  // 把 Contentful 的資料轉成原本 hero.json 的結構
+  const data = response.items.map(item => ({
+    id: item.fields.youTubeId || '',                                   // YouTube ID
+    title: item.fields.heroTitle || item.fields.title || '',           // 主題/標題
+    desc: item.fields.heroText || item.fields.description || '',       // 說明
+    thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
+  }));
+    console.log('HERO 資料', data);
+
+  // 這段和你原本邏輯一樣，亂數排序、初始化索引
+  let currentIndex = data.length, randomIndex;
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
+  }
+  heroVideos = data;
   heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
   if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
   else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 }).catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
 
-function shuffleArray(array) {
-  let arr = array.slice();
-  let currentIndex = arr.length, randomIndex;
-  while (currentIndex != 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
+  function onYouTubeIframeAPIReady() {
+    if (!heroVideos.length) return;
+    heroPlayer = new YT.Player('ytPlayer', {
+      videoId: heroVideos[0].id,
+      playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: heroVideos.map(v => v.id).join(',') },
+      events: {
+        onReady: e => {
+          e.target.mute();
+          e.target.setPlaybackQuality('hd1080');
+          e.target.playVideo();
+          updateHeroCaption(0);
+        },
+        onStateChange: onPlayerStateChange
+      }
+    });
   }
-  return arr;
-}
 
-function onYouTubeIframeAPIReady() {
-  if (!heroVideos.length) return;
-  if (heroPlayer) heroPlayer.destroy();
-  heroPlayer = new YT.Player('ytPlayer', {
-    videoId: heroVideos[0].id,
-    playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 0 },
-    events: {
-      onReady: (e) => {
-        e.target.mute();
-        setHDQuality(e.target);
-        e.target.playVideo();
-        updateHeroCaption(0);
-        setupHeroTimer();
-      },
-      onStateChange: onPlayerStateChange
+  function onPlayerStateChange(event) {
+    const mask = document.getElementById('heroMask');
+    if (!mask) return;
+    if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
+    else if (event.data === YT.PlayerState.PLAYING) {
+      mask.classList.remove('show');
+      const currentVideoId = heroPlayer.getVideoData().video_id;
+      if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
+        currentHeroIndex = ytIdToIndex[currentVideoId];
+        updateHeroCaption(currentHeroIndex);
+      }
     }
-  });
-}
-
-function onPlayerStateChange(event) {
-  const mask = document.getElementById('heroMask');
-  if (!mask) return;
-  if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
-  else if (event.data === YT.PlayerState.PLAYING) {
-    mask.classList.remove('show');
-    setHDQuality(event.target);
   }
-}
 
-function setHDQuality(player) {
-  // 設定最高畫質
-  const qualities = ["highres", "hd2160", "hd1440", "hd1080", "hd720"];
-  for (let q of qualities) {
-    player.setPlaybackQuality(q);
+  function updateHeroCaption(index) {
+    const captionEl = document.getElementById('heroCaption');
+    if (captionEl && heroVideos[index]) {
+      captionEl.innerHTML = `<div class="cap-title">${heroVideos[index].title || ''}</div><div class="cap-desc">${heroVideos[index].desc || ''}</div>`;
+      captionEl.classList.add('visible');
+    }
   }
-}
-
-// === 12 秒自動切換＋全部播完才亂數重排 ===
-function setupHeroTimer() {
-  clearTimeout(heroTimer);
-  heroTimer = setTimeout(() => {
-    playNextHero();
-  }, 12000); // 12 秒
-}
-
-function playNextHero() {
-  currentHeroIndex++;
-  if (currentHeroIndex >= heroVideos.length) {
-    // 一輪結束，亂數重排再播
-    heroVideos = shuffleArray(heroVideos);
-    currentHeroIndex = 0;
-  }
-  heroPlayer.loadVideoById(heroVideos[currentHeroIndex].id);
-  updateHeroCaption(currentHeroIndex);
-  setupHeroTimer();
-}
-
-function updateHeroCaption(index) {
-  const captionEl = document.getElementById('heroCaption');
-  if (captionEl && heroVideos[index]) {
-    captionEl.innerHTML = `<div class="cap-title">${heroVideos[index].title || ''}</div><div class="cap-desc">${heroVideos[index].desc || ''}</div>`;
-    captionEl.classList.add('visible');
-  }
-}
-
-
 
   // --- 精選節目區塊邏輯 ---
   fetch("featured_updated.json")
