@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     desc: item.fields.heroText || item.fields.description || '',       // 說明
     thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
   }));
+    console.log('HERO 資料', data);
 
   // 這段和你原本邏輯一樣，亂數排序、初始化索引
   let currentIndex = data.length, randomIndex;
