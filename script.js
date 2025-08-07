@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   contentfulClient.getEntries({
   content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
-  'fields.首頁HERO': true,         // 只抓首頁 HERO 勾選的
+  'fields.isHero': true,         // 只抓首頁 HERO 勾選的
   order: '-sys.updatedAt'          // 最新的在前面
 }).then(response => {
   // 把 Contentful 的資料轉成原本 hero.json 的結構
