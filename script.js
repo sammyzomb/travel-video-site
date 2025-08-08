@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
       events: {
         onReady: e => {
           e.target.mute();
-          e.target.setPlaybackQuality('hd1080');
+          e.target.setPlaybackQuality('hd1440');
           e.target.playVideo();
           updateHeroCaption(0);
         },
