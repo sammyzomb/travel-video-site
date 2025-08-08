@@ -129,13 +129,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateHeroCaption(currentHeroIndex);
       }
 
-      // 當影片開始播放，設定一個 12 秒的計時器來切換到下一個影片
+      // 當影片開始播放，設定一個 10 秒的計時器來切換到下一個影片
       heroTimer = setTimeout(() => {
         // 確保播放器物件存在且有 nextVideo 方法
         if (heroPlayer && typeof heroPlayer.nextVideo === 'function') {
           heroPlayer.nextVideo();
         }
-      }, 12000); // 12000 毫秒 = 12 秒
+      }, 10000); // 10000 毫秒 = 10 秒
     }
   }
   // --- 修改結束 ---
