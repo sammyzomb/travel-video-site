@@ -14,14 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const body = document.body;
 
   function toggleMenu() {
+    if (!sideMenu || !menuOverlay) return;
     sideMenu.classList.toggle('active');
     menuOverlay.classList.toggle('active');
     body.classList.toggle('menu-open');
   }
 
-  hamburgerBtn.addEventListener('click', toggleMenu);
-  menuOverlay.addEventListener('click', toggleMenu);
-
+  if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleMenu);
+  if (menuOverlay) menuOverlay.addEventListener('click', toggleMenu);
 
   // --- 主題切換邏輯 ---
   const themeSwitcher = document.getElementById('theme-switcher');
@@ -40,13 +40,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   updateThemeIcon(body.classList.contains('dark-theme') ? 'dark-theme' : '');
 
-  themeSwitcher.addEventListener('click', (e) => {
-    e.preventDefault();
-    body.classList.toggle('dark-theme');
-    let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
-    localStorage.setItem('theme', currentTheme);
-    updateThemeIcon(currentTheme);
-  });
+  if (themeSwitcher) {
+    themeSwitcher.addEventListener('click', (e) => {
+      e.preventDefault();
+      body.classList.toggle('dark-theme');
+      let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
+      localStorage.setItem('theme', currentTheme);
+      updateThemeIcon(currentTheme);
+    });
+  }
 
   function updateThemeIcon(theme) {
     if (!themeIconSun || !themeIconMoon) return;
@@ -59,94 +61,146 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- Hero 區塊邏輯 ---
-  let heroVideos = [], currentHeroIndex = 0, heroPlayer;
-  let ytIdToIndex = {};
-  // --- 新增開始 ---
-  let heroTimer; // 用於存放計時器的變數
-  // --- 新增結束 ---
-
+  // =========================
+  //        Hero 區塊
+  //   一輪播完才重洗＋10秒切換
+  // =========================
+  let heroVideos = [], heroOrder = [], heroIdx = 0, heroPlayer = null;
+  let heroTimer = null;
 
   contentfulClient.getEntries({
-  content_type: 'video',          // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
-  'fields.isHero': true,          // 只抓首頁 HERO 勾選的
-  order: '-sys.updatedAt'         // 最新的在前面
-}).then(response => {
-  // 把 Contentful 的資料轉成原本 hero.json 的結構
-  const data = response.items.map(item => ({
-    id: item.fields.youTubeId || '',                                  // YouTube ID
-    title: item.fields.heroTitle || item.fields.title || '',          // 主題/標題
-    desc: item.fields.heroText || item.fields.description || '',      // 說明
-    thumb: item.fields.thumbnail?.fields?.file?.url || '',            // 縮圖
-  }));
-    console.log('HERO 資料', data);
+    content_type: 'video',          // 這個 "video" 要和 Contentful 模型 API ID 一樣
+    'fields.isHero': true,          // 只抓首頁 HERO 勾選的
+    order: '-sys.updatedAt'         // 最新在前
+  }).then(response => {
+    const data = response.items.map(item => ({
+      id: item.fields.youTubeId || '',
+      title: item.fields.heroTitle || item.fields.title || '',
+      desc: item.fields.heroText || item.fields.description || '',
+      thumb: item.fields.thumbnail?.fields?.file?.url ? ('https:' + item.fields.thumbnail.fields.file.url) : ''
+    })).filter(v => v.id);
 
-  // 這段和你原本邏輯一樣，亂數排序、初始化索引
-  let currentIndex = data.length, randomIndex;
-  while (currentIndex != 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
-  }
-  heroVideos = data;
-  heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
-  if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
-  else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-}).catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
-
-  function onYouTubeIframeAPIReady() {
+    heroVideos = data;
     if (!heroVideos.length) return;
+
+    heroOrder = shuffleOnce(heroVideos.map(v => v.id));
+    heroIdx = 0;
+
+    ensureYouTubeAPI(() => {
+      initHeroPlayer(heroOrder[heroIdx]);
+    });
+  }).catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
+
+  // Fisher–Yates 單次洗牌
+  function shuffleOnce(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function ensureYouTubeAPI(cb) {
+    if (window.YT && window.YT.Player) { cb(); return; }
+    const tagId = 'yt-iframe-api';
+    if (!document.getElementById(tagId)) {
+      const tag = document.createElement('script');
+      tag.id = tagId;
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+    window.onYouTubeIframeAPIReady = () => cb();
+  }
+
+  function initHeroPlayer(firstVideoId) {
     heroPlayer = new YT.Player('ytPlayer', {
-      videoId: heroVideos[0].id,
-      playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: heroVideos.map(v => v.id).join(',') },
+      videoId: firstVideoId,
+      playerVars: {
+        autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1
+        // 不使用 loop/playlist；由我們自己控序
+      },
       events: {
-        onReady: e => {
+        onReady: (e) => {
           e.target.mute();
           e.target.setPlaybackQuality('hd1080');
           e.target.playVideo();
-          updateHeroCaption(0);
+          updateHeroCaptionById(firstVideoId);
+          startHeroTimer(); // 10 秒切換
         },
-        onStateChange: onPlayerStateChange
+        onStateChange: onHeroStateChange
       }
     });
   }
 
-  // --- 修改開始 ---
-  function onPlayerStateChange(event) {
+  function onHeroStateChange(event) {
     const mask = document.getElementById('heroMask');
-    if (!mask) return;
+    if (mask) {
+      if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
+      else if (event.data === YT.PlayerState.PLAYING) mask.classList.remove('show');
+    }
 
-    // 每當影片狀態改變時，先清除舊的計時器
-    clearTimeout(heroTimer);
+    // 狀態變化先清除舊計時器，避免重複
+    clearHeroTimer();
 
-    if (event.data === YT.PlayerState.BUFFERING) {
-      mask.classList.add('show');
-    } else if (event.data === YT.PlayerState.PLAYING) {
-      mask.classList.remove('show');
-      const currentVideoId = heroPlayer.getVideoData().video_id;
-      if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
-        currentHeroIndex = ytIdToIndex[currentVideoId];
-        updateHeroCaption(currentHeroIndex);
-      }
-
-      // 當影片開始播放，設定一個 10 秒的計時器來切換到下一個影片
-      heroTimer = setTimeout(() => {
-        // 確保播放器物件存在且有 nextVideo 方法
-        if (heroPlayer && typeof heroPlayer.nextVideo === 'function') {
-          heroPlayer.nextVideo();
-        }
-      }, 10000); // 10000 毫秒 = 10 秒
+    if (event.data === YT.PlayerState.PLAYING) {
+      const vid = heroPlayer.getVideoData().video_id;
+      updateHeroCaptionById(vid);
+      startHeroTimer(); // 重新計時 10 秒
     }
   }
-  // --- 修改結束 ---
 
-  function updateHeroCaption(index) {
+  function startHeroTimer() {
+    clearHeroTimer();
+    heroTimer = setTimeout(nextHero, 10000); // 10 秒
+  }
+
+  function clearHeroTimer() {
+    if (heroTimer) {
+      clearTimeout(heroTimer);
+      heroTimer = null;
+    }
+  }
+
+  function nextHero() {
+    if (!heroVideos.length || !heroPlayer) return;
+
+    // 移到下一支；若一輪結束，重洗新一輪
+    heroIdx++;
+    if (heroIdx >= heroOrder.length) {
+      heroOrder = shuffleOnce(heroVideos.map(v => v.id));
+      heroIdx = 0;
+    }
+
+    const nextId = heroOrder[heroIdx];
+    heroPlayer.loadVideoById(nextId);
+    heroPlayer.playVideo();
+    updateHeroCaptionById(nextId);
+    startHeroTimer();
+  }
+
+  function updateHeroCaptionById(videoId) {
     const captionEl = document.getElementById('heroCaption');
-    if (captionEl && heroVideos[index]) {
-      captionEl.innerHTML = `<div class="cap-title">${heroVideos[index].title || ''}</div><div class="cap-desc">${heroVideos[index].desc || ''}</div>`;
-      captionEl.classList.add('visible');
-    }
+    if (!captionEl) return;
+    const meta = heroVideos.find(v => v.id === videoId);
+    if (!meta) return;
+    captionEl.innerHTML = `
+      <div class="cap-title">${meta.title || ''}</div>
+      <div class="cap-desc">${meta.desc || ''}</div>`;
+    captionEl.classList.add('visible');
   }
+
+  // 使用者切到背景分頁/回來時的處理，避免回來瞬間暴衝跳片
+  document.addEventListener('visibilitychange', () => {
+    if (!heroPlayer) return;
+    if (document.hidden) {
+      clearHeroTimer();
+      try { heroPlayer.pauseVideo(); } catch {}
+    } else {
+      try { heroPlayer.playVideo(); } catch {}
+      startHeroTimer();
+    }
+  });
 
   // --- 精選節目區塊邏輯 ---
   fetch("featured_updated.json")
@@ -158,27 +212,26 @@ document.addEventListener('DOMContentLoaded', function() {
       data.forEach(video => {
         const card = document.createElement("div");
         card.className = "video-card";
-        
-        // --- 圖片載入邏輯已更新 ---
+
         const highResThumb = `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`;
         const standardThumb = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
-        const thumb = video.image ? video.image : highResThumb;
+        const thumb = video.image ? (video.image.startsWith('http') ? video.image : `https:${video.image}`) : highResThumb;
 
         card.innerHTML = `
           <div class="video-thumb">
-            <img src="${thumb}" alt="${video.title}" onerror="this.onerror=null;this.src='${standardThumb}';">
+            <img loading="lazy" src="${thumb}" alt="${video.title}" onerror="this.onerror=null;this.src='${standardThumb}';">
           </div>
           <div class="video-content">
-            <div class="video-tags">${video.tags.join(' / ')}</div>
-            <div class="video-title">${video.title}</div>
-            <div class="video-desc">${video.description}</div>
-            <button class="video-cta" data-videoid="${video.youtubeId}">${video.cta}</button>
+            <div class="video-tags">${(video.tags || []).join(' / ')}</div>
+            <div class="video-title">${video.title || ''}</div>
+            <div class="video-desc">${video.description || ''}</div>
+            <button class="video-cta" data-videoid="${video.youtubeId}">${video.cta || '播放'}</button>
           </div>`;
         container.appendChild(card);
       });
     })
     .catch(error => console.error('處理精選節目時發生錯誤:', error));
-    
+
   // --- 節目表預告邏輯 ---
   Promise.all([
     fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
@@ -187,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .then(([programData, videosData]) => {
     const container = document.getElementById('schedule-spotlight');
     if (!container) return;
-    
+
     const videosMap = new Map(videosData.map(video => [video.id, video]));
     const spotlightPrograms = programData.slice(0, 3);
 
@@ -210,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
   })
   .catch(error => console.error('處理節目表預告時發生錯誤:', error));
 
-
   // --- 全螢幕播放器邏輯 ---
   const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
   let fullscreenPlayerObject = null;
@@ -222,25 +274,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  fullscreenPlayerEl.addEventListener('click', function(event) {
-    if (event.target && event.target.classList.contains('close-player-btn')) {
-      closeFullscreenPlayer();
-    }
-  });
+  if (fullscreenPlayerEl) {
+    fullscreenPlayerEl.addEventListener('click', function(event) {
+      if (event.target && event.target.classList.contains('close-player-btn')) {
+        closeFullscreenPlayer();
+      }
+    });
+  }
 
   function openFullscreenPlayer(videoId) {
     if (!fullscreenPlayerEl) return;
     document.body.style.overflow = 'hidden';
+
+    // 停止 Hero 計時器，避免背景繼續跳片或重疊聲音
+    clearHeroTimer();
+
     fullscreenPlayerEl.innerHTML = `
       <button class="close-player-btn" title="關閉">&times;</button>
       <div id="main-player"></div>`;
     fullscreenPlayerEl.classList.add("active");
     fullscreenPlayerObject = new YT.Player('main-player', {
-        height: '100%',
-        width: '100%',
-        videoId: videoId,
-        playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1 },
-        events: { 'onReady': onPlayerReady }
+      height: '100%',
+      width: '100%',
+      videoId: videoId,
+      playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1 },
+      events: { 'onReady': onPlayerReady }
     });
   }
 
@@ -253,11 +311,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!fullscreenPlayerEl) return;
     document.body.style.overflow = '';
     if (fullscreenPlayerObject && typeof fullscreenPlayerObject.destroy === 'function') {
-        fullscreenPlayerObject.destroy();
-        fullscreenPlayerObject = null;
+      fullscreenPlayerObject.destroy();
+      fullscreenPlayerObject = null;
     }
     fullscreenPlayerEl.innerHTML = "";
     fullscreenPlayerEl.classList.remove("active");
+
+    // 關閉全螢幕後，恢復 Hero 計時器
+    startHeroTimer();
   }
 
   window.addEventListener("keydown", (e) => {
