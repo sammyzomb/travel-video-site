@@ -62,7 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- Hero 區塊邏輯 ---
   let heroVideos = [], currentHeroIndex = 0, heroPlayer;
   let ytIdToIndex = {};
-  let heroTimer = null; // <<< 新增
+  let heroTimer = null;
+  let heroOrder = [];   // 這一輪要播的順序（用你已經洗過的順序）
+  let heroPos = 0;      // 目前播放到第幾支
 
   contentfulClient.getEntries({
   content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
@@ -86,6 +88,8 @@ document.addEventListener('DOMContentLoaded', function() {
     [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
   }
   heroVideos = data;
+  heroOrder = heroVideos.map(v => v.id); // ← 新增：用目前已洗好的順序當本輪播放序
+  heroPos = 0;                            // ← 新增：起始從第 0 支
   heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
   if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
   else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
@@ -94,8 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function onYouTubeIframeAPIReady() {
     if (!heroVideos.length) return;
     heroPlayer = new YT.Player('ytPlayer', {
-      videoId: heroVideos[0].id,
-      playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1, loop: 1, playlist: heroVideos.map(v => v.id).join(',') },
+      videoId: heroOrder[0], // 用我們剛剛建立的本輪順序
+      playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1 }, // 拿掉 loop/playlist
+
       events: {
         onReady: e => {
           e.target.mute();
