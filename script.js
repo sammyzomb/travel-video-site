@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- Hero 區塊邏輯 ---
   let heroVideos = [], currentHeroIndex = 0, heroPlayer;
   let ytIdToIndex = {};
+  let heroTimer = null; // <<< 新增
 
   contentfulClient.getEntries({
   content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
@@ -107,19 +108,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  function onPlayerStateChange(event) {
-    const mask = document.getElementById('heroMask');
-    if (!mask) return;
-    if (event.data === YT.PlayerState.BUFFERING) mask.classList.add('show');
-    else if (event.data === YT.PlayerState.PLAYING) {
-      mask.classList.remove('show');
-      const currentVideoId = heroPlayer.getVideoData().video_id;
-      if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
-        currentHeroIndex = ytIdToIndex[currentVideoId];
-        updateHeroCaption(currentHeroIndex);
-      }
-    }
+ function onPlayerStateChange(event) {
+  const mask = document.getElementById('heroMask');
+
+  // 任何狀態變化都先清除舊計時器
+  if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
+
+  if (mask) {
+    if (event.data === YT.PlayerState.PLAYING) mask.classList.remove('show');
+    else mask.classList.add('show'); // 非播放中顯示遮罩，避免看到縮圖牆
   }
+
+  if (event.data === YT.PlayerState.PLAYING) {
+    const currentVideoId = heroPlayer.getVideoData().video_id;
+    if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
+      currentHeroIndex = ytIdToIndex[currentVideoId];
+      updateHeroCaption(currentHeroIndex);
+    }
+
+    // 播放中啟動 10 秒後自動跳下一支
+    heroTimer = setTimeout(() => {
+      try { heroPlayer.nextVideo(); } catch (e) {}
+    }, 10000);
+  }
+}
 
   function updateHeroCaption(index) {
     const captionEl = document.getElementById('heroCaption');
