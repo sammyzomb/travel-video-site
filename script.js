@@ -59,48 +59,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
- // --- Hero 區塊邏輯 ---
+// --- Hero 區塊邏輯 ---
 let heroVideos = [], currentHeroIndex = 0, heroPlayer;
 let ytIdToIndex = {};
 let heroTimer = null;
-let heroOrder = [];   // 這一輪要播的順序（用你已經洗過的順序）
+let heroOrder = [];   // 這一輪的播放順序（用洗過的順序）
 let heroPos = 0;      // 目前播放到第幾支
 
 contentfulClient.getEntries({
-  content_type: 'video',           // 這個 "video" 要和你 Contentful 內容模型的 API ID 一樣
-  'fields.isHero': true,           // 只抓首頁 HERO 勾選的
-  order: '-sys.updatedAt'          // 最新的在前面
+  content_type: 'video',
+  'fields.isHero': true,
+  order: '-sys.updatedAt'
 }).then(response => {
-  // 把 Contentful 的資料轉成原本 hero.json 的結構
+  // 轉成前端需要的結構
   const data = response.items.map(item => ({
-    id: item.fields.youTubeId || '',                                   // YouTube ID
-    title: item.fields.heroTitle || item.fields.title || '',           // 主題/標題
-    desc: item.fields.heroText || item.fields.description || '',       // 說明
-    thumb: item.fields.thumbnail?.fields?.file?.url || '',             // 縮圖
+    id: item.fields.youTubeId || '',
+    title: item.fields.heroTitle || item.fields.title || '',
+    desc: item.fields.heroText || item.fields.description || '',
+    thumb: item.fields.thumbnail?.fields?.file?.url || '',
   }));
   console.log('HERO 資料', data);
 
-  // 洗牌初始化
+  // 洗牌
   let currentIndex = data.length, randomIndex;
   while (currentIndex != 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
     [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
   }
+
   heroVideos = data;
-  heroOrder = heroVideos.map(v => v.id); // 用目前已洗好的順序當本輪播放序
-  heroPos = 0;                           // 起始從第 0 支
+  heroOrder = heroVideos.map(v => v.id); // 本輪順序 = 洗過後的 id
+  heroPos = 0;
   heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
 
   if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
   else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-}).catch(error => console.error('處理 Hero 影片時發生錯誤:', error));
+}).catch(err => console.error('處理 Hero 影片時發生錯誤:', err));
 
 function onYouTubeIframeAPIReady() {
   if (!heroVideos.length) return;
+
+  // 先蓋遮罩，避免看到縮圖牆
+  const mask = document.getElementById('heroMask');
+  if (mask) mask.classList.add('show');
+
   heroPlayer = new YT.Player('ytPlayer', {
-    videoId: heroOrder[0], // 用我們剛剛建立的本輪順序
-    playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1 }, // 拿掉 loop/playlist
+    videoId: heroOrder[0],  // 用本輪順序的第一支
+    playerVars: {
+      autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1,
+      playsinline: 1, fs: 0, disablekb: 1, iv_load_policy: 3
+    },
     events: {
       onReady: e => {
         e.target.mute();
@@ -119,20 +128,21 @@ function onPlayerStateChange(event) {
   // 任何狀態變化都先清除舊計時器
   if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
 
+  // 除了「播放中」，其餘狀態都顯示遮罩
   if (mask) {
     if (event.data === YT.PlayerState.PLAYING) mask.classList.remove('show');
-    else mask.classList.add('show'); // 非播放中顯示遮罩，避免看到縮圖牆
+    else mask.classList.add('show');
   }
 
   if (event.data === YT.PlayerState.PLAYING) {
     const currentVideoId = heroPlayer.getVideoData().video_id;
     if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
       currentHeroIndex = ytIdToIndex[currentVideoId];
-      heroPos = heroOrder.indexOf(currentVideoId); // 確保位置同步
+      heroPos = heroOrder.indexOf(currentVideoId); // 讓指標與實際播放同步
       updateHeroCaption(currentHeroIndex);
     }
 
-    // 播放中啟動 10 秒後自動跳下一支（用我們自己的順序）
+    // 播放中啟動 10 秒後自動切下一支（用我們自己的序列）
     heroTimer = setTimeout(() => {
       try { nextHero(); } catch (e) {}
     }, 10000);
@@ -142,16 +152,17 @@ function onPlayerStateChange(event) {
 function updateHeroCaption(index) {
   const captionEl = document.getElementById('heroCaption');
   if (captionEl && heroVideos[index]) {
-    captionEl.innerHTML = `<div class="cap-title">${heroVideos[index].title || ''}</div><div class="cap-desc">${heroVideos[index].desc || ''}</div>`;
+    captionEl.innerHTML =
+      `<div class="cap-title">${heroVideos[index].title || ''}</div>
+       <div class="cap-desc">${heroVideos[index].desc || ''}</div>`;
     captionEl.classList.add('visible');
   }
 }
 
 function nextHero() {
-  // 往下一支；若到尾端就重洗一輪
+  // 前進一支；到尾端就重洗新一輪
   heroPos++;
   if (heroPos >= heroOrder.length) {
-    // 用現有的洗牌法重洗
     let arr = heroOrder.slice();
     let currentIndex = arr.length, randomIndex;
     while (currentIndex != 0) {
@@ -164,8 +175,48 @@ function nextHero() {
   }
 
   const nextId = heroOrder[heroPos];
+
+  // 切片前先蓋遮罩，避免縮圖牆閃一下
+  const mask = document.getElementById('heroMask');
+  if (mask) mask.classList.add('show');
+
   heroPlayer.loadVideoById(nextId);
 }
+
+/* ====== 保險：分頁切換 / 全螢幕時暫停 Hero ====== */
+
+// 分頁切換暫停計時器
+document.addEventListener('visibilitychange', () => {
+  if (!heroPlayer) return;
+  if (document.hidden) {
+    if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
+    try { heroPlayer.pauseVideo(); } catch {}
+  } else {
+    try { heroPlayer.playVideo(); } catch {}
+    if (!heroTimer) {
+      heroTimer = setTimeout(() => {
+        try { nextHero(); } catch (e) {}
+      }, 10000);
+    }
+  }
+});
+
+// 開關全螢幕時暫停 Hero
+document.addEventListener('fullscreenchange', () => {
+  if (!heroPlayer) return;
+  if (document.fullscreenElement) {
+    if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
+    try { heroPlayer.pauseVideo(); } catch {}
+  } else {
+    try { heroPlayer.playVideo(); } catch {}
+    if (!heroTimer) {
+      heroTimer = setTimeout(() => {
+        try { nextHero(); } catch (e) {}
+      }, 10000);
+    }
+  }
+});
+
 
   // --- 精選節目區塊邏輯 ---
   fetch("featured_updated.json")
