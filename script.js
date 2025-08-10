@@ -71,18 +71,17 @@ contentfulClient.getEntries({
   'fields.isHero': true,
   order: '-sys.updatedAt'
 }).then(response => {
-  // 轉成前端需要的結構
+  // 轉成前端需要的結構，並濾掉沒有 YouTube ID 的項目
   const data = response.items.map(item => ({
     id: item.fields.youTubeId || '',
     title: item.fields.heroTitle || item.fields.title || '',
     desc: item.fields.heroText || item.fields.description || '',
     thumb: item.fields.thumbnail?.fields?.file?.url || '',
-  }));
-  console.log('HERO 資料', data);
+  })).filter(v => v.id);
 
   // 洗牌
   let currentIndex = data.length, randomIndex;
-  while (currentIndex != 0) {
+  while (currentIndex !== 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
     [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
@@ -93,14 +92,16 @@ contentfulClient.getEntries({
   heroPos = 0;
   heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
 
+  if (heroOrder.length === 0) return; // 沒有可播影片就結束
+
   if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
   else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 }).catch(err => console.error('處理 Hero 影片時發生錯誤:', err));
 
 function onYouTubeIframeAPIReady() {
-  if (!heroVideos.length) return;
+  if (!heroVideos.length || heroOrder.length === 0) return;
 
-  // 先蓋遮罩，避免看到縮圖牆
+  // 先蓋遮罩，避免看到縮圖牆（你的 CSS 需有 #heroMask.show { opacity:1 }）
   const mask = document.getElementById('heroMask');
   if (mask) mask.classList.add('show');
 
@@ -117,7 +118,8 @@ function onYouTubeIframeAPIReady() {
         e.target.playVideo();
         updateHeroCaption(0);
       },
-      onStateChange: onPlayerStateChange
+      onStateChange: onPlayerStateChange,
+      onError: () => { try { nextHero(); } catch (e) {} } // 影片錯誤就跳下一支
     }
   });
 }
@@ -128,24 +130,32 @@ function onPlayerStateChange(event) {
   // 任何狀態變化都先清除舊計時器
   if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
 
-  // 除了「播放中」，其餘狀態都顯示遮罩
-  if (mask) {
-    if (event.data === YT.PlayerState.PLAYING) mask.classList.remove('show');
-    else mask.classList.add('show');
+  // 預設顯示遮罩；只有 PLAYING 才移除
+  if (mask) mask.classList.add('show');
+
+  // 影片已載入（CUED）但尚未播放 → 立刻播放，避免停在縮圖牆
+  if (event.data === YT.PlayerState.CUED) {
+    try { heroPlayer.playVideo(); } catch (e) {}
+    return; // 等 PLAYING 再處理其它邏輯
   }
 
   if (event.data === YT.PlayerState.PLAYING) {
+    if (mask) mask.classList.remove('show');
+
     const currentVideoId = heroPlayer.getVideoData().video_id;
     if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
       currentHeroIndex = ytIdToIndex[currentVideoId];
-      heroPos = heroOrder.indexOf(currentVideoId); // 讓指標與實際播放同步
+      heroPos = heroOrder.indexOf(currentVideoId); // 與實際播放同步
       updateHeroCaption(currentHeroIndex);
     }
 
-    // 播放中啟動 10 秒後自動切下一支（用我們自己的序列）
-    heroTimer = setTimeout(() => {
-      try { nextHero(); } catch (e) {}
-    }, 10000);
+    // 播放中：10 秒後切下一支（用我們自己的序列）
+    heroTimer = setTimeout(() => { try { nextHero(); } catch (e) {} }, 10000);
+  }
+
+  // 自然播畢也直接切下一支，避免停在縮圖牆
+  if (event.data === YT.PlayerState.ENDED) {
+    try { nextHero(); } catch (e) {}
   }
 }
 
@@ -165,8 +175,8 @@ function nextHero() {
   if (heroPos >= heroOrder.length) {
     let arr = heroOrder.slice();
     let currentIndex = arr.length, randomIndex;
-    while (currentIndex != 0) {
-      randomIndex = Math.floor(Math.random() * (currentIndex));
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
       [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
     }
@@ -181,6 +191,7 @@ function nextHero() {
   if (mask) mask.classList.add('show');
 
   heroPlayer.loadVideoById(nextId);
+  try { heroPlayer.playVideo(); } catch (e) {} // 強制播放，避免停在 CUED
 }
 
 /* ====== 保險：分頁切換 / 全螢幕時暫停 Hero ====== */
@@ -194,9 +205,7 @@ document.addEventListener('visibilitychange', () => {
   } else {
     try { heroPlayer.playVideo(); } catch {}
     if (!heroTimer) {
-      heroTimer = setTimeout(() => {
-        try { nextHero(); } catch (e) {}
-      }, 10000);
+      heroTimer = setTimeout(() => { try { nextHero(); } catch (e) {} }, 10000);
     }
   }
 });
@@ -210,12 +219,11 @@ document.addEventListener('fullscreenchange', () => {
   } else {
     try { heroPlayer.playVideo(); } catch {}
     if (!heroTimer) {
-      heroTimer = setTimeout(() => {
-        try { nextHero(); } catch (e) {}
-      }, 10000);
+      heroTimer = setTimeout(() => { try { nextHero(); } catch (e) {} }, 10000);
     }
   }
 });
+
 
 
   // --- 精選節目區塊邏輯 ---
