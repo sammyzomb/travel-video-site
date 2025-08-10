@@ -195,33 +195,72 @@ document.addEventListener('DOMContentLoaded', () => {
     try { heroPlayer.playVideo(); } catch {}
   }
 
-  // === 精選節目 ===
-  fetch('featured_updated.json')
-    .then(res => res.ok ? res.json() : Promise.reject('無法載入 featured_updated.json'))
-    .then(data => {
-      const container = document.getElementById('featured-videos');
-      if (!container) return;
-      container.innerHTML = '';
-      data.forEach(video => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-        const highResThumb = `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`;
-        const standardThumb = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
-        const thumb = video.image ? video.image : highResThumb;
-        card.innerHTML = `
-          <div class="video-thumb">
-            <img src="${thumb}" alt="${video.title}" onerror="this.onerror=null;this.src='${standardThumb}';">
-          </div>
-          <div class="video-content">
-            <div class="video-tags">${(video.tags||[]).join(' / ')}</div>
-            <div class="video-title">${video.title||''}</div>
-            <div class="video-desc">${video.description||''}</div>
-            <button class="video-cta" data-videoid="${video.youtubeId}">${video.cta||'播放'}</button>
-          </div>`;
-        container.appendChild(card);
-      });
-    })
-    .catch(err => console.error('處理精選節目時發生錯誤:', err));
+ // === 精選節目（Contentful 版本｜最多顯示 8 支）===
+(async function loadFeaturedFromCF() {
+  const container = document.getElementById('featured-videos');
+  if (!container) return;
+
+  try {
+    const entries = await contentfulClient.getEntries({
+      content_type: 'video',      // 若你的 content type 不是 'video' 請告訴我
+      'fields.isFeatured': true,  // 精選布林欄位（ID 如不同再告訴我）
+      order: '-sys.updatedAt',
+      limit: 24
+    });
+
+    const items = (entries.items || []).map(it => {
+      const f = it.fields || {};
+      const title = f.title || f.videoTitle || '';
+      const desc  = f.description || f.shortDescription || f.featuredText || '';
+      const ytid  = f.youTubeId || f.youtubeId || '';
+      const mp4   = f.mp4Url || f.mp4 || '';
+      const tags  = Array.isArray(f.tags) ? f.tags : [];
+      let thumb = '';
+      if (f.thumbnail?.fields?.file?.url) {
+        thumb = f.thumbnail.fields.file.url.startsWith('http')
+          ? f.thumbnail.fields.file.url
+          : `https:${f.thumbnail.fields.file.url}`;
+      }
+      if (!thumb && ytid) thumb = `https://i.ytimg.com/vi/${ytid}/maxresdefault.jpg`;
+      return { title, desc, ytid, mp4, tags, thumb };
+    });
+
+    const SHOW_MAX = 8;
+    const showList = items.slice(0, SHOW_MAX);
+
+    const frag = document.createDocumentFragment();
+    showList.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      card.innerHTML = `
+        <div class="video-thumb">
+          ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}"
+             onerror="this.onerror=null;this.src='${v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : ''}';">`
+                    : `<div style="width:100%;height:230px;background:var(--card-bg);"></div>`}
+        </div>
+        <div class="video-content">
+          ${v.tags?.length ? `<div class="video-tags">${v.tags.join(' / ')}</div>` : ``}
+          <div class="video-title">${escapeHtml(v.title)}</div>
+          ${v.desc ? `<div class="video-desc">${escapeHtml(v.desc)}</div>` : ``}
+          ${v.ytid
+              ? `<button class="video-cta" data-type="youtube" data-videoid="${v.ytid}">立即觀看</button>`
+              : v.mp4
+                ? `<button class="video-cta" data-type="mp4" data-src="${v.mp4}">立即觀看</button>`
+                : ``}
+        </div>`;
+      frag.appendChild(card);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(frag);
+
+    // >8 之後我們再加「查看更多」按鈕（下一步處理）
+  } catch (err) {
+    console.error('Contentful 連線失敗（featured）：', err);
+    const container = document.getElementById('featured-videos');
+    if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
+  }
+})();
 
   // === 節目表預告 ===
   Promise.all([
