@@ -1,64 +1,115 @@
+// 初始化 Contentful client
+const contentfulClient = contentful.createClient({
+  space: 'os5wf90ljenp',
+  accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+});
+
+// 確保整個網頁 DOM 都載入完成後，再執行我們的程式碼
+document.addEventListener('DOMContentLoaded', function() {
+
+  // --- 漢堡選單邏輯 ---
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const sideMenu = document.getElementById('side-menu');
+  const menuOverlay = document.getElementById('menu-overlay');
+  const body = document.body;
+
+  function toggleMenu() {
+    sideMenu.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+    body.classList.toggle('menu-open');
+  }
+
+  hamburgerBtn.addEventListener('click', toggleMenu);
+  menuOverlay.addEventListener('click', toggleMenu);
+
+
+  // --- 主題切換邏輯 ---
+  const themeSwitcher = document.getElementById('theme-switcher');
+  const themeIconSun = document.getElementById('theme-icon-sun');
+  const themeIconMoon = document.getElementById('theme-icon-moon');
+
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    body.classList.add(savedTheme);
+  } else {
+    const currentHour = new Date().getHours();
+    if (currentHour >= 18 || currentHour < 6) {
+      body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark-theme');
+    }
+  }
+  updateThemeIcon(body.classList.contains('dark-theme') ? 'dark-theme' : '');
+
+  themeSwitcher.addEventListener('click', (e) => {
+    e.preventDefault();
+    body.classList.toggle('dark-theme');
+    let currentTheme = body.classList.contains('dark-theme') ? 'dark-theme' : '';
+    localStorage.setItem('theme', currentTheme);
+    updateThemeIcon(currentTheme);
+  });
+
+  function updateThemeIcon(theme) {
+    if (!themeIconSun || !themeIconMoon) return;
+    if (theme === 'dark-theme') {
+      themeIconSun.style.display = 'none';
+      themeIconMoon.style.display = 'inline-block';
+    } else {
+      themeIconSun.style.display = 'inline-block';
+      themeIconMoon.style.display = 'none';
+    }
+  }
 // --- Hero 區塊邏輯 ---
 let heroVideos = [], currentHeroIndex = 0, heroPlayer;
 let ytIdToIndex = {};
 let heroTimer = null;
-let heroOrder = [];     // 這一輪的播放順序（洗牌後的 id）
-let heroPos = 0;        // 目前播放到第幾支
-let lastPlayedId = null; // 上一支播放的是哪一支（用來避免連播）
+let heroOrder = [];   // 這一輪的播放順序（用洗過的順序）
+let heroPos = 0;      // 目前播放到第幾支
 
 contentfulClient.getEntries({
   content_type: 'video',
   'fields.isHero': true,
   order: '-sys.updatedAt',
-  limit: 1000
+  limit: 100 // 預設 Contentful 只回 100 筆，保險加上
 }).then(response => {
-  // 映射欄位並濾掉沒有 YouTube ID 的項目
-  const mapped = response.items.map(item => ({
-    sysId: item.sys.id,
-    updatedAt: item.sys.updatedAt,
+  console.log(`Contentful 回傳總筆數: ${response.items.length}`);
+  // 轉成前端需要的結構
+  const data = response.items.map(item => ({
     id: item.fields.youTubeId || '',
     title: item.fields.heroTitle || item.fields.title || '',
     desc: item.fields.heroText || item.fields.description || '',
     thumb: item.fields.thumbnail?.fields?.file?.url || '',
-  })).filter(v => v.id);
+  }));
 
-  // 以 youTubeId 去重（同一支影片保留較新的）
-  const byId = new Map();
-  for (const v of mapped) {
-    const has = byId.get(v.id);
-    if (!has || new Date(v.updatedAt) > new Date(has.updatedAt)) byId.set(v.id, v);
-  }
-  let data = Array.from(byId.values());
+  // 過濾空 ID（避免沒有影片的資料進來）
+  const filteredData = data.filter(v => v.id);
+  console.log(`過濾空 ID 後剩餘影片數: ${filteredData.length}`);
+  console.log('影片清單:', filteredData.map(v => v.id));
 
-  // 洗牌（Fisher–Yates）
-  let currentIndex = data.length, randomIndex;
-  while (currentIndex !== 0) {
+  // 洗牌
+  let currentIndex = filteredData.length, randomIndex;
+  while (currentIndex != 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
-    [data[currentIndex], data[randomIndex]] = [data[randomIndex], data[currentIndex]];
+    [filteredData[currentIndex], filteredData[randomIndex]] = [filteredData[randomIndex], filteredData[currentIndex]];
   }
 
-  heroVideos = data;
-  heroOrder = heroVideos.map(v => v.id);
+  heroVideos = filteredData;
+  heroOrder = heroVideos.map(v => v.id); // 本輪順序 = 洗過後的 id
   heroPos = 0;
-  ytIdToIndex = {};
   heroVideos.forEach((v, i) => ytIdToIndex[v.id] = i);
-
-  if (heroOrder.length === 0) return;
 
   if (window.YT && window.YT.Player) onYouTubeIframeAPIReady();
   else window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 }).catch(err => console.error('處理 Hero 影片時發生錯誤:', err));
 
 function onYouTubeIframeAPIReady() {
-  if (!heroVideos.length || !heroOrder.length) return;
+  if (!heroVideos.length) return;
 
-  // 先蓋遮罩，避免看到縮圖牆（CSS 請確保 .show 會讓遮罩可見）
   const mask = document.getElementById('heroMask');
   if (mask) mask.classList.add('show');
 
   heroPlayer = new YT.Player('ytPlayer', {
-    videoId: heroOrder[0],  // 第一支
+    videoId: heroOrder[0],
     playerVars: {
       autoplay: 1, mute: 1, controls: 0, rel: 0, showinfo: 0, modestbranding: 1,
       playsinline: 1, fs: 0, disablekb: 1, iv_load_policy: 3
@@ -70,8 +121,7 @@ function onYouTubeIframeAPIReady() {
         e.target.playVideo();
         updateHeroCaption(0);
       },
-      onStateChange: onPlayerStateChange,
-      onError: () => { try { nextHero(); } catch (e) {} } // 影片錯誤就跳下一支
+      onStateChange: onPlayerStateChange
     }
   });
 }
@@ -79,36 +129,24 @@ function onYouTubeIframeAPIReady() {
 function onPlayerStateChange(event) {
   const mask = document.getElementById('heroMask');
 
-  // 任何狀態變化都先清除舊計時器
   if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
 
-  // 預設顯示遮罩；只有 PLAYING 才移除
-  if (mask) mask.classList.add('show');
-
-  // 影片已載入（CUED）但尚未播放 → 立刻播放，避免停在縮圖牆
-  if (event.data === YT.PlayerState.CUED) {
-    try { heroPlayer.playVideo(); } catch (e) {}
-    return; // 等 PLAYING 再處理其他邏輯
+  if (mask) {
+    if (event.data === YT.PlayerState.PLAYING) mask.classList.remove('show');
+    else mask.classList.add('show');
   }
 
   if (event.data === YT.PlayerState.PLAYING) {
-    if (mask) mask.classList.remove('show');
-
     const currentVideoId = heroPlayer.getVideoData().video_id;
     if (ytIdToIndex.hasOwnProperty(currentVideoId)) {
       currentHeroIndex = ytIdToIndex[currentVideoId];
-      heroPos = heroOrder.indexOf(currentVideoId); // 與實際播放同步
+      heroPos = heroOrder.indexOf(currentVideoId);
       updateHeroCaption(currentHeroIndex);
-      lastPlayedId = currentVideoId;                // 記錄剛播放的影片
     }
 
-    // 播放中：10 秒後切下一支（用我們自己的序列）
-    heroTimer = setTimeout(() => { try { nextHero(); } catch (e) {} }, 10000);
-  }
-
-  // 自然播畢也直接切下一支，避免停在縮圖牆
-  if (event.data === YT.PlayerState.ENDED) {
-    try { nextHero(); } catch (e) {}
+    heroTimer = setTimeout(() => {
+      try { nextHero(); } catch (e) {}
+    }, 10000);
   }
 }
 
@@ -123,37 +161,139 @@ function updateHeroCaption(index) {
 }
 
 function nextHero() {
-  // 前進一支
   heroPos++;
-
-  // 到尾端就重洗新一輪
   if (heroPos >= heroOrder.length) {
     let arr = heroOrder.slice();
     let currentIndex = arr.length, randomIndex;
-    while (currentIndex !== 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
+    while (currentIndex != 0) {
+      randomIndex = Math.floor(Math.random() * (currentIndex));
       currentIndex--;
       [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
-    }
-    // 避免新一輪第一支剛好又是上一支
-    if (arr.length > 1 && lastPlayedId && arr[0] === lastPlayedId) {
-      [arr[0], arr[1]] = [arr[1], arr[0]];
     }
     heroOrder = arr;
     heroPos = 0;
   }
 
-  // 取得下一支；若不巧等於上一支，再往後推一格
-  let nextId = heroOrder[heroPos];
-  if (lastPlayedId && nextId === lastPlayedId && heroOrder.length > 1) {
-    heroPos = (heroPos + 1) % heroOrder.length;
-    nextId = heroOrder[heroPos];
-  }
-
-  // 切片前先蓋遮罩
+  const nextId = heroOrder[heroPos];
   const mask = document.getElementById('heroMask');
   if (mask) mask.classList.add('show');
 
   heroPlayer.loadVideoById(nextId);
-  try { heroPlayer.playVideo(); } catch (e) {} // 強制播放，避免停在 CUED
 }
+
+  // --- 精選節目區塊邏輯 ---
+  fetch("featured_updated.json")
+    .then(res => res.ok ? res.json() : Promise.reject('無法載入 featured_updated.json'))
+    .then(data => {
+      const container = document.getElementById("featured-videos");
+      if (!container) return;
+      container.innerHTML = '';
+      data.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        
+        // --- 圖片載入邏輯已更新 ---
+        const highResThumb = `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`;
+        const standardThumb = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`;
+        const thumb = video.image ? video.image : highResThumb;
+
+        card.innerHTML = `
+          <div class="video-thumb">
+            <img src="${thumb}" alt="${video.title}" onerror="this.onerror=null;this.src='${standardThumb}';">
+          </div>
+          <div class="video-content">
+            <div class="video-tags">${video.tags.join(' / ')}</div>
+            <div class="video-title">${video.title}</div>
+            <div class="video-desc">${video.description}</div>
+            <button class="video-cta" data-videoid="${video.youtubeId}">${video.cta}</button>
+          </div>`;
+        container.appendChild(card);
+      });
+    })
+    .catch(error => console.error('處理精選節目時發生錯誤:', error));
+    
+  // --- 節目表預告邏輯 ---
+  Promise.all([
+    fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
+    fetch('videos.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 videos.json'))
+  ])
+  .then(([programData, videosData]) => {
+    const container = document.getElementById('schedule-spotlight');
+    if (!container) return;
+    
+    const videosMap = new Map(videosData.map(video => [video.id, video]));
+    const spotlightPrograms = programData.slice(0, 3);
+
+    spotlightPrograms.forEach(item => {
+      const videoInfo = videosMap.get(item.vid);
+      if (videoInfo) {
+        const scheduleCard = document.createElement('a');
+        scheduleCard.href = `video.html?id=${videoInfo.id}`;
+        scheduleCard.className = 'schedule-card';
+        scheduleCard.innerHTML = `
+          <img src="${videoInfo.thumb}" alt="${item.title}" class="schedule-card-img">
+          <div class="schedule-card-overlay">
+            <div class="schedule-card-time">${item.start}</div>
+            <div class="schedule-card-title">${item.title}</div>
+          </div>
+        `;
+        container.appendChild(scheduleCard);
+      }
+    });
+  })
+  .catch(error => console.error('處理節目表預告時發生錯誤:', error));
+
+
+  // --- 全螢幕播放器邏輯 ---
+  const fullscreenPlayerEl = document.getElementById("fullscreenPlayer");
+  let fullscreenPlayerObject = null;
+
+  document.body.addEventListener('click', function(event) {
+    if (event.target && event.target.classList.contains('video-cta')) {
+      const videoId = event.target.dataset.videoid;
+      if (videoId) openFullscreenPlayer(videoId);
+    }
+  });
+
+  fullscreenPlayerEl.addEventListener('click', function(event) {
+    if (event.target && event.target.classList.contains('close-player-btn')) {
+      closeFullscreenPlayer();
+    }
+  });
+
+  function openFullscreenPlayer(videoId) {
+    if (!fullscreenPlayerEl) return;
+    document.body.style.overflow = 'hidden';
+    fullscreenPlayerEl.innerHTML = `
+      <button class="close-player-btn" title="關閉">&times;</button>
+      <div id="main-player"></div>`;
+    fullscreenPlayerEl.classList.add("active");
+    fullscreenPlayerObject = new YT.Player('main-player', {
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1 },
+        events: { 'onReady': onPlayerReady }
+    });
+  }
+
+  function onPlayerReady(event) {
+    event.target.setPlaybackQuality('highres');
+    event.target.playVideo();
+  }
+
+  function closeFullscreenPlayer() {
+    if (!fullscreenPlayerEl) return;
+    document.body.style.overflow = '';
+    if (fullscreenPlayerObject && typeof fullscreenPlayerObject.destroy === 'function') {
+        fullscreenPlayerObject.destroy();
+        fullscreenPlayerObject = null;
+    }
+    fullscreenPlayerEl.innerHTML = "";
+    fullscreenPlayerEl.classList.remove("active");
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeFullscreenPlayer();
+  });
+});
