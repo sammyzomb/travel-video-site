@@ -9,18 +9,28 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
 
-  <!-- 只放大 HERO 區塊高度，其它不動 -->
+  <!-- HERO 視覺覆蓋：調低高度、左右滿版、避免黑邊與水平捲軸 -->
   <style id="hero-size-override">
     :root{
-      --hero-h-desktop: 80vh; /* 桌機想更大可改 90~92vh */
-      --hero-h-mobile: 66vh;  /* 手機想更大可改 68~72vh */
+      /* 視覺高度：覺得還高可改成 68~70vh；覺得太矮可調回 74~76vh */
+      --hero-h-desktop: 72vh;
+      --hero-h-mobile: 60vh;
     }
 
-    /* 撐高 HERO 容器與背景包裹 */
-    .hero,
+    /* 讓頁面不出現水平捲軸（因 100vw 技巧） */
+    html, body { overflow-x: hidden; }
+
+    /* HERO 區塊本身只負責裁切與定位，其他區塊不受影響 */
+    .hero { position: relative; overflow: hidden; }
+
+    /* 影片背景包裹：寬度拉到滿視窗，置中對齊；高度用上面變數控制 */
     .hero .yt-bg-wrapper{
-      height: var(--hero-h-desktop) !important;
-      min-height: 640px;
+      position: relative;
+      width: 100vw;              /* 左右滿版 */
+      left: 50%;
+      transform: translateX(-50%);
+      height: var(--hero-h-desktop);
+      min-height: 480px;
     }
 
     /* 讓 YouTube 播放器填滿容器 */
@@ -36,10 +46,9 @@
 
     /* 手機高度 */
     @media (max-width: 768px){
-      .hero,
       .hero .yt-bg-wrapper{
-        height: var(--hero-h-mobile) !important;
-        min-height: 420px;
+        height: var(--hero-h-mobile);
+        min-height: 380px;
       }
     }
   </style>
