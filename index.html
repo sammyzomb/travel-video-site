@@ -8,6 +8,41 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+
+  <!-- 只放大 HERO 區塊高度，其它不動 -->
+  <style id="hero-size-override">
+    :root{
+      --hero-h-desktop: 88vh; /* 桌機想更大可改 90~92vh */
+      --hero-h-mobile: 66vh;  /* 手機想更大可改 68~72vh */
+    }
+
+    /* 撐高 HERO 容器與背景包裹 */
+    .hero,
+    .hero .yt-bg-wrapper{
+      height: var(--hero-h-desktop) !important;
+      min-height: 640px;
+    }
+
+    /* 讓 YouTube 播放器填滿容器 */
+    #ytPlayer{
+      height: 100% !important;
+      min-height: inherit !important;
+    }
+    #ytPlayer iframe{
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* 手機高度 */
+    @media (max-width: 768px){
+      .hero,
+      .hero .yt-bg-wrapper{
+        height: var(--hero-h-mobile) !important;
+        min-height: 420px;
+      }
+    }
+  </style>
 </head>
 <body>
 
