@@ -204,25 +204,33 @@ document.addEventListener('DOMContentLoaded', () => {
     heroPlayer.loadVideoById(nextId);
     try { heroPlayer.playVideo(); } catch {}
   }
- // === 精選節目（Contentful 版本｜最多顯示 8 支）===
+
+// === 精選節目（Contentful 版本｜最多顯示 8 支，標題 20 字、描述 30 字限制）===
 (async function loadFeaturedFromCF() {
   const container = document.getElementById('featured-videos');
   if (!container) return;
 
+  // 小工具：取第一個有值的欄位
+  const pick = (f, keys) => {
+    for (const k of keys) {
+      if (f && f[k] != null && f[k] !== '') return f[k];
+    }
+    return '';
+  };
+
+  // 小工具：限制字數
+  const limitText = (txt, max) => {
+    if (!txt) return '';
+    return txt.length > max ? txt.slice(0, max) + '…' : txt;
+  };
+
   try {
     const entries = await contentfulClient.getEntries({
-      content_type: 'video',       // 影片 Content type ID
-      'fields.isFeatured': true,   // 精選節目推薦欄位 ID
+      content_type: 'video',
+      'fields.isFeatured': true,
       order: '-sys.updatedAt',
       limit: 24
     });
-
-    const pick = (f, keys) => {
-      for (const k of keys) {
-        if (f && f[k] != null && f[k] !== '') return f[k];
-      }
-      return '';
-    };
 
     const items = (entries.items || []).map(it => {
       const f = it.fields || {};
@@ -252,13 +260,14 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'video-card';
       card.innerHTML = `
         <div class="video-thumb">
-          ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}">`
+          ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}"
+             onerror="this.onerror=null;this.src='${v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : ''}';">`
                     : `<div style="width:100%;height:230px;background:var(--card-bg);"></div>`}
         </div>
         <div class="video-content">
           ${v.tags?.length ? `<div class="video-tags">${v.tags.join(' / ')}</div>` : ``}
-          <div class="video-title">${escapeHtml(v.title || '未命名影片')}</div>
-          ${v.desc ? `<div class="video-desc">${escapeHtml(v.desc)}</div>` : ``}
+          <div class="video-title">${escapeHtml(limitText(v.title || '未命名影片', 20))}</div>
+          ${v.desc ? `<div class="video-desc">${escapeHtml(limitText(v.desc, 30))}</div>` : ``}
           ${
             v.ytid
               ? `<button class="video-cta" data-type="youtube" data-videoid="${v.ytid}">立即觀看</button>`
@@ -279,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
   }
 })();
-
 
 
   // === 節目表預告 ===
