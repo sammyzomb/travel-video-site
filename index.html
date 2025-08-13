@@ -8,50 +8,6 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
-
-  <!-- HERO 視覺覆蓋：調低高度、左右滿版、避免黑邊與水平捲軸 -->
-  <style id="hero-size-override">
-    :root{
-      /* 視覺高度：覺得還高可改成 68~70vh；覺得太矮可調回 74~76vh */
-      --hero-h-desktop: 72vh;
-      --hero-h-mobile: 60vh;
-    }
-
-    /* 讓頁面不出現水平捲軸（因 100vw 技巧） */
-    html, body { overflow-x: hidden; }
-
-    /* HERO 區塊本身只負責裁切與定位，其他區塊不受影響 */
-    .hero { position: relative; overflow: hidden; }
-
-    /* 影片背景包裹：寬度拉到滿視窗，置中對齊；高度用上面變數控制 */
-    .hero .yt-bg-wrapper{
-      position: relative;
-      width: 100vw;              /* 左右滿版 */
-      left: 50%;
-      transform: translateX(-50%);
-      height: var(--hero-h-desktop);
-      min-height: 480px;
-    }
-
-    /* 讓 YouTube 播放器填滿容器 */
-    #ytPlayer{
-      height: 100% !important;
-      min-height: inherit !important;
-    }
-    #ytPlayer iframe{
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-    }
-
-    /* 手機高度 */
-    @media (max-width: 768px){
-      .hero .yt-bg-wrapper{
-        height: var(--hero-h-mobile);
-        min-height: 380px;
-      }
-    }
-  </style>
 </head>
 <body>
 
