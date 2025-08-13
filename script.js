@@ -1,3 +1,13 @@
+// 避免文字有 HTML 特殊符號出錯
+function escapeHtml(s='') {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 // 初始化 Contentful client
 const contentfulClient = contentful.createClient({
   space: 'os5wf90ljenp',
@@ -194,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     heroPlayer.loadVideoById(nextId);
     try { heroPlayer.playVideo(); } catch {}
   }
-
  // === 精選節目（Contentful 版本｜最多顯示 8 支）===
 (async function loadFeaturedFromCF() {
   const container = document.getElementById('featured-videos');
@@ -202,26 +211,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   try {
     const entries = await contentfulClient.getEntries({
-      content_type: 'video',      // 若你的 content type 不是 'video' 請告訴我
-      'fields.isFeatured': true,  // 精選布林欄位（ID 如不同再告訴我）
+      content_type: 'video',       // 影片 Content type ID
+      'fields.isFeatured': true,   // 精選節目推薦欄位 ID
       order: '-sys.updatedAt',
       limit: 24
     });
 
+    const pick = (f, keys) => {
+      for (const k of keys) {
+        if (f && f[k] != null && f[k] !== '') return f[k];
+      }
+      return '';
+    };
+
     const items = (entries.items || []).map(it => {
       const f = it.fields || {};
-      const title = f.title || f.videoTitle || '';
-      const desc  = f.description || f.shortDescription || f.featuredText || '';
-      const ytid  = f.youTubeId || f.youtubeId || '';
-      const mp4   = f.mp4Url || f.mp4 || '';
+      const title = pick(f, ['影片標題','title']);
+      const desc  = pick(f, ['精選推薦影片說明文字','description']);
+      const ytid  = pick(f, ['YouTube ID','youTubeId']);
+      const mp4   = pick(f, ['MP4 影片網址','mp4Url']);
       const tags  = Array.isArray(f.tags) ? f.tags : [];
+
       let thumb = '';
-      if (f.thumbnail?.fields?.file?.url) {
-        thumb = f.thumbnail.fields.file.url.startsWith('http')
-          ? f.thumbnail.fields.file.url
-          : `https:${f.thumbnail.fields.file.url}`;
+      const cfThumb = f.thumbnail?.fields?.file?.url;
+      if (cfThumb) {
+        thumb = cfThumb.startsWith('http') ? cfThumb : `https:${cfThumb}`;
+      } else if (ytid) {
+        thumb = `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`;
       }
-      if (!thumb && ytid) thumb = `https://i.ytimg.com/vi/${ytid}/maxresdefault.jpg`;
+
       return { title, desc, ytid, mp4, tags, thumb };
     });
 
@@ -234,19 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'video-card';
       card.innerHTML = `
         <div class="video-thumb">
-          ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}"
-             onerror="this.onerror=null;this.src='${v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : ''}';">`
+          ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}">`
                     : `<div style="width:100%;height:230px;background:var(--card-bg);"></div>`}
         </div>
         <div class="video-content">
           ${v.tags?.length ? `<div class="video-tags">${v.tags.join(' / ')}</div>` : ``}
-          <div class="video-title">${escapeHtml(v.title)}</div>
+          <div class="video-title">${escapeHtml(v.title || '未命名影片')}</div>
           ${v.desc ? `<div class="video-desc">${escapeHtml(v.desc)}</div>` : ``}
-          ${v.ytid
+          ${
+            v.ytid
               ? `<button class="video-cta" data-type="youtube" data-videoid="${v.ytid}">立即觀看</button>`
-              : v.mp4
-                ? `<button class="video-cta" data-type="mp4" data-src="${v.mp4}">立即觀看</button>`
-                : ``}
+              : (v.mp4 ? `<a class="video-cta" href="${v.mp4}" target="_blank" rel="noopener">播放 MP4</a>` : ``)
+          }
         </div>`;
       frag.appendChild(card);
     });
@@ -254,13 +271,16 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = '';
     container.appendChild(frag);
 
-    // >8 之後我們再加「查看更多」按鈕（下一步處理）
+    if (!showList.length) {
+      container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
+    }
   } catch (err) {
     console.error('Contentful 連線失敗（featured）：', err);
-    const container = document.getElementById('featured-videos');
     if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
   }
 })();
+
+
 
   // === 節目表預告 ===
   Promise.all([
