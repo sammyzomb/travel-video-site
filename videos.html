@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>所有節目｜航向世界旅遊頻道</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 之後會用到 Contentful SDK；先不用載入 -->
+  <style>
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
+    .page-head { display:flex; align-items:center; gap:12px; margin: 8px 0 16px; }
+    .page-head h1 { font-weight: 900; font-size: 28px; margin: 0; }
+    .hint { color:#6b7280; font-size:14px; }
+    .placeholder {
+      border:1px dashed #cbd5e1; border-radius:12px; padding:24px; color:#64748b;
+      background: linear-gradient(90deg,#f8fafc 0%,#f1f5f9 50%,#f8fafc 100%);
+    }
+  </style>
+</head>
+<body>
+  <main class="page-wrap">
+    <div class="page-head">
+      <h1>所有節目</h1>
+      <span class="hint">（下一步會自動依「洲 → 國家／綜合」分組）</span>
+    </div>
+    <div id="all-videos">
+      <div class="placeholder">
+        這裡將載入所有節目清單。<br>通過後我再帶你加入 JS 從 Contentful 取資料並自動分類。
+      </div>
+    </div>
+  </main>
+</body>
+</html>
