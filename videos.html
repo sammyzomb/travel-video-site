@@ -201,16 +201,55 @@
     };
     const getFlag = (country) => COUNTRY_FLAGS[country] || '';
 
-    const ALIAS_EXACT = new Map();
-    const ALIAS_TEXT = [];
-    for (const row of COUNTRY_INDEX) {
-      for (const a of row.aliases) {
-        const key = norm(a);
-        ALIAS_EXACT.set(key, { country: row.country, continent: row.continent });
-        if (key.length >= 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
-      }
+   // === 別名索引（國名 + 城市名）===
+const ALIAS_EXACT = new Map();
+const ALIAS_TEXT = [];
+
+// 1) 來自 COUNTRY_INDEX 的「國名」與其別名（長度 ≥ 2；國名權重 2）
+for (const row of COUNTRY_INDEX) {
+  for (const a of row.aliases) {
+    const key = norm(a);
+    const val = { country: row.country, continent: row.continent };
+    ALIAS_EXACT.set(key, val); // tags 完整比對
+    if (key.length >= 2) {
+      ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent, weight: 2 });
     }
-    ALIAS_TEXT.sort((a,b)=>b.alias.length-a.alias.length);
+  }
+}
+
+// 2) 常見「城市/地區」→ 國家（可持續擴充；城市權重 1）
+const CITY_ALIASES = [
+  // 印尼
+  ['雅加達','印尼','asia'], ['日惹','印尼','asia'], ['泗水','印尼','asia'], ['萬隆','印尼','asia'],
+  ['峇里','印尼','asia'], ['巴里島','印尼','asia'], ['峇里島','印尼','asia'], ['龍目','印尼','asia'],
+  ['爪哇','印尼','asia'], ['蘇門答臘','印尼','asia'],
+  // 泰國
+  ['曼谷','泰國','asia'], ['清邁','泰國','asia'], ['普吉','泰國','asia'], ['芭達雅','泰國','asia'],
+  // 越南
+  ['胡志明','越南','asia'], ['河內','越南','asia'], ['峴港','越南','asia'],
+  // 土耳其
+  ['伊斯坦堡','土耳其','asia'], ['卡帕多奇亞','土耳其','asia'], ['安卡拉','土耳其','asia'],
+  // 日本
+  ['東京','日本','asia'], ['大阪','日本','asia'], ['京都','日本','asia'], ['沖繩','日本','asia'],
+  // 馬來西亞
+  ['吉隆坡','馬來西亞','asia'], ['檳城','馬來西亞','asia'], ['亞庇','馬來西亞','asia'],
+  // 英文常見
+  ['jakarta','印尼','asia'], ['bali','印尼','asia'], ['yogyakarta','印尼','asia'], ['bandung','印尼','asia'],
+  ['surabaya','印尼','asia'], ['bangkok','泰國','asia'], ['chiang mai','泰國','asia'], ['phuket','泰國','asia'],
+  ['istanbul','土耳其','asia'], ['cappadocia','土耳其','asia'], ['tokyo','日本','asia'], ['kyoto','日本','asia'],
+  ['osaka','日本','asia'], ['okinawa','日本','asia'], ['kuala lumpur','馬來西亞','asia'], ['penang','馬來西亞','asia'],
+];
+
+for (const [alias, country, continent] of CITY_ALIASES) {
+  const k = norm(alias);
+  const val = { country, continent };
+  ALIAS_EXACT.set(k, val);                                  // 若城市出現在 tags 也能命中
+  ALIAS_TEXT.push({ alias: k, country, continent, weight: 1 }); // 內文/標題比對
+}
+
+// 長字優先；同長時「國名(2)」優先於「城市(1)」
+ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.weight));
+
 
     function guessCountryAndContinent({ title='', desc='', tags=[] }) {
       const nt = norm(title), nd = norm(desc);
