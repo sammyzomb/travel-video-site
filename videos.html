@@ -156,6 +156,7 @@
       { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
       { country:'伊朗', aliases:['伊朗','iran','ir','波斯','persia'], continent:'asia' },
       { country:'不丹', aliases:['不丹','bhutan','bt'], continent:'asia' },
+      { country:'伊朗', aliases:['伊朗','iran','ir','波斯','persia'], continent:'asia' },
 
 
       { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' },
@@ -171,6 +172,9 @@
       { country:'捷克', aliases:['捷克','czech','czechia','cz'], continent:'europe' },
       { country:'奧地利', aliases:['奧地利','austria','at'], continent:'europe' },
       { country:'冰島', aliases:['冰島','iceland','is'], continent:'europe' },
+      { country:'瑞士', aliases:['瑞士','switzerland','ch','schweiz','suisse','svizzera'], continent:'europe' },
+ 
+
 
       { country:'美國', aliases:['美國','usa','us','united states','america','u.s.'], continent:'north_america' },
       { country:'加拿大', aliases:['加拿大','canada','ca'], continent:'north_america' },
@@ -245,6 +249,30 @@ const CITY_ALIASES = [
   ['surabaya','印尼','asia'], ['bangkok','泰國','asia'], ['chiang mai','泰國','asia'], ['phuket','泰國','asia'],
   ['istanbul','土耳其','asia'], ['cappadocia','土耳其','asia'], ['tokyo','日本','asia'], ['kyoto','日本','asia'],
   ['osaka','日本','asia'], ['okinawa','日本','asia'], ['kuala lumpur','馬來西亞','asia'], ['penang','馬來西亞','asia'],
+  // 俄羅斯（貝加爾湖等）
+['貝加爾湖','俄羅斯','europe'], ['贝加尔湖','俄羅斯','europe'],
+['伊爾庫茨克','俄羅斯','europe'], ['irkutsk','俄羅斯','europe'],
+['baikal','俄羅斯','europe'], ['西伯利亞','俄羅斯','europe'],
+
+// 肯亞（馬賽馬拉）
+['馬賽馬拉','肯亞','africa'], ['馬塞馬拉','肯亞','africa'],
+['maasai mara','肯亞','africa'], ['masai mara','肯亞','africa'],
+
+// 瑞士（常見城市／景點）
+['蘇黎世','瑞士','europe'], ['日內瓦','瑞士','europe'], ['琉森','瑞士','europe'], ['盧塞恩','瑞士','europe'],
+['因特拉肯','瑞士','europe'], ['少女峰','瑞士','europe'], ['策馬特','瑞士','europe'], ['馬特洪峰','瑞士','europe'],
+['zurich','瑞士','europe'], ['geneva','瑞士','europe'], ['lucerne','瑞士','europe'],
+['interlaken','瑞士','europe'], ['zermatt','瑞士','europe'], ['matterhorn','瑞士','europe'],
+
+// 不丹
+['廷布','不丹','asia'], ['帕羅','不丹','asia'], ['普那卡','不丹','asia'], ['虎穴寺','不丹','asia'],
+['thimphu','不丹','asia'], ['paro','不丹','asia'], ['punakha','不丹','asia'], ['tigers nest','不丹','asia'],
+
+// 伊朗
+['德黑蘭','伊朗','asia'], ['伊斯法罕','伊朗','asia'], ['設拉子','伊朗','asia'],
+['納西爾清真寺','伊朗','asia'], ['粉紅清真寺','伊朗','asia'],
+['tehran','伊朗','asia'], ['isfahan','伊朗','asia'], ['shiraz','伊朗','asia'],
+['nasir al-mulk mosque','伊朗','asia'], ['pink mosque','伊朗','asia'],
 ];
 
 for (const [alias, country, continent] of CITY_ALIASES) {
