@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
 
-  <!-- 必要套件 -->
+  <!-- 必要套件：Contentful + Twemoji -->
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 
@@ -18,7 +18,8 @@
     :root{ --bg:#ffffff; --text:#111827; --card:#ffffff; --card-border:rgba(0,0,0,.06); }
     .dark-theme{ --bg:#0b1620; --text:#e5eef9; --card:#0f2133; --card-border:rgba(255,255,255,.06); }
     body{ background:var(--bg); color:var(--text); margin:0; }
-    /* 保底卡片樣式（你的 style.css 會蓋過也沒關係） */
+
+    /* 本頁必要樣式（你的 style.css 會覆蓋更精緻的外觀也OK） */
     .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
     .page-head { display:flex; align-items:center; gap:12px; margin: 8px 0 16px; }
     .page-head h1 { font-weight:900; font-size:28px; margin:0; }
@@ -45,7 +46,7 @@
 </head>
 <body>
 
-  <!-- 導覽列（沿用你給的結構；把所有節目改連 videos.html） -->
+  <!-- 導覽列（把「所有節目」指向本頁 videos.html） -->
   <div class="navbar">
     <a class="logo" href="index.html"><img src="logo.png" alt="航向世界旅遊頻道 LOGO" /></a>
     <nav class="desktop-nav">
@@ -99,17 +100,15 @@
     <div id="all-videos"><div class="placeholder">載入中…</div></div>
   </main>
 
-  <!-- 你的主站 JS（含主題切換／漢堡選單等） -->
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- 你的主站 JS（主題切換 / 漢堡選單等） -->
   <script src="script.js"></script>
 
+  <!-- 本頁邏輯：抓 Contentful → 分組 → 渲染（內嵌版） -->
   <script>
-  // ===== 小工具 =====
   const $ = (s, el=document) => el.querySelector(s);
   const escapeHtml = (s='') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const norm = (str='') => String(str).trim().toLowerCase().replace(/\s+/g,' ').replace(/[()．・·‚’'´`’‘"]/g,'').replace(/台/g,'臺');
 
-  // ===== 洲別（顯示順序）=====
   const CONTINENTS = [
     { key:'asia', label:'亞洲' }, { key:'europe', label:'歐洲' },
     { key:'north_america', label:'北美洲' }, { key:'south_america', label:'南美洲' },
@@ -117,21 +116,18 @@
     { key:'antarctica', label:'南極洲' }, { key:'other', label:'其他' },
   ];
 
-  // ===== 區域提示詞（直指洲；找不到國家時使用）=====
   const REGION_HINTS = new Map([
     ['東亞','asia'],['東北亞','asia'],['東南亞','asia'],['南亞','asia'],['中亞','asia'],['西亞','asia'],['中東','asia'],
     ['歐洲','europe'],['北歐','europe'],['東歐','europe'],['西歐','europe'],['中歐','europe'],['地中海','europe'],['巴爾幹','europe'],['斯堪地那維亞','europe'],
     ['北美','north_america'],['南美','south_america'],['中南美','south_america'],
     ['非洲','africa'],['撒哈拉','africa'],['撒哈拉以南非洲','africa'],
-    ['大洋洲','oceania'],['南太平洋','oceania'],
-    ['南極','antarctica'],['南極洲','antarctica'],
+    ['大洋洲','oceania'],['南太平洋','oceania'],['南極','antarctica'],['南極洲','antarctica'],
     ['east asia','asia'],['southeast asia','asia'],['south asia','asia'],['central asia','asia'],['middle east','asia'],
     ['europe','europe'],['mediterranean','europe'],['balkans','europe'],['scandinavia','europe'],['nordic','europe'],
     ['north america','north_america'],['south america','south_america'],['latin america','south_america'],
     ['africa','africa'],['sub-saharan','africa'],['oceania','oceania'],['antarctica','antarctica'],
   ]);
 
-  // ===== 國家別名索引（要補新國家就加 aliases）=====
   const COUNTRY_INDEX = [
     { country:'日本', aliases:['日本','にほん','nihon','nippon','japan','jp'], continent:'asia' },
     { country:'韓國', aliases:['韓國','南韓','대한민국','korea','south korea','kr'], continent:'asia' },
@@ -153,10 +149,10 @@
     { country:'約旦', aliases:['約旦','jordan','jo'], continent:'asia' },
     { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
 
-    { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' }, /* 地跨，先歸歐洲 */
+    { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' },
     { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
     { country:'挪威', aliases:['挪威','norway','no'], continent:'europe' },
-    { country:'瑞典', aliases:['瑞典','sweden','se'], continent:'europe' },
+    { country:'瑞典', aliases:['瑞甸','瑞典','sweden','se'], continent:'europe' },
     { country:'英國', aliases:['英國','uk','united kingdom','england','scotland','wales','northern ireland','gb'], continent:'europe' },
     { country:'法國', aliases:['法國','france','fr'], continent:'europe' },
     { country:'德國', aliases:['德國','germany','de'], continent:'europe' },
@@ -188,7 +184,6 @@
     { country:'紐西蘭', aliases:['紐西蘭','新西蘭','new zealand','nz'], continent:'oceania' },
   ];
 
-  // ===== 國旗（emoji；Twemoji 會轉 SVG）=====
   const COUNTRY_FLAGS = {
     '日本':'🇯🇵','韓國':'🇰🇷','台灣':'🇹🇼','中國':'🇨🇳','蒙古':'🇲🇳','哈薩克':'🇰🇿','吉爾吉斯':'🇰🇬','烏茲別克':'🇺🇿','塔吉克':'🇹🇯','土庫曼':'🇹🇲',
     '印度':'🇮🇳','泰國':'🇹🇭','越南':'🇻🇳','馬來西亞':'🇲🇾','印尼':'🇮🇩','尼泊爾':'🇳🇵','以色列':'🇮🇱','約旦':'🇯🇴','土耳其':'🇹🇷',
@@ -200,7 +195,6 @@
   };
   const getFlag = (country) => COUNTRY_FLAGS[country] || '';
 
-  // ===== 查表（精確: tags；文本: title/desc 子字串）=====
   const ALIAS_EXACT = new Map();
   const ALIAS_TEXT = [];
   for (const row of COUNTRY_INDEX) {
@@ -210,20 +204,21 @@
       if (key.length > 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
     }
   }
-  ALIAS_TEXT.sort((a,b) => b.alias.length - a.alias.length); // 長別名優先
+  ALIAS_TEXT.sort((a,b)=>b.alias.length-a.alias.length);
 
   function guessCountryAndContinent({ title='', desc='', tags=[] }) {
     const nt = norm(title), nd = norm(desc);
     const nTags = (Array.isArray(tags) ? tags : []).map(t => norm(String(t))).filter(Boolean);
 
-    for (const t of nTags) { const hit = ALIAS_EXACT.get(t); if (hit) return hit; }     // 1) tags 精確
-    for (const row of ALIAS_TEXT) if (nt.includes(row.alias)) return row;               // 2) 標題子字串
-    for (const row of ALIAS_TEXT) if (nd.includes(row.alias)) return row;               // 3) 說明子字串
-    for (const t of nTags) { const cont = REGION_HINTS.get(t); if (cont) return { country:null, continent:cont }; } // 4) 區域詞
+    for (const t of nTags) { const hit = ALIAS_EXACT.get(t); if (hit) return hit; }
+    for (const row of ALIAS_TEXT) if (nt.includes(row.alias)) return row;
+    for (const row of ALIAS_TEXT) if (nd.includes(row.alias)) return row;
+
+    for (const t of nTags) { const cont = REGION_HINTS.get(t); if (cont) return { country:null, continent:cont }; }
     for (const [hint, cont] of REGION_HINTS.entries()) {
       const h = norm(hint); if (h.length>2 && (nt.includes(h) || nd.includes(h))) return { country:null, continent:cont };
     }
-    return { country:null, continent:'other' }; // 5) 其他
+    return { country:null, continent:'other' };
   }
 
   function classifyItem(v) {
@@ -237,28 +232,31 @@
 
   (async function run(){
     const container = $('#all-videos');
+    if (!container) return;
     container.innerHTML = '<div class="placeholder">載入中…</div>';
-
-    const client = contentful.createClient({ space:'os5wf90ljenp', accessToken:'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0' });
 
     let res;
     try {
+      const client = contentful.createClient({
+        space: 'os5wf90ljenp',
+        accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+      });
       res = await client.getEntries({ content_type:'video', order:'-sys.updatedAt', limit:500 });
     } catch (e) {
-      console.error(e);
+      console.error('Contentful 連線失敗（videos.html）：', e);
       container.innerHTML = '<div class="placeholder">❌ 目前無法載入所有節目。</div>';
       return;
     }
 
     const pick = (obj, keys) => { for (const k of keys) if (obj && obj[k]!=null && obj[k]!=='') return obj[k]; return ''; };
-    const items = res.items.map(it=>{
+    const items = (res.items||[]).map(it=>{
       const f = it.fields||{};
       const title = pick(f,['影片標題','title']);
       const desc  = pick(f,['精選推薦影片說明文字','description']);
       const ytid  = pick(f,['YouTube ID','youTubeId']);
       const mp4   = pick(f,['MP4 影片網址','mp4Url']);
       const tags  = Array.isArray(f.tags)?f.tags:[];
-      let thumb = f.thumbnail?.fields?.file?.url || '';
+      let thumb   = f.thumbnail?.fields?.file?.url || '';
       if (thumb && !thumb.startsWith('http')) thumb = 'https:' + thumb;
       if (!thumb && ytid) thumb = `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`;
       return { title, desc, ytid, mp4, tags, thumb };
@@ -348,7 +346,7 @@
       }
     }
 
-    // 把國旗 emoji 轉為 SVG（Windows 也會正常顯示）
+    // 解析國旗 emoji → SVG（解決 Windows 只顯示字母）
     if (window.twemoji) {
       twemoji.parse(document.getElementById('all-videos'), {
         base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
@@ -357,7 +355,7 @@
       });
     }
 
-    // 播放器：若你的 script.js 有 openFullscreenPlayer() 就用，否則開新分頁
+    // 點卡片播放（若首頁有 openFullscreenPlayer 就沿用，否則新分頁）
     document.body.addEventListener('click', (e)=>{
       const btn = e.target?.closest?.('.video-cta');
       if (!btn) return;
