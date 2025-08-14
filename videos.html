@@ -5,38 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>所有節目｜航向世界旅遊頻道</title>
 
-  <!-- 你的全站樣式 -->
+  <!-- 你的全站樣式（若沒有也不影響，本站有提供保底樣式） -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Contentful SDK -->
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
 
   <style>
+    /* 保底樣式（你的 style.css 會蓋過） */
+    :root { --card-bg:#f3f4f6; }
+    body { margin:0; font-family: 'Noto Sans TC', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif; background:#0b1620; color:#e5eef9; }
     .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
     .page-head { display:flex; align-items:center; gap:12px; margin: 4px 0 16px; }
     .page-head h1 { font-weight: 900; font-size: 28px; margin: 0; }
-    .hint { color:#6b7280; font-size:14px; }
-    .placeholder { border:1px dashed #cbd5e1; border-radius:12px; padding:24px; color:#64748b; }
+    .hint { color:#8aa4c2; font-size:14px; }
     .quick-nav { display:flex; gap:8px; flex-wrap:wrap; margin: 10px 0 18px; }
-    .quick-nav a { padding:6px 10px; border-radius:999px; background:#e9eefb; color:#0a5bfd; font-weight:700; text-decoration:none; }
-    .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; }
-    .country-title { margin:12px 0 8px; font-size:20px; font-weight:800; }
-    /* 預防沒有全站 grid 樣式時，給一個保底 */
+    .quick-nav a { padding:6px 10px; border-radius:999px; background:#15314a; color:#b9d7ff; font-weight:700; text-decoration:none; }
+    .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; border-left:6px solid #3fa0ff; padding-left:10px; }
+    .country-title { margin:12px 0 8px; font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px; }
+    .country-flag { font-size:22px; }
     .video-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-    .video-card { border-radius:16px; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.08); overflow:hidden; }
-    .dark-theme .video-card { background:#0f172a; }
+    .video-card { border-radius:16px; background:#0f2133; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; border:1px solid rgba(255,255,255,.06); }
+    .video-thumb { aspect-ratio:16/9; width:100%; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06); background:var(--card-bg); }
+    .video-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
     .video-content { padding:14px 16px; }
-    .video-title { font-weight:900; font-size:18px; margin:6px 0; line-height:1.3; }
-    .video-desc { color:#64748b; font-size:14px; line-height:1.5; }
-    .video-tags { color:#6b7280; font-size:13px; margin-bottom:6px; }
-    .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#0a5bfd; color:#fff; font-weight:800; cursor:pointer; }
+    .video-title { font-weight:900; font-size:18px; margin:6px 0; line-height:1.35; color:#e9f3ff; }
+    .video-desc { color:#93a6bf; font-size:14px; line-height:1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .video-tags { color:#8aa4c2; font-size:13px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#3fa0ff; color:#001528; font-weight:800; cursor:pointer; }
+    .placeholder { border:1px dashed #3a5b7b; border-radius:12px; padding:24px; color:#8aa4c2; text-align:center; }
+    @media (max-width:640px){ .page-wrap{ padding:18px 4%; } .page-head h1{ font-size:24px; } }
   </style>
 </head>
 <body>
+  <!-- 需要共用導覽列的話，把首頁 navbar 貼到上面 body 內即可 -->
   <main class="page-wrap">
     <div class="page-head">
       <h1>所有節目</h1>
-      <span class="hint">自動依「洲 → 國家／綜合」分組</span>
+      <span class="hint">自動依「洲 → 國家／綜合」分組（從標題→標籤→說明文字偵測國家）</span>
     </div>
 
     <div id="all-videos">
@@ -45,13 +51,13 @@
   </main>
 
   <script>
-  // ===== 工具 =====
+  // ===== 小工具 =====
   const $ = (s, el=document) => el.querySelector(s);
   const escapeHtml = (s='') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const norm = (str='') => String(str).trim().toLowerCase()
     .replace(/\s+/g,' ')
     .replace(/[()．・·‚’'´`’‘"]/g,'')
-    .replace(/台/g,'臺');
+    .replace(/台/g,'臺'); // 統一台/臺
 
   // ===== 洲清單（顯示順序）=====
   const CONTINENTS = [
@@ -65,7 +71,7 @@
     { key:'other', label:'其他' },
   ];
 
-  // ===== 區域提示詞（直指洲）=====
+  // ===== 區域提示詞（直指洲；找不到國家時使用）=====
   const REGION_HINTS = new Map([
     ['東亞','asia'],['東北亞','asia'],['東南亞','asia'],['南亞','asia'],['中亞','asia'],['西亞','asia'],['中東','asia'],
     ['歐洲','europe'],['北歐','europe'],['東歐','europe'],['西歐','europe'],['中歐','europe'],['地中海','europe'],['巴爾幹','europe'],['斯堪地那維亞','europe'],
@@ -80,7 +86,7 @@
     ['oceania','oceania'],['antarctica','antarctica'],
   ]);
 
-  // ===== 國家別名 → 洲 =====
+  // ===== 國家別名索引（想加新國家就加這裡 aliases）=====
   const COUNTRY_INDEX = [
     { country:'日本', aliases:['日本','にほん','nihon','nippon','japan','jp'], continent:'asia' },
     { country:'韓國', aliases:['韓國','南韓','대한민국','korea','south korea','kr'], continent:'asia' },
@@ -136,26 +142,77 @@
     { country:'澳洲', aliases:['澳洲','澳大利亞','australia','au'], continent:'oceania' },
     { country:'紐西蘭', aliases:['紐西蘭','新西蘭','new zealand','nz'], continent:'oceania' },
   ];
-  const ALIAS_LOOKUP = new Map();
-  for (const row of COUNTRY_INDEX) for (const a of row.aliases) ALIAS_LOOKUP.set(norm(a), { country: row.country, continent: row.continent });
 
-  function guessCountryAndContinent(tags=[]) {
-    const nTags = (Array.isArray(tags)?tags:[]).map(t=>norm(String(t))).filter(Boolean);
-    for (const t of nTags) if (ALIAS_LOOKUP.has(t)) return ALIAS_LOOKUP.get(t);               // 完全匹配
-    for (const t of nTags) if (REGION_HINTS.has(t)) return { country:null, continent:REGION_HINTS.get(t) }; // 區域詞
-    for (const t of nTags) { // 子字串（例：俄羅斯-摩爾曼斯克）
-      for (const [alias,row] of ALIAS_LOOKUP.entries()) if (t.includes(alias)) return row;
+  // ===== 國旗（用 emoji；要改圖檔也可在這裡換）=====
+  const COUNTRY_FLAGS = {
+    '日本':'🇯🇵','韓國':'🇰🇷','台灣':'🇹🇼','中國':'🇨🇳','蒙古':'🇲🇳','哈薩克':'🇰🇿','吉爾吉斯':'🇰🇬','烏茲別克':'🇺🇿','塔吉克':'🇹🇯','土庫曼':'🇹🇲',
+    '印度':'🇮🇳','泰國':'🇹🇭','越南':'🇻🇳','馬來西亞':'🇲🇾','印尼':'🇮🇩','尼泊爾':'🇳🇵','以色列':'🇮🇱','約旦':'🇯🇴','土耳其':'🇹🇷',
+    '俄羅斯':'🇷🇺','芬蘭':'🇫🇮','挪威':'🇳🇴','瑞典':'🇸🇪','英國':'🇬🇧','法國':'🇫🇷','德國':'🇩🇪','義大利':'🇮🇹','西班牙':'🇪🇸','葡萄牙':'🇵🇹','捷克':'🇨🇿','奧地利':'🇦🇹','冰島':'🇮🇸',
+    '美國':'🇺🇸','加拿大':'🇨🇦','墨西哥':'🇲🇽',
+    '巴西':'🇧🇷','阿根廷':'🇦🇷','智利':'🇨🇱','祕魯':'🇵🇪','玻利維亞':'🇧🇴','哥倫比亞':'🇨🇴',
+    '南非':'🇿🇦','摩洛哥':'🇲🇦','埃及':'🇪🇬','坦尚尼亞':'🇹🇿','肯亞':'🇰🇪',
+    '澳洲':'🇦🇺','紐西蘭':'🇳🇿'
+  };
+  const getFlag = (country) => COUNTRY_FLAGS[country] || '';
+
+  // ===== 建兩種查表：精確（tags）與文本（title/desc 子字串）=====
+  const ALIAS_EXACT = new Map();
+  const ALIAS_TEXT = [];
+  for (const row of COUNTRY_INDEX) {
+    for (const a of row.aliases) {
+      const key = norm(a);
+      ALIAS_EXACT.set(key, { country: row.country, continent: row.continent });
+      if (key.length > 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
     }
-    return { country:null, continent:'other' };
+  }
+  // 長別名優先，避免「new zealand」被「zealand」搶先
+  ALIAS_TEXT.sort((a,b) => b.alias.length - a.alias.length);
+
+  // ===== 判斷國家／洲（標題→標籤→說明）=====
+  function guessCountryAndContinent({ title='', desc='', tags=[] }) {
+    const nt = norm(title);
+    const nd = norm(desc);
+    const nTags = (Array.isArray(tags) ? tags : []).map(t => norm(String(t))).filter(Boolean);
+
+    // 1) tags 精確匹配（最可靠）
+    for (const t of nTags) {
+      const hit = ALIAS_EXACT.get(t);
+      if (hit) return hit;
+    }
+    // 2) 標題子字串
+    for (const row of ALIAS_TEXT) if (nt.includes(row.alias)) return row;
+    // 3) 說明子字串
+    for (const row of ALIAS_TEXT) if (nd.includes(row.alias)) return row;
+
+    // 4) 找不到國家 → 用區域詞判斷洲（先看 tags，再看 title/desc）
+    for (const t of nTags) {
+      const cont = REGION_HINTS.get(t);
+      if (cont) return { country: null, continent: cont };
+    }
+    for (const [hint, cont] of REGION_HINTS.entries()) {
+      const h = norm(hint);
+      if (h.length > 2 && (nt.includes(h) || nd.includes(h))) {
+        return { country: null, continent: cont };
+      }
+    }
+
+    // 5) 全都沒有 → 其他
+    return { country: null, continent: 'other' };
   }
 
-  function classifyItem(v){
-    const { country, continent } = guessCountryAndContinent(v.tags || []);
-    const contKey = continent || 'other';
-    const contLabel = (CONTINENTS.find(c=>c.key===contKey)||{label:'其他'}).label;
-    let countryKey = country ? norm(country) : 'mixed';
+  function classifyItem(v) {
+    const { country, continent } = guessCountryAndContinent({
+      title: v.title || '',
+      desc:  v.desc  || '',
+      tags:  v.tags  || []
+    });
+
+    const contKey   = continent || 'other';
+    const contLabel = (CONTINENTS.find(c => c.key === contKey) || { label:'其他' }).label;
+    let countryKey   = country ? norm(country) : 'mixed';
     let countryLabel = country || '綜合';
-    return { continentKey:contKey, continentLabel:contLabel, countryKey, countryLabel };
+
+    return { continentKey: contKey, continentLabel: contLabel, countryKey, countryLabel };
   }
 
   // ===== 取資料並渲染 =====
@@ -163,7 +220,7 @@
     const container = $('#all-videos');
     container.innerHTML = '<div class="placeholder">載入中…</div>';
 
-    // 連 Contentful
+    // 連 Contentful（用你前台同一組金鑰）
     const client = contentful.createClient({
       space: 'os5wf90ljenp',
       accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
@@ -204,7 +261,7 @@
     // 渲染
     container.innerHTML = '';
 
-    // 快速錨點
+    // 洲別快速錨點
     const nav = document.createElement('div');
     nav.className = 'quick-nav';
     for (const c of CONTINENTS) {
@@ -233,9 +290,12 @@
       });
 
       for (const [ckey, bucket] of entries) {
+        const flag = bucket.label === '綜合' ? '' : getFlag(bucket.label);
         const block = document.createElement('div');
         block.id = `country-${c.key}-${ckey}`;
-        block.innerHTML = `<h3 class="country-title">${bucket.label}</h3><div class="video-grid"></div>`;
+        block.innerHTML = `
+          <h3 class="country-title">${flag ? `<span class="country-flag">${flag}</span>` : ''}${bucket.label}</h3>
+          <div class="video-grid"></div>`;
         body.appendChild(block);
 
         const grid = block.querySelector('.video-grid');
@@ -249,9 +309,8 @@
           const card = document.createElement('div');
           card.className = 'video-card';
           card.innerHTML = `
-            <div class="video-thumb" style="aspect-ratio:16/9; width:100%; overflow:hidden; border-radius:14px; background:var(--card-bg);">
+            <div class="video-thumb">
               ${v.thumb ? `<img src="${v.thumb}" alt="${safeTitle}" loading="lazy" decoding="async"
-                            style="width:100%;height:100%;object-fit:cover;display:block;"
                             onerror="this.onerror=null;this.src='${ytFallback}';">`
                         : `<div style="width:100%;height:100%;background:var(--card-bg);"></div>`}
             </div>
@@ -271,7 +330,7 @@
       }
     }
 
-    // 播放器：若頁面有 openFullscreenPlayer() 就用；否則開新分頁
+    // 播放器：若首頁有 openFullscreenPlayer() 就沿用；否則新分頁開
     document.body.addEventListener('click', (e)=>{
       const btn = e.target?.closest?.('.video-cta');
       if (!btn) return;
