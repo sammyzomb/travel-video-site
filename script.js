@@ -205,121 +205,114 @@ document.addEventListener('DOMContentLoaded', () => {
     try { heroPlayer.playVideo(); } catch {}
   }
 
-// === 精選節目（每頁 8 個，支援查看更多；縮圖固定 16:9）===
-(async function loadFeaturedFromCF() {
-  const container = document.getElementById('featured-videos');
-  if (!container) return;
+  // === 精選節目（每頁 8 個，支援查看更多；縮圖固定 16:9）===
+  (async function loadFeaturedFromCF() {
+    const container = document.getElementById('featured-videos');
+    if (!container) return;
 
-  // 取第一個有值的欄位
-  const pick = (f, keys) => {
-    for (const k of keys) {
-      if (f && f[k] != null && f[k] !== '') return f[k];
-    }
-    return '';
-  };
+    // 取第一個有值的欄位
+    const pick = (f, keys) => {
+      for (const k of keys) {
+        if (f && f[k] != null && f[k] !== '') return f[k];
+      }
+      return '';
+    };
 
-  // 文字長度限制：標題 20、描述 30
-  const limitText = (txt, max) => !txt ? '' : (txt.length > max ? txt.slice(0, max) + '…' : txt);
+    // 文字長度限制：標題 20、描述 30
+    const limitText = (txt, max) => !txt ? '' : (txt.length > max ? txt.slice(0, max) + '…' : txt);
 
-  try {
-    // 先多抓一些，之後在前端分頁（可視需要調大）
-    const entries = await contentfulClient.getEntries({
-      content_type: 'video',
-      'fields.isFeatured': true,
-      order: '-sys.updatedAt',
-      limit: 100
-    });
-
-    const allItems = (entries.items || []).map(it => {
-      const f = it.fields || {};
-      const title = pick(f, ['影片標題','title']);
-      const desc  = pick(f, ['精選推薦影片說明文字','description']);
-      const ytid  = pick(f, ['YouTube ID','youTubeId']);
-      const mp4   = pick(f, ['MP4 影片網址','mp4Url']);
-      const tags  = Array.isArray(f.tags) ? f.tags : [];
-
-      // 縮圖：優先 Contentful 圖，否則用 YouTube 預設圖
-      let thumb = '';
-      const cfThumb = f.thumbnail?.fields?.file?.url;
-      if (cfThumb) thumb = cfThumb.startsWith('http') ? cfThumb : `https:${cfThumb}`;
-      else if (ytid) thumb = `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`;
-
-      return { title, desc, ytid, mp4, tags, thumb };
-    });
-
-    // 分頁渲染
-    const PAGE_SIZE = 8;
-    let rendered = 0;
-
-    // 建立「查看更多」按鈕（動態插入在容器後面）
-    const moreWrap = document.createElement('div');
-    moreWrap.id = 'featured-actions';
-    moreWrap.style = 'text-align:center;margin-top:16px;';
-    const moreBtn = document.createElement('button');
-    moreBtn.id = 'featured-more';
-    moreBtn.className = 'video-more-btn';
-    moreBtn.textContent = '查看更多';
-    moreBtn.style = 'padding:10px 16px;border-radius:10px;border:0;background:#0a5bfd;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.08)';
-    moreWrap.appendChild(moreBtn);
-    container.after(moreWrap);
-
-    function renderNextPage() {
-      const slice = allItems.slice(rendered, rendered + PAGE_SIZE);
-      if (!slice.length) return;
-
-      const frag = document.createDocumentFragment();
-      slice.forEach(v => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-        card.innerHTML = `
-          <div class="video-thumb" style="aspect-ratio:16/9; width:100%; overflow:hidden; border-radius:14px; background:var(--card-bg);">
-            ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}"
-                style="width:100%;height:100%;object-fit:cover;display:block;"
-                onerror="this.onerror=null;this.src='${v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : ''}';">`
-                      : `<div style="width:100%;height:100%;background:var(--card-bg);"></div>`}
-          </div>
-          <div class="video-content">
-            ${v.tags?.length ? `<div class="video-tags">${v.tags.join(' / ')}</div>` : ``}
-            <div class="video-title">${escapeHtml(limitText(v.title || '未命名影片', 20))}</div>
-            ${v.desc ? `<div class="video-desc">${escapeHtml(limitText(v.desc, 30))}</div>` : ``}
-            ${
-              v.ytid
-                ? `<button class="video-cta" data-type="youtube" data-videoid="${v.ytid}">立即觀看</button>`
-                : (v.mp4 ? `<a class="video-cta" href="${v.mp4}" target="_blank" rel="noopener">播放 MP4</a>` : ``)
-            }
-          </div>`;
-        frag.appendChild(card);
+    try {
+      // 先多抓一些，之後在前端分頁（可視需要調大）
+      const entries = await contentfulClient.getEntries({
+        content_type: 'video',
+        'fields.isFeatured': true,
+        order: '-sys.updatedAt',
+        limit: 100
       });
 
-      container.appendChild(frag);
-      rendered += slice.length;
+      const allItems = (entries.items || []).map(it => {
+        const f = it.fields || {};
+        const title = pick(f, ['影片標題','title']);
+        const desc  = pick(f, ['精選推薦影片說明文字','description']);
+        const ytid  = pick(f, ['YouTube ID','youTubeId']);
+        const mp4   = pick(f, ['MP4 影片網址','mp4Url']);
+        const tags  = Array.isArray(f.tags) ? f.tags : [];
 
-      // 顯示 / 隱藏「查看更多」
-      if (rendered >= allItems.length) {
+        // 縮圖：優先 Contentful 圖，否則用 YouTube 預設圖
+        let thumb = '';
+        const cfThumb = f.thumbnail?.fields?.file?.url;
+        if (cfThumb) thumb = cfThumb.startsWith('http') ? cfThumb : `https:${cfThumb}`;
+        else if (ytid) thumb = `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`;
+
+        return { title, desc, ytid, mp4, tags, thumb };
+      });
+
+      // 分頁渲染
+      const PAGE_SIZE = 8;
+      let rendered = 0;
+
+      // 建立「所有節目 / 查看更多」連結（導到所有節目頁）
+      const moreWrap = document.createElement('div');
+      moreWrap.id = 'featured-actions';
+      moreWrap.style = 'text-align:center;margin-top:16px;';
+
+      const moreLink = document.createElement('a');
+      moreLink.id = 'featured-more';
+      moreLink.href = 'videos.html'; // 重點：直接連到所有節目頁
+      moreLink.className = 'video-more-btn';
+      moreLink.textContent = '所有節目'; // 如果你要顯示「查看更多」，把文字改回去即可
+      moreLink.style = 'padding:10px 16px;border-radius:10px;border:0;background:#0a5bfd;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.08);display:inline-block;text-decoration:none;';
+      moreWrap.appendChild(moreLink);
+      container.after(moreWrap);
+
+      function renderNextPage() {
+        const slice = allItems.slice(rendered, rendered + PAGE_SIZE);
+        if (!slice.length) return;
+
+        const frag = document.createDocumentFragment();
+        slice.forEach(v => {
+          const card = document.createElement('div');
+          card.className = 'video-card';
+          card.innerHTML = `
+            <div class="video-thumb" style="aspect-ratio:16/9; width:100%; overflow:hidden; border-radius:14px; background:var(--card-bg);">
+              ${v.thumb ? `<img src="${v.thumb}" alt="${escapeHtml(v.title)}"
+                  style="width:100%;height:100%;object-fit:cover;display:block;"
+                  onerror="this.onerror=null;this.src='${v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : ''}';">`
+                        : `<div style="width:100%;height:100%;background:var(--card-bg);"></div>`}
+            </div>
+            <div class="video-content">
+              ${v.tags?.length ? `<div class="video-tags">${v.tags.join(' / ')}</div>` : ``}
+              <div class="video-title">${escapeHtml(limitText(v.title || '未命名影片', 20))}</div>
+              ${v.desc ? `<div class="video-desc">${escapeHtml(limitText(v.desc, 30))}</div>` : ``}
+              ${
+                v.ytid
+                  ? `<button class="video-cta" data-type="youtube" data-videoid="${v.ytid}">立即觀看</button>`
+                  : (v.mp4 ? `<a class="video-cta" href="${v.mp4}" target="_blank" rel="noopener">播放 MP4</a>` : ``)
+              }
+            </div>`;
+          frag.appendChild(card);
+        });
+
+        container.appendChild(frag);
+        rendered += slice.length;
+
+        // 顯示 / 隱藏「所有節目」連結：只要有資料就顯示
+        moreWrap.style.display = allItems.length ? '' : 'none';
+      }
+
+      // 首次渲染
+      container.innerHTML = '';
+      if (allItems.length === 0) {
+        container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
         moreWrap.style.display = 'none';
       } else {
-        moreWrap.style.display = '';
+        renderNextPage(); // 第 1 頁
       }
+    } catch (err) {
+      console.error('Contentful 連線失敗（featured）：', err);
+      if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
     }
-
-    // 綁定按鈕
-    moreBtn.addEventListener('click', renderNextPage);
-
-    // 首次渲染
-    container.innerHTML = '';
-    if (allItems.length === 0) {
-      container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
-      moreWrap.style.display = 'none';
-    } else {
-      renderNextPage(); // 第 1 頁
-    }
-  } catch (err) {
-    console.error('Contentful 連線失敗（featured）：', err);
-    if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
-  }
-})();
-
-
+  })();
 
   // === 節目表預告 ===
   Promise.all([
