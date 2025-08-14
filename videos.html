@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>所有節目｜航向世界旅遊頻道</title>
 
-  <!-- 你的全站樣式（若沒有也不影響，本站有提供保底樣式） -->
+  <!-- 你的全站樣式（可留可拿掉；沒有也不影響，下面有保底樣式） -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Contentful SDK -->
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <!-- Twemoji：把國旗 emoji 轉成 SVG，解決 Windows 只顯示字母問題 -->
+  <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 
   <style>
     /* 保底樣式（你的 style.css 會蓋過） */
@@ -23,7 +25,10 @@
     .quick-nav a { padding:6px 10px; border-radius:999px; background:#15314a; color:#b9d7ff; font-weight:700; text-decoration:none; }
     .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; border-left:6px solid #3fa0ff; padding-left:10px; }
     .country-title { margin:12px 0 8px; font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px; }
-    .country-flag { font-size:22px; }
+    .country-flag { font-size:22px; line-height:1; display:inline-flex; align-items:center; }
+    /* Twemoji 轉出的 <img class="emoji"> 的尺寸微調，讓國旗與字齊 */
+    .country-flag img.emoji { height: 1.2em; width: auto; vertical-align: -0.15em; }
+
     .video-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
     .video-card { border-radius:16px; background:#0f2133; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; border:1px solid rgba(255,255,255,.06); }
     .video-thumb { aspect-ratio:16/9; width:100%; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06); background:var(--card-bg); }
@@ -38,7 +43,6 @@
   </style>
 </head>
 <body>
-  <!-- 需要共用導覽列的話，把首頁 navbar 貼到上面 body 內即可 -->
   <main class="page-wrap">
     <div class="page-head">
       <h1>所有節目</h1>
@@ -108,7 +112,7 @@
     { country:'約旦', aliases:['約旦','jordan','jo'], continent:'asia' },
     { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
 
-    { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' }, // 地跨，先歸歐洲
+    { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' }, /* 地跨，先歸歐洲 */
     { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
     { country:'挪威', aliases:['挪威','norway','no'], continent:'europe' },
     { country:'瑞典', aliases:['瑞典','sweden','se'], continent:'europe' },
@@ -143,7 +147,7 @@
     { country:'紐西蘭', aliases:['紐西蘭','新西蘭','new zealand','nz'], continent:'oceania' },
   ];
 
-  // ===== 國旗（用 emoji；要改圖檔也可在這裡換）=====
+  // ===== 國旗（emoji；Twemoji 會轉成 SVG 圖片）=====
   const COUNTRY_FLAGS = {
     '日本':'🇯🇵','韓國':'🇰🇷','台灣':'🇹🇼','中國':'🇨🇳','蒙古':'🇲🇳','哈薩克':'🇰🇿','吉爾吉斯':'🇰🇬','烏茲別克':'🇺🇿','塔吉克':'🇹🇯','土庫曼':'🇹🇲',
     '印度':'🇮🇳','泰國':'🇹🇭','越南':'🇻🇳','馬來西亞':'🇲🇾','印尼':'🇮🇩','尼泊爾':'🇳🇵','以色列':'🇮🇱','約旦':'🇯🇴','土耳其':'🇹🇷',
@@ -155,7 +159,7 @@
   };
   const getFlag = (country) => COUNTRY_FLAGS[country] || '';
 
-  // ===== 建兩種查表：精確（tags）與文本（title/desc 子字串）=====
+  // ===== 查表：精確（tags）與文本（title/desc 子字串）=====
   const ALIAS_EXACT = new Map();
   const ALIAS_TEXT = [];
   for (const row of COUNTRY_INDEX) {
@@ -165,8 +169,7 @@
       if (key.length > 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
     }
   }
-  // 長別名優先，避免「new zealand」被「zealand」搶先
-  ALIAS_TEXT.sort((a,b) => b.alias.length - a.alias.length);
+  ALIAS_TEXT.sort((a,b) => b.alias.length - a.alias.length); // 長別名優先
 
   // ===== 判斷國家／洲（標題→標籤→說明）=====
   function guessCountryAndContinent({ title='', desc='', tags=[] }) {
@@ -294,7 +297,10 @@
         const block = document.createElement('div');
         block.id = `country-${c.key}-${ckey}`;
         block.innerHTML = `
-          <h3 class="country-title">${flag ? `<span class="country-flag">${flag}</span>` : ''}${bucket.label}</h3>
+          <h3 class="country-title">
+            ${flag ? `<span class="country-flag">${flag}</span>` : ''}
+            ${bucket.label}
+          </h3>
           <div class="video-grid"></div>`;
         body.appendChild(block);
 
@@ -328,6 +334,15 @@
         });
         grid.appendChild(frag);
       }
+    }
+
+    // 解析國旗 emoji 為 SVG（Twemoji）
+    if (window.twemoji) {
+      twemoji.parse(document.getElementById('all-videos'), {
+        base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
+        folder: 'svg',
+        ext: '.svg'
+      });
     }
 
     // 播放器：若首頁有 openFullscreenPlayer() 就沿用；否則新分頁開
