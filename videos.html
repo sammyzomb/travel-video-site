@@ -42,6 +42,9 @@
     .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#3fa0ff; color:#001528; font-weight:800; cursor:pointer; }
     .placeholder { border:1px dashed #3a5b7b; border-radius:12px; padding:24px; color:#8aa4c2; text-align:center; }
     @media (max-width:640px){ .page-wrap{ padding:18px 4%; } .page-head h1{ font-size:24px; } }
+    /* 統一限制所有 Twemoji 圖片；避免被全站 img 規則放大 */
+    img.emoji { height: 1em; width: auto; vertical-align: -0.15em; display: inline; }
+
   </style>
 </head>
 <body>
@@ -349,14 +352,17 @@
         }
       }
 
-      // 解析國旗 emoji → SVG（解決 Windows 只顯示字母）
-      if (window.twemoji) {
-        twemoji.parse(document.getElementById('all-videos'), {
-          base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
-          folder: 'svg',
-          ext: '.svg'
-        });
-      }
+     // 只把「國旗」轉成 SVG，避免描述裡的 emoji 被放大
+if (window.twemoji) {
+  document.querySelectorAll('.country-flag').forEach(node => {
+    twemoji.parse(node, {
+      base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
+      folder: 'svg',
+      ext: '.svg'
+    });
+  });
+}
+
 
       // 點卡片播放（若首頁有 openFullscreenPlayer 就沿用，否則新分頁）
       document.body.addEventListener('click', (e)=>{
