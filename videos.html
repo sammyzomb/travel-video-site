@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>所有節目｜航向世界旅遊頻道</title>
 
-  <!-- 你的全站樣式 -->
+  <!-- 全站樣式 -->
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
 
@@ -13,13 +13,12 @@
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 
-  <!-- 主題橋接（讓本頁跟你的深/淺色主題同步） -->
+  <!-- 本頁樣式（可保留，你的 style.css 會覆蓋也沒關係） -->
   <style>
     :root{ --bg:#ffffff; --text:#111827; --card:#ffffff; --card-border:rgba(0,0,0,.06); }
     .dark-theme{ --bg:#0b1620; --text:#e5eef9; --card:#0f2133; --card-border:rgba(255,255,255,.06); }
     body{ background:var(--bg); color:var(--text); margin:0; }
 
-    /* 本頁必要樣式（你的 style.css 會覆蓋更精緻的外觀也OK） */
     .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
     .page-head { display:flex; align-items:center; gap:12px; margin: 8px 0 16px; }
     .page-head h1 { font-weight:900; font-size:28px; margin:0; }
@@ -41,10 +40,29 @@
     .video-tags { color:#8aa4c2; font-size:13px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#3fa0ff; color:#001528; font-weight:800; cursor:pointer; }
     .placeholder { border:1px dashed #3a5b7b; border-radius:12px; padding:24px; color:#8aa4c2; text-align:center; }
-    @media (max-width:640px){ .page-wrap{ padding:18px 4%; } .page-head h1{ font-size:24px; } }
-    /* 統一限制所有 Twemoji 圖片；避免被全站 img 規則放大 */
+
+    /* 每個國家預設只顯示 6 張卡片；展開後全顯示 */
+    .video-grid.is-collapsed .video-card:nth-child(n+7) { display: none; }
+    .video-grid.is-expanded .video-card { display: block; }
+    .country-more-btn{
+      margin: 10px 0 24px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 12px;
+      background:#e9eef6;
+      color:#0a2a4a;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .dark-theme .country-more-btn{ background:#0f2a44; color:#cfe4ff; }
+
+    /* 避免任何 emoji 被當一般 img 放大 */
     img.emoji { height: 1em; width: auto; vertical-align: -0.15em; display: inline; }
 
+    @media (max-width:640px){
+      .page-wrap{ padding:18px 4%; }
+      .page-head h1{ font-size:24px; }
+    }
   </style>
 </head>
 <body>
@@ -103,17 +121,22 @@
     <div id="all-videos"><div class="placeholder">載入中…</div></div>
   </main>
 
-  <!-- 你的主站 JS（主題切換 / 漢堡選單等） -->
+  <!-- 全站 JS（主題切換 / 漢堡等） -->
   <script src="script.js"></script>
 
-  <!-- 本頁邏輯（包在 IIFE，避免與 script.js 名稱衝突） -->
+  <!-- 本頁邏輯 -->
   <script>
   (function(){
     'use strict';
 
     const $ = (s, el=document) => el.querySelector(s);
-    const escapeHtml = (s='') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    const norm = (str='') => String(str).trim().toLowerCase().replace(/\s+/g,' ').replace(/[()．・·‚’'´`’‘"]/g,'').replace(/台/g,'臺');
+    const escapeHtml = (s='') => String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const norm = (str='') => String(str).trim().toLowerCase()
+      .replace(/\s+/g,' ')
+      .replace(/[()．・·‚’'´`’‘"]/g,'')
+      .replace(/台/g,'臺');
 
     const CONTINENTS = [
       { key:'asia', label:'亞洲' }, { key:'europe', label:'歐洲' },
@@ -135,6 +158,7 @@
     ]);
 
     const COUNTRY_INDEX = [
+      // 亞洲
       { country:'日本', aliases:['日本','にほん','nihon','nippon','japan','jp'], continent:'asia' },
       { country:'韓國', aliases:['韓國','南韓','대한민국','korea','south korea','kr'], continent:'asia' },
       { country:'台灣', aliases:['臺灣','台灣','taiwan','tw'], continent:'asia' },
@@ -156,13 +180,12 @@
       { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
       { country:'伊朗', aliases:['伊朗','iran','ir','波斯','persia'], continent:'asia' },
       { country:'不丹', aliases:['不丹','bhutan','bt'], continent:'asia' },
-      { country:'伊朗', aliases:['伊朗','iran','ir','波斯','persia'], continent:'asia' },
 
-
+      // 歐洲
       { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' },
       { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
       { country:'挪威', aliases:['挪威','norway','no'], continent:'europe' },
-      { country:'瑞典', aliases:['瑞甸','瑞典','sweden','se'], continent:'europe' },
+      { country:'瑞典', aliases:['瑞典','瑞甸','sweden','se'], continent:'europe' },
       { country:'英國', aliases:['英國','uk','united kingdom','england','scotland','wales','northern ireland','gb'], continent:'europe' },
       { country:'法國', aliases:['法國','france','fr'], continent:'europe' },
       { country:'德國', aliases:['德國','germany','de'], continent:'europe' },
@@ -173,13 +196,13 @@
       { country:'奧地利', aliases:['奧地利','austria','at'], continent:'europe' },
       { country:'冰島', aliases:['冰島','iceland','is'], continent:'europe' },
       { country:'瑞士', aliases:['瑞士','switzerland','ch','schweiz','suisse','svizzera'], continent:'europe' },
- 
 
-
+      // 北美洲
       { country:'美國', aliases:['美國','usa','us','united states','america','u.s.'], continent:'north_america' },
       { country:'加拿大', aliases:['加拿大','canada','ca'], continent:'north_america' },
       { country:'墨西哥', aliases:['墨西哥','mexico','mx'], continent:'north_america' },
 
+      // 南美洲
       { country:'巴西', aliases:['巴西','brazil','br'], continent:'south_america' },
       { country:'阿根廷', aliases:['阿根廷','argentina','ar'], continent:'south_america' },
       { country:'智利', aliases:['智利','chile','cl'], continent:'south_america' },
@@ -187,12 +210,14 @@
       { country:'玻利維亞', aliases:['玻利維亞','bolivia','bo'], continent:'south_america' },
       { country:'哥倫比亞', aliases:['哥倫比亞','colombia','co'], continent:'south_america' },
 
+      // 非洲
       { country:'南非', aliases:['南非','south africa','za'], continent:'africa' },
       { country:'摩洛哥', aliases:['摩洛哥','morocco','ma'], continent:'africa' },
       { country:'埃及', aliases:['埃及','egypt','eg'], continent:'africa' },
       { country:'坦尚尼亞', aliases:['坦尚尼亞','坦桑尼亞','tanzania','tz'], continent:'africa' },
       { country:'肯亞', aliases:['肯亞','kenya','ke'], continent:'africa' },
 
+      // 大洋洲
       { country:'澳洲', aliases:['澳洲','澳大利亞','australia','au'], continent:'oceania' },
       { country:'紐西蘭', aliases:['紐西蘭','新西蘭','new zealand','nz'], continent:'oceania' },
     ];
@@ -200,103 +225,100 @@
     const COUNTRY_FLAGS = {
       '日本':'🇯🇵','韓國':'🇰🇷','台灣':'🇹🇼','中國':'🇨🇳','蒙古':'🇲🇳','哈薩克':'🇰🇿','吉爾吉斯':'🇰🇬','烏茲別克':'🇺🇿','塔吉克':'🇹🇯','土庫曼':'🇹🇲',
       '印度':'🇮🇳','泰國':'🇹🇭','越南':'🇻🇳','馬來西亞':'🇲🇾','印尼':'🇮🇩','尼泊爾':'🇳🇵','以色列':'🇮🇱','約旦':'🇯🇴','土耳其':'🇹🇷',
-      '俄羅斯':'🇷🇺','芬蘭':'🇫🇮','挪威':'🇳🇴','瑞典':'🇸🇪','英國':'🇬🇧','法國':'🇫🇷','德國':'🇩🇪','義大利':'🇮🇹','西班牙':'🇪🇸','葡萄牙':'🇵🇹','捷克':'🇨🇿','奧地利':'🇦🇹','冰島':'🇮🇸',
+      '俄羅斯':'🇷🇺','芬蘭':'🇫🇮','挪威':'🇳🇴','瑞典':'🇸🇪','英國':'🇬🇧','法國':'🇫🇷','德國':'🇩🇪','義大利':'🇮🇹','西班牙':'🇪🇸','葡萄牙':'🇵🇹','捷克':'🇨🇿','奧地利':'🇦🇹','冰島':'🇮🇸','瑞士':'🇨🇭',
       '美國':'🇺🇸','加拿大':'🇨🇦','墨西哥':'🇲🇽',
       '巴西':'🇧🇷','阿根廷':'🇦🇷','智利':'🇨🇱','祕魯':'🇵🇪','玻利維亞':'🇧🇴','哥倫比亞':'🇨🇴',
       '南非':'🇿🇦','摩洛哥':'🇲🇦','埃及':'🇪🇬','坦尚尼亞':'🇹🇿','肯亞':'🇰🇪',
       '澳洲':'🇦🇺','紐西蘭':'🇳🇿',
-      '瑞士':'🇨🇭',
-      '不丹':'🇧🇹',
-      '伊朗':'🇮🇷',
-
+      '不丹':'🇧🇹','伊朗':'🇮🇷'
     };
     const getFlag = (country) => COUNTRY_FLAGS[country] || '';
 
-   // === 別名索引（國名 + 城市名）===
-const ALIAS_EXACT = new Map();
-const ALIAS_TEXT = [];
+    // === 別名索引（國名 + 城市名）===
+    const ALIAS_EXACT = new Map();
+    const ALIAS_TEXT = [];
 
-// 1) 來自 COUNTRY_INDEX 的「國名」與其別名（長度 ≥ 2；國名權重 2）
-for (const row of COUNTRY_INDEX) {
-  for (const a of row.aliases) {
-    const key = norm(a);
-    const val = { country: row.country, continent: row.continent };
-    ALIAS_EXACT.set(key, val); // tags 完整比對
-    if (key.length >= 2) {
-      ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent, weight: 2 });
+    // 1) 國名與別名（長度 ≥ 2；國名權重 2）
+    for (const row of COUNTRY_INDEX) {
+      for (const a of row.aliases) {
+        const key = norm(a);
+        const val = { country: row.country, continent: row.continent };
+        ALIAS_EXACT.set(key, val); // tags 完整比對
+        if (key.length >= 2) {
+          ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent, weight: 2 });
+        }
+      }
     }
-  }
-}
 
-// 2) 常見「城市/地區」→ 國家（可持續擴充；城市權重 1）
-const CITY_ALIASES = [
-  // 印尼
-  ['雅加達','印尼','asia'], ['日惹','印尼','asia'], ['泗水','印尼','asia'], ['萬隆','印尼','asia'],
-  ['峇里','印尼','asia'], ['巴里島','印尼','asia'], ['峇里島','印尼','asia'], ['龍目','印尼','asia'],
-  ['爪哇','印尼','asia'], ['蘇門答臘','印尼','asia'],
-  // 泰國
-  ['曼谷','泰國','asia'], ['清邁','泰國','asia'], ['普吉','泰國','asia'], ['芭達雅','泰國','asia'],
-  // 越南
-  ['胡志明','越南','asia'], ['河內','越南','asia'], ['峴港','越南','asia'],
-  // 土耳其
-  ['伊斯坦堡','土耳其','asia'], ['卡帕多奇亞','土耳其','asia'], ['安卡拉','土耳其','asia'],
-  // 日本
-  ['東京','日本','asia'], ['大阪','日本','asia'], ['京都','日本','asia'], ['沖繩','日本','asia'],
-  // 馬來西亞
-  ['吉隆坡','馬來西亞','asia'], ['檳城','馬來西亞','asia'], ['亞庇','馬來西亞','asia'],
-  // 英文常見
-  ['jakarta','印尼','asia'], ['bali','印尼','asia'], ['yogyakarta','印尼','asia'], ['bandung','印尼','asia'],
-  ['surabaya','印尼','asia'], ['bangkok','泰國','asia'], ['chiang mai','泰國','asia'], ['phuket','泰國','asia'],
-  ['istanbul','土耳其','asia'], ['cappadocia','土耳其','asia'], ['tokyo','日本','asia'], ['kyoto','日本','asia'],
-  ['osaka','日本','asia'], ['okinawa','日本','asia'], ['kuala lumpur','馬來西亞','asia'], ['penang','馬來西亞','asia'],
-  // 俄羅斯（貝加爾湖等）
-['貝加爾湖','俄羅斯','europe'], ['贝加尔湖','俄羅斯','europe'],
-['伊爾庫茨克','俄羅斯','europe'], ['irkutsk','俄羅斯','europe'],
-['baikal','俄羅斯','europe'], ['西伯利亞','俄羅斯','europe'],
-
-// 肯亞（馬賽馬拉）
-['馬賽馬拉','肯亞','africa'], ['馬塞馬拉','肯亞','africa'],
-['maasai mara','肯亞','africa'], ['masai mara','肯亞','africa'],
-
-// 瑞士（常見城市／景點）
-['蘇黎世','瑞士','europe'], ['日內瓦','瑞士','europe'], ['琉森','瑞士','europe'], ['盧塞恩','瑞士','europe'],
-['因特拉肯','瑞士','europe'], ['少女峰','瑞士','europe'], ['策馬特','瑞士','europe'], ['馬特洪峰','瑞士','europe'],
-['zurich','瑞士','europe'], ['geneva','瑞士','europe'], ['lucerne','瑞士','europe'],
-['interlaken','瑞士','europe'], ['zermatt','瑞士','europe'], ['matterhorn','瑞士','europe'],
-
-// 不丹
-['廷布','不丹','asia'], ['帕羅','不丹','asia'], ['普那卡','不丹','asia'], ['虎穴寺','不丹','asia'],
-['thimphu','不丹','asia'], ['paro','不丹','asia'], ['punakha','不丹','asia'], ['tigers nest','不丹','asia'],
-
-// 伊朗
-['德黑蘭','伊朗','asia'], ['伊斯法罕','伊朗','asia'], ['設拉子','伊朗','asia'],
-['納西爾清真寺','伊朗','asia'], ['粉紅清真寺','伊朗','asia'],
-['tehran','伊朗','asia'], ['isfahan','伊朗','asia'], ['shiraz','伊朗','asia'],
-['nasir al-mulk mosque','伊朗','asia'], ['pink mosque','伊朗','asia'],
-];
-
-for (const [alias, country, continent] of CITY_ALIASES) {
-  const k = norm(alias);
-  const val = { country, continent };
-  ALIAS_EXACT.set(k, val);                                  // 若城市出現在 tags 也能命中
-  ALIAS_TEXT.push({ alias: k, country, continent, weight: 1 }); // 內文/標題比對
-}
-
-// 長字優先；同長時「國名(2)」優先於「城市(1)」
-ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.weight));
-
+    // 2) 城市/地區 → 國家（可持續擴充；城市權重 1）
+    const CITY_ALIASES = [
+      // 印尼
+      ['雅加達','印尼','asia'], ['日惹','印尼','asia'], ['泗水','印尼','asia'], ['萬隆','印尼','asia'],
+      ['峇里','印尼','asia'], ['巴里島','印尼','asia'], ['峇里島','印尼','asia'], ['龍目','印尼','asia'],
+      ['爪哇','印尼','asia'], ['蘇門答臘','印尼','asia'],
+      // 泰國
+      ['曼谷','泰國','asia'], ['清邁','泰國','asia'], ['普吉','泰國','asia'], ['芭達雅','泰國','asia'],
+      // 越南
+      ['胡志明','越南','asia'], ['河內','越南','asia'], ['峴港','越南','asia'],
+      // 土耳其
+      ['伊斯坦堡','土耳其','asia'], ['卡帕多奇亞','土耳其','asia'], ['安卡拉','土耳其','asia'],
+      // 日本
+      ['東京','日本','asia'], ['大阪','日本','asia'], ['京都','日本','asia'], ['沖繩','日本','asia'],
+      // 馬來西亞
+      ['吉隆坡','馬來西亞','asia'], ['檳城','馬來西亞','asia'], ['亞庇','馬來西亞','asia'],
+      // 俄羅斯（貝加爾湖等）
+      ['貝加爾湖','俄羅斯','europe'], ['贝加尔湖','俄羅斯','europe'],
+      ['伊爾庫茨克','俄羅斯','europe'], ['irkutsk','俄羅斯','europe'],
+      ['baikal','俄羅斯','europe'], ['西伯利亞','俄羅斯','europe'],
+      // 肯亞（馬賽馬拉）
+      ['馬賽馬拉','肯亞','africa'], ['馬塞馬拉','肯亞','africa'],
+      ['maasai mara','肯亞','africa'], ['masai mara','肯亞','africa'],
+      // 瑞士（常見城市／景點）
+      ['蘇黎世','瑞士','europe'], ['日內瓦','瑞士','europe'], ['琉森','瑞士','europe'], ['盧塞恩','瑞士','europe'],
+      ['因特拉肯','瑞士','europe'], ['少女峰','瑞士','europe'], ['策馬特','瑞士','europe'], ['馬特洪峰','瑞士','europe'],
+      ['zurich','瑞士','europe'], ['geneva','瑞士','europe'], ['lucerne','瑞士','europe'],
+      ['interlaken','瑞士','europe'], ['zermatt','瑞士','europe'], ['matterhorn','瑞士','europe'],
+      // 不丹
+      ['廷布','不丹','asia'], ['帕羅','不丹','asia'], ['普那卡','不丹','asia'], ['虎穴寺','不丹','asia'],
+      ['thimphu','不丹','asia'], ['paro','不丹','asia'], ['punakha','不丹','asia'], ['tigers nest','不丹','asia'],
+      // 伊朗
+      ['德黑蘭','伊朗','asia'], ['伊斯法罕','伊朗','asia'], ['設拉子','伊朗','asia'],
+      ['納西爾清真寺','伊朗','asia'], ['粉紅清真寺','伊朗','asia'],
+      ['tehran','伊朗','asia'], ['isfahan','伊朗','asia'], ['shiraz','伊朗','asia'],
+      ['nasir al-mulk mosque','伊朗','asia'], ['pink mosque','伊朗','asia'],
+      // 英文常見（補充）
+      ['jakarta','印尼','asia'], ['bali','印尼','asia'], ['yogyakarta','印尼','asia'], ['bandung','印尼','asia'],
+      ['surabaya','印尼','asia'], ['bangkok','泰國','asia'], ['chiang mai','泰國','asia'], ['phuket','泰國','asia'],
+      ['istanbul','土耳其','asia'], ['cappadocia','土耳其','asia'], ['tokyo','日本','asia'], ['kyoto','日本','asia'],
+      ['osaka','日本','asia'], ['okinawa','日本','asia'], ['kuala lumpur','馬來西亞','asia'], ['penang','馬來西亞','asia'],
+    ];
+    for (const [alias, country, continent] of CITY_ALIASES) {
+      const k = norm(alias);
+      const val = { country, continent };
+      ALIAS_EXACT.set(k, val);                                  // 若城市在 tags 也能命中
+      ALIAS_TEXT.push({ alias: k, country, continent, weight: 1 }); // 內文/標題比對
+    }
+    // 長字優先；同長時「國名(2)」優先於「城市(1)」
+    ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.weight));
 
     function guessCountryAndContinent({ title='', desc='', tags=[] }) {
       const nt = norm(title), nd = norm(desc);
       const nTags = (Array.isArray(tags) ? tags : []).map(t => norm(String(t))).filter(Boolean);
 
-      for (const t of nTags) { const hit = ALIAS_EXACT.get(t); if (hit) return hit; }
+      // 1) 先看 tags 完整比對（國名/城市）
+      for (const t of nTags) {
+        const hit = ALIAS_EXACT.get(t);
+        if (hit) return hit;
+      }
+      // 2) 再看標題／說明包含（長字、國名優先）
       for (const row of ALIAS_TEXT) if (nt.includes(row.alias)) return row;
       for (const row of ALIAS_TEXT) if (nd.includes(row.alias)) return row;
 
+      // 3) 再看區域提示（tags > 內文）
       for (const t of nTags) { const cont = REGION_HINTS.get(t); if (cont) return { country:null, continent:cont }; }
       for (const [hint, cont] of REGION_HINTS.entries()) {
-        const h = norm(hint); if (h.length>2 && (nt.includes(h) || nd.includes(h))) return { country:null, continent:cont };
+        const h = norm(hint);
+        if (h.length>2 && (nt.includes(h) || nd.includes(h))) return { country:null, continent:cont };
       }
       return { country:null, continent:'other' };
     }
@@ -305,8 +327,8 @@ ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.wei
       const { country, continent } = guessCountryAndContinent({ title:v.title||'', desc:v.desc||'', tags:v.tags||[] });
       const contKey = continent || 'other';
       const contLabel = (CONTINENTS.find(c=>c.key===contKey)||{label:'其他'}).label;
-      let countryKey = country ? norm(country) : 'mixed';
-      let countryLabel = country || '綜合';
+      const countryKey = country ? norm(country) : 'mixed';
+      const countryLabel = country || '綜合';
       return { continentKey:contKey, continentLabel:contLabel, countryKey, countryLabel };
     }
 
@@ -423,20 +445,34 @@ ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.wei
             frag.appendChild(card);
           });
           grid.appendChild(frag);
+
+          /* 每個國家最多先露出 6 支，其餘折疊；自動處理新/舊國家 */
+          const MAX_PER_COUNTRY = 6;
+          if (bucket.items.length > MAX_PER_COUNTRY) {
+            grid.classList.add('is-collapsed');
+            const btn = document.createElement('button');
+            btn.className = 'country-more-btn';
+            btn.textContent = `顯示更多（+${bucket.items.length - MAX_PER_COUNTRY}）`;
+            btn.addEventListener('click', () => {
+              const expanded = grid.classList.toggle('is-expanded');
+              grid.classList.toggle('is-collapsed', !expanded);
+              btn.textContent = expanded ? '收合' : `顯示更多（+${bucket.items.length - MAX_PER_COUNTRY}）`;
+            });
+            block.appendChild(btn);
+          }
         }
       }
 
-     // 只把「國旗」轉成 SVG，避免描述裡的 emoji 被放大
-if (window.twemoji) {
-  document.querySelectorAll('.country-flag').forEach(node => {
-    twemoji.parse(node, {
-      base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
-      folder: 'svg',
-      ext: '.svg'
-    });
-  });
-}
-
+      // 只把「國旗」轉成 SVG，避免描述裡的其他 emoji 被放大
+      if (window.twemoji) {
+        document.querySelectorAll('.country-flag').forEach(node => {
+          twemoji.parse(node, {
+            base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
+            folder: 'svg',
+            ext: '.svg'
+          });
+        });
+      }
 
       // 點卡片播放（若首頁有 openFullscreenPlayer 就沿用，否則新分頁）
       document.body.addEventListener('click', (e)=>{
