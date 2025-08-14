@@ -207,7 +207,7 @@
       for (const a of row.aliases) {
         const key = norm(a);
         ALIAS_EXACT.set(key, { country: row.country, continent: row.continent });
-        if (key.length > 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
+        if (key.length >= 2) ALIAS_TEXT.push({ alias: key, country: row.country, continent: row.continent });
       }
     }
     ALIAS_TEXT.sort((a,b)=>b.alias.length-a.alias.length);
