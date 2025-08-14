@@ -4,30 +4,286 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>所有節目｜航向世界旅遊頻道</title>
+
+  <!-- 你的全站樣式 -->
   <link rel="stylesheet" href="style.css">
-  <!-- 之後會用到 Contentful SDK；先不用載入 -->
+
+  <!-- Contentful SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+
   <style>
     .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
-    .page-head { display:flex; align-items:center; gap:12px; margin: 8px 0 16px; }
+    .page-head { display:flex; align-items:center; gap:12px; margin: 4px 0 16px; }
     .page-head h1 { font-weight: 900; font-size: 28px; margin: 0; }
     .hint { color:#6b7280; font-size:14px; }
-    .placeholder {
-      border:1px dashed #cbd5e1; border-radius:12px; padding:24px; color:#64748b;
-      background: linear-gradient(90deg,#f8fafc 0%,#f1f5f9 50%,#f8fafc 100%);
-    }
+    .placeholder { border:1px dashed #cbd5e1; border-radius:12px; padding:24px; color:#64748b; }
+    .quick-nav { display:flex; gap:8px; flex-wrap:wrap; margin: 10px 0 18px; }
+    .quick-nav a { padding:6px 10px; border-radius:999px; background:#e9eefb; color:#0a5bfd; font-weight:700; text-decoration:none; }
+    .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; }
+    .country-title { margin:12px 0 8px; font-size:20px; font-weight:800; }
+    /* 預防沒有全站 grid 樣式時，給一個保底 */
+    .video-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+    .video-card { border-radius:16px; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.08); overflow:hidden; }
+    .dark-theme .video-card { background:#0f172a; }
+    .video-content { padding:14px 16px; }
+    .video-title { font-weight:900; font-size:18px; margin:6px 0; line-height:1.3; }
+    .video-desc { color:#64748b; font-size:14px; line-height:1.5; }
+    .video-tags { color:#6b7280; font-size:13px; margin-bottom:6px; }
+    .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#0a5bfd; color:#fff; font-weight:800; cursor:pointer; }
   </style>
 </head>
 <body>
   <main class="page-wrap">
     <div class="page-head">
       <h1>所有節目</h1>
-      <span class="hint">（下一步會自動依「洲 → 國家／綜合」分組）</span>
+      <span class="hint">自動依「洲 → 國家／綜合」分組</span>
     </div>
+
     <div id="all-videos">
-      <div class="placeholder">
-        這裡將載入所有節目清單。<br>通過後我再帶你加入 JS 從 Contentful 取資料並自動分類。
-      </div>
+      <div class="placeholder">載入中…</div>
     </div>
   </main>
+
+  <script>
+  // ===== 工具 =====
+  const $ = (s, el=document) => el.querySelector(s);
+  const escapeHtml = (s='') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const norm = (str='') => String(str).trim().toLowerCase()
+    .replace(/\s+/g,' ')
+    .replace(/[()．・·‚’'´`’‘"]/g,'')
+    .replace(/台/g,'臺');
+
+  // ===== 洲清單（顯示順序）=====
+  const CONTINENTS = [
+    { key:'asia', label:'亞洲' },
+    { key:'europe', label:'歐洲' },
+    { key:'north_america', label:'北美洲' },
+    { key:'south_america', label:'南美洲' },
+    { key:'africa', label:'非洲' },
+    { key:'oceania', label:'大洋洲' },
+    { key:'antarctica', label:'南極洲' },
+    { key:'other', label:'其他' },
+  ];
+
+  // ===== 區域提示詞（直指洲）=====
+  const REGION_HINTS = new Map([
+    ['東亞','asia'],['東北亞','asia'],['東南亞','asia'],['南亞','asia'],['中亞','asia'],['西亞','asia'],['中東','asia'],
+    ['歐洲','europe'],['北歐','europe'],['東歐','europe'],['西歐','europe'],['中歐','europe'],['地中海','europe'],['巴爾幹','europe'],['斯堪地那維亞','europe'],
+    ['北美','north_america'],['南美','south_america'],['中南美','south_america'],
+    ['非洲','africa'],['撒哈拉','africa'],['撒哈拉以南非洲','africa'],
+    ['大洋洲','oceania'],['南太平洋','oceania'],
+    ['南極','antarctica'],['南極洲','antarctica'],
+    ['east asia','asia'],['southeast asia','asia'],['south asia','asia'],['central asia','asia'],['middle east','asia'],
+    ['europe','europe'],['mediterranean','europe'],['balkans','europe'],['scandinavia','europe'],['nordic','europe'],
+    ['north america','north_america'],['south america','south_america'],['latin america','south_america'],
+    ['africa','africa'],['sub-saharan','africa'],
+    ['oceania','oceania'],['antarctica','antarctica'],
+  ]);
+
+  // ===== 國家別名 → 洲 =====
+  const COUNTRY_INDEX = [
+    { country:'日本', aliases:['日本','にほん','nihon','nippon','japan','jp'], continent:'asia' },
+    { country:'韓國', aliases:['韓國','南韓','대한민국','korea','south korea','kr'], continent:'asia' },
+    { country:'台灣', aliases:['臺灣','台灣','taiwan','tw'], continent:'asia' },
+    { country:'中國', aliases:['中國','中國大陸','china','cn'], continent:'asia' },
+    { country:'蒙古', aliases:['蒙古','mongolia','mn'], continent:'asia' },
+    { country:'哈薩克', aliases:['哈薩克','哈薩克斯坦','kazakhstan','kz'], continent:'asia' },
+    { country:'吉爾吉斯', aliases:['吉爾吉斯','吉爾吉斯斯坦','kyrgyzstan','kg','kirgiz'], continent:'asia' },
+    { country:'烏茲別克', aliases:['烏茲別克','烏茲別克斯坦','uzbekistan','uz'], continent:'asia' },
+    { country:'塔吉克', aliases:['塔吉克','塔吉克斯坦','tajikistan','tj'], continent:'asia' },
+    { country:'土庫曼', aliases:['土庫曼','土庫曼斯坦','turkmenistan','tm'], continent:'asia' },
+    { country:'印度', aliases:['印度','india','in'], continent:'asia' },
+    { country:'泰國', aliases:['泰國','thailand','th'], continent:'asia' },
+    { country:'越南', aliases:['越南','vietnam','vn'], continent:'asia' },
+    { country:'馬來西亞', aliases:['馬來西亞','malaysia','my'], continent:'asia' },
+    { country:'印尼', aliases:['印尼','印度尼西亞','indonesia','id'], continent:'asia' },
+    { country:'尼泊爾', aliases:['尼泊爾','nepal','np'], continent:'asia' },
+    { country:'以色列', aliases:['以色列','israel','il'], continent:'asia' },
+    { country:'約旦', aliases:['約旦','jordan','jo'], continent:'asia' },
+    { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
+
+    { country:'俄羅斯', aliases:['俄羅斯','russia','ru'], continent:'europe' }, // 地跨，先歸歐洲
+    { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
+    { country:'挪威', aliases:['挪威','norway','no'], continent:'europe' },
+    { country:'瑞典', aliases:['瑞典','sweden','se'], continent:'europe' },
+    { country:'英國', aliases:['英國','uk','united kingdom','england','scotland','wales','northern ireland','gb'], continent:'europe' },
+    { country:'法國', aliases:['法國','france','fr'], continent:'europe' },
+    { country:'德國', aliases:['德國','germany','de'], continent:'europe' },
+    { country:'義大利', aliases:['義大利','意大利','italy','it'], continent:'europe' },
+    { country:'西班牙', aliases:['西班牙','spain','es'], continent:'europe' },
+    { country:'葡萄牙', aliases:['葡萄牙','portugal','pt'], continent:'europe' },
+    { country:'捷克', aliases:['捷克','czech','czechia','cz'], continent:'europe' },
+    { country:'奧地利', aliases:['奧地利','austria','at'], continent:'europe' },
+    { country:'冰島', aliases:['冰島','iceland','is'], continent:'europe' },
+
+    { country:'美國', aliases:['美國','usa','us','united states','america','u.s.'], continent:'north_america' },
+    { country:'加拿大', aliases:['加拿大','canada','ca'], continent:'north_america' },
+    { country:'墨西哥', aliases:['墨西哥','mexico','mx'], continent:'north_america' },
+
+    { country:'巴西', aliases:['巴西','brazil','br'], continent:'south_america' },
+    { country:'阿根廷', aliases:['阿根廷','argentina','ar'], continent:'south_america' },
+    { country:'智利', aliases:['智利','chile','cl'], continent:'south_america' },
+    { country:'祕魯', aliases:['祕魯','秘魯','peru','pe'], continent:'south_america' },
+    { country:'玻利維亞', aliases:['玻利維亞','bolivia','bo'], continent:'south_america' },
+    { country:'哥倫比亞', aliases:['哥倫比亞','colombia','co'], continent:'south_america' },
+
+    { country:'南非', aliases:['南非','south africa','za'], continent:'africa' },
+    { country:'摩洛哥', aliases:['摩洛哥','morocco','ma'], continent:'africa' },
+    { country:'埃及', aliases:['埃及','egypt','eg'], continent:'africa' },
+    { country:'坦尚尼亞', aliases:['坦尚尼亞','坦桑尼亞','tanzania','tz'], continent:'africa' },
+    { country:'肯亞', aliases:['肯亞','kenya','ke'], continent:'africa' },
+
+    { country:'澳洲', aliases:['澳洲','澳大利亞','australia','au'], continent:'oceania' },
+    { country:'紐西蘭', aliases:['紐西蘭','新西蘭','new zealand','nz'], continent:'oceania' },
+  ];
+  const ALIAS_LOOKUP = new Map();
+  for (const row of COUNTRY_INDEX) for (const a of row.aliases) ALIAS_LOOKUP.set(norm(a), { country: row.country, continent: row.continent });
+
+  function guessCountryAndContinent(tags=[]) {
+    const nTags = (Array.isArray(tags)?tags:[]).map(t=>norm(String(t))).filter(Boolean);
+    for (const t of nTags) if (ALIAS_LOOKUP.has(t)) return ALIAS_LOOKUP.get(t);               // 完全匹配
+    for (const t of nTags) if (REGION_HINTS.has(t)) return { country:null, continent:REGION_HINTS.get(t) }; // 區域詞
+    for (const t of nTags) { // 子字串（例：俄羅斯-摩爾曼斯克）
+      for (const [alias,row] of ALIAS_LOOKUP.entries()) if (t.includes(alias)) return row;
+    }
+    return { country:null, continent:'other' };
+  }
+
+  function classifyItem(v){
+    const { country, continent } = guessCountryAndContinent(v.tags || []);
+    const contKey = continent || 'other';
+    const contLabel = (CONTINENTS.find(c=>c.key===contKey)||{label:'其他'}).label;
+    let countryKey = country ? norm(country) : 'mixed';
+    let countryLabel = country || '綜合';
+    return { continentKey:contKey, continentLabel:contLabel, countryKey, countryLabel };
+  }
+
+  // ===== 取資料並渲染 =====
+  (async function run(){
+    const container = $('#all-videos');
+    container.innerHTML = '<div class="placeholder">載入中…</div>';
+
+    // 連 Contentful
+    const client = contentful.createClient({
+      space: 'os5wf90ljenp',
+      accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+    });
+
+    let res;
+    try {
+      res = await client.getEntries({ content_type:'video', order:'-sys.updatedAt', limit:500 });
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = '<div class="placeholder">❌ 目前無法載入所有節目。</div>';
+      return;
+    }
+
+    const pick = (obj, keys) => { for (const k of keys) if (obj && obj[k]!=null && obj[k]!=='') return obj[k]; return ''; };
+    const items = res.items.map(it=>{
+      const f = it.fields || {};
+      const title = pick(f, ['影片標題','title']);
+      const desc  = pick(f, ['精選推薦影片說明文字','description']);
+      const ytid  = pick(f, ['YouTube ID','youTubeId']);
+      const mp4   = pick(f, ['MP4 影片網址','mp4Url']);
+      const tags  = Array.isArray(f.tags) ? f.tags : [];
+      let thumb   = f.thumbnail?.fields?.file?.url || '';
+      if (thumb && !thumb.startsWith('http')) thumb = 'https:' + thumb;
+      if (!thumb && ytid) thumb = `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`;
+      return { title, desc, ytid, mp4, tags, thumb };
+    });
+
+    // 分組：groups[continent].countries[countryKey].items[]
+    const groups = {};
+    for (const v of items) {
+      const slot = classifyItem(v);
+      groups[slot.continentKey] ??= { label: slot.continentLabel, countries:{} };
+      groups[slot.continentKey].countries[slot.countryKey] ??= { label: slot.countryLabel, items: [] };
+      groups[slot.continentKey].countries[slot.countryKey].items.push(v);
+    }
+
+    // 渲染
+    container.innerHTML = '';
+
+    // 快速錨點
+    const nav = document.createElement('div');
+    nav.className = 'quick-nav';
+    for (const c of CONTINENTS) {
+      if (!groups[c.key]) continue;
+      const a = document.createElement('a');
+      a.href = `#cont-${c.key}`;
+      a.textContent = c.label;
+      nav.appendChild(a);
+    }
+    container.appendChild(nav);
+
+    for (const c of CONTINENTS) {
+      const node = groups[c.key];
+      if (!node) continue;
+
+      const contSection = document.createElement('section');
+      contSection.id = `cont-${c.key}`;
+      contSection.innerHTML = `<h2 class="continent-title">${node.label}</h2><div class="continent-body"></div>`;
+      container.appendChild(contSection);
+      const body = contSection.querySelector('.continent-body');
+
+      const entries = Object.entries(node.countries).sort((a,b)=>{
+        const A = a[1].label === '綜合' ? '~~~' : a[1].label;
+        const B = b[1].label === '綜合' ? '~~~' : b[1].label;
+        return String(A).localeCompare(String(B), 'zh-Hant');
+      });
+
+      for (const [ckey, bucket] of entries) {
+        const block = document.createElement('div');
+        block.id = `country-${c.key}-${ckey}`;
+        block.innerHTML = `<h3 class="country-title">${bucket.label}</h3><div class="video-grid"></div>`;
+        body.appendChild(block);
+
+        const grid = block.querySelector('.video-grid');
+        const frag = document.createDocumentFragment();
+
+        bucket.items.forEach(v=>{
+          const safeTitle = escapeHtml(v.title || '未命名影片');
+          const safeDesc  = v.desc ? escapeHtml(v.desc) : '';
+          const ytFallback = v.ytid ? `https://i.ytimg.com/vi/${v.ytid}/hqdefault.jpg` : '';
+
+          const card = document.createElement('div');
+          card.className = 'video-card';
+          card.innerHTML = `
+            <div class="video-thumb" style="aspect-ratio:16/9; width:100%; overflow:hidden; border-radius:14px; background:var(--card-bg);">
+              ${v.thumb ? `<img src="${v.thumb}" alt="${safeTitle}" loading="lazy" decoding="async"
+                            style="width:100%;height:100%;object-fit:cover;display:block;"
+                            onerror="this.onerror=null;this.src='${ytFallback}';">`
+                        : `<div style="width:100%;height:100%;background:var(--card-bg);"></div>`}
+            </div>
+            <div class="video-content">
+              ${Array.isArray(v.tags)&&v.tags.length ? `<div class="video-tags">${v.tags.map(t=>escapeHtml(String(t))).join(' / ')}</div>` : ``}
+              <div class="video-title">${safeTitle}</div>
+              ${safeDesc ? `<div class="video-desc">${safeDesc}</div>` : ``}
+              ${
+                v.ytid
+                  ? `<button class="video-cta" data-videoid="${escapeHtml(v.ytid)}">立即觀看</button>`
+                  : (v.mp4 ? `<a class="video-cta" href="${escapeHtml(v.mp4)}" target="_blank" rel="noopener">播放 MP4</a>` : ``)
+              }
+            </div>`;
+          frag.appendChild(card);
+        });
+        grid.appendChild(frag);
+      }
+    }
+
+    // 播放器：若頁面有 openFullscreenPlayer() 就用；否則開新分頁
+    document.body.addEventListener('click', (e)=>{
+      const btn = e.target?.closest?.('.video-cta');
+      if (!btn) return;
+      const id = btn.dataset.videoid;
+      if (!id) return;
+      if (typeof window.openFullscreenPlayer === 'function') {
+        window.openFullscreenPlayer(id);
+      } else {
+        window.open(`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`, '_blank', 'noopener');
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
