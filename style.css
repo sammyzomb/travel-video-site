@@ -50,9 +50,7 @@ body {
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
 }
-body.menu-open {
-  overflow: hidden;
-}
+body.menu-open { overflow: hidden; }
 
 /* --- 導覽列 Navbar --- */
 .navbar {
@@ -83,9 +81,7 @@ body.menu-open {
   padding: 8px 4px;
 }
 .desktop-nav a:hover { color: var(--primary-color); }
-.desktop-nav a .nav-icon {
-    margin-right: 6px;
-}
+.desktop-nav a .nav-icon { margin-right: 6px; }
 .nav-actions { display: flex; align-items: center; gap: 16px; }
 .nav-actions a {
   color: var(--text-color);
@@ -98,9 +94,7 @@ body.menu-open {
   stroke: var(--text-color);
   transition: stroke 0.2s;
 }
-.nav-actions a:hover .nav-icon, .desktop-nav a:hover .nav-icon { 
-    stroke: var(--primary-color); 
-}
+.nav-actions a:hover .nav-icon, .desktop-nav a:hover .nav-icon { stroke: var(--primary-color); }
 
 /* --- 漢堡選單 --- */
 .hamburger-btn {
@@ -109,10 +103,7 @@ body.menu-open {
   padding: 0; margin: 0;
   cursor: pointer; z-index: 1002;
 }
-.hamburger-btn rect {
-  fill: var(--text-color);
-  transition: fill 0.2s;
-}
+.hamburger-btn rect { fill: var(--text-color); transition: fill 0.2s; }
 .hamburger-btn:hover rect { fill: var(--primary-color); }
 .side-menu {
   position: fixed; top: 0; right: 0;
@@ -123,8 +114,7 @@ body.menu-open {
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
   z-index: 1001;
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
 }
 .side-menu.active { transform: translateX(0); }
 .side-menu a {
@@ -134,22 +124,15 @@ body.menu-open {
   padding: 16px 24px;
   transition: color 0.2s, background-color 0.2s;
 }
-.side-menu a:hover {
-  color: var(--primary-color);
-  background-color: var(--primary-color-hover);
-}
+.side-menu a:hover { color: var(--primary-color); background-color: var(--primary-color-hover); }
 .menu-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease-in-out;
 }
-.menu-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+.menu-overlay.active { opacity: 1; pointer-events: auto; }
 
 /* --- 響應式設計 --- */
 @media screen and (max-width: 900px) {
@@ -216,7 +199,6 @@ body.menu-open {
   align-self: flex-start; transition: background-color 0.2s;
 }
 .video-cta:hover { background: var(--primary-color-hover); }
-
 
 /* --- 節目表預告區塊 (樣式更新) --- */
 .schedule-section {
@@ -287,7 +269,6 @@ body.menu-open {
   transform: scale(1.05);
 }
 
-
 /* --- 全螢幕播放器 --- */
 .fullscreen-player { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 9999; }
 .fullscreen-player.active { display: flex; }
@@ -303,3 +284,87 @@ body.menu-open {
   transition: transform 0.2s, background-color 0.2s;
 }
 .close-player-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+
+/* ============================
+   所有節目：七大洲分類條 + 洲摺疊動畫
+   ============================ */
+:root { --continent-sticky-top: 64px; } /* 若 navbar 高度不同改這裡 */
+
+.continent-sticky{
+  position: sticky;
+  top: var(--continent-sticky-top);
+  z-index: 900;
+  background: var(--section-bg);
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.continent-menu{
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display:flex; justify-content:center; align-items:center; gap:0;
+  padding: 12px 0;
+  font-family:'Noto Sans TC', sans-serif;
+}
+
+.continent-item{
+  appearance:none; background:none; border:0; cursor:pointer;
+  padding: 0 24px;
+  text-align:center; line-height:1.1;
+  position: relative;
+}
+.continent-item:focus, .continent-item:focus-visible{ outline:none; }
+
+/* 中文字級 ≈ 〈所有節目〉（h1 約 28px） */
+.continent-item .zh{ display:block; font-weight:900; color:var(--text-color); font-size: 28px; letter-spacing:.01em; }
+.continent-item .en{ display:block; font-size:14px; color:var(--text-color-light); margin-top:2px; }
+
+.divider{ width:1px; height:28px; background:#bcd3ff; margin: 0 12px; }
+
+.continent-item:hover .zh,
+.continent-item:hover .en,
+.continent-item.active .zh,
+.continent-item.active .en{ color: var(--primary-color); }
+
+.continent-item.active::after{
+  content:""; position:absolute; left:14px; right:14px; bottom:-13px;
+  height:3px; background:var(--primary-color); border-radius:2px;
+}
+
+@media (max-width:768px){
+  .continent-item{ padding:0 14px; }
+  .continent-item .zh{ font-size:22px; }
+  .continent-item .en{ font-size:12px; }
+  .divider{ height:22px; margin:0 8px; }
+}
+
+/* ==== 洲區塊摺疊動畫與 +/− 按鈕 ==== */
+.continent-head{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-top:24px;
+}
+.continent-section .continent-title{ margin:0; }
+
+.cont-toggle{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-weight:900; cursor:pointer;
+  transition: transform .18s ease;
+}
+.cont-toggle .sym{ font-size:20px; line-height:1; transform: translateY(-1px); }
+.cont-toggle:hover{ transform: translateY(-1px); }
+
+.continent-body{
+  overflow:hidden;
+  transition:max-height .32s ease, opacity .24s ease;
+  will-change:max-height, opacity;
+  opacity:1;
+}
+.continent-section.is-collapsed .continent-body{
+  max-height:0 !important;
+  opacity:0;
+}
