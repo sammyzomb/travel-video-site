@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 
-  <!-- 本頁樣式（極簡主題橋接 + 國家區塊強化 + 七大洲方塊導覽） -->
+  <!-- 本頁樣式（極簡主題橋接 + 七大洲導覽 + 卡片等高 + 區塊收合 + 標籤/徽章） -->
   <style>
     :root{ --bg:#ffffff; --text:#111827; --card:#ffffff; --card-border:rgba(0,0,0,.06); }
     .dark-theme{ --bg:#0b1620; --text:#e5eef9; --card:#0f2133; --card-border:rgba(255,255,255,.08); }
@@ -26,47 +26,60 @@
 
     /* === 七大洲極簡方塊導覽（固定 7 洲） === */
     .continent-nav{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:12px;
-      margin:8px 0 22px;
+      display:grid; grid-template-columns:repeat(7,1fr);
+      gap:12px; margin:8px 0 22px;
     }
     .continent-nav a{
       display:flex; align-items:center; justify-content:center;
-      height:44px;
-      background:var(--bg);
-      border:1px solid var(--card-border);
-      color:var(--text);
-      font-weight:800; text-decoration:none;
-      border-radius:8px;
-      transition:background .18s ease, transform .12s ease, border-color .18s ease;
+      height:44px; background:var(--bg); border:1px solid var(--card-border);
+      color:var(--text); font-weight:800; text-decoration:none;
+      border-radius:8px; transition:background .18s ease, transform .12s ease, border-color .18s ease;
     }
     .continent-nav a:hover{ background:var(--card); transform:translateY(-1px); }
     .continent-nav a:active{ transform:translateY(0); }
     .dark-theme .continent-nav a{ background:transparent; border-color:rgba(255,255,255,.10); }
     .dark-theme .continent-nav a:hover{ background:#0f2133; }
-
     @media (max-width:1024px){ .continent-nav{ grid-template-columns:repeat(4,1fr); } }
     @media (max-width:640px){ .continent-nav{ grid-template-columns:repeat(2,1fr); } .continent-nav a{ height:40px; } }
 
-    /* === 影片卡片 === */
-    .video-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-    .video-card { border-radius:16px; background:var(--card); border:1px solid var(--card-border); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
-    .video-thumb { aspect-ratio:16/9; width:100%; overflow:hidden; border-bottom:1px solid var(--card-border); background:#e5e7eb; }
-    .video-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .video-content { padding:14px 16px; }
-    .video-title { font-weight:900; font-size:18px; margin:6px 0; line-height:1.35; color:var(--text); }
-    .video-desc { color:#93a6bf; font-size:14px; line-height:1.55; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-    .video-tags { color:#8aa4c2; font-size:13px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .video-cta { margin-top:10px; padding:10px 14px; border-radius:12px; border:0; background:#3fa0ff; color:#001528; font-weight:800; cursor:pointer; }
-
-    /* === 國家抬頭 + 計數徽章 === */
+    /* === 洲/國家標題 === */
+    .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; border-left:6px solid #3fa0ff; padding-left:10px; }
     .country-head{display:flex;align-items:center;gap:10px;margin:12px 0 6px}
     .country-title{margin:0;font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px}
     .country-flag{font-size:22px;line-height:1;display:inline-flex;align-items:center}
     .country-flag img.emoji{height:1.2em;width:auto;vertical-align:-0.15em}
     .country-count{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e9eef6;color:#0a2a4a}
     .dark-theme .country-count{background:#0f2a44;color:#cfe4ff}
+
+    /* === 卡片（等高＋按鈕貼底對齊）=== */
+    .video-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:16px;
+      align-items:stretch;
+    }
+    .video-card{
+      display:flex; flex-direction:column;
+      border-radius:16px; background:var(--card); border:1px solid var(--card-border);
+      box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden;
+    }
+    .video-thumb{
+      flex:0 0 auto; aspect-ratio:16/9; width:100%; overflow:hidden;
+      border-bottom:1px solid var(--card-border); background:#e5e7eb;
+    }
+    .video-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .video-content{ display:flex; flex-direction:column; gap:8px; flex:1 1 auto; padding:14px 16px; }
+    .video-title{ font-weight:900; font-size:18px; margin:6px 0 0; line-height:1.35; color:var(--text); }
+    .video-tags{ color:#8aa4c2; font-size:13px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .video-desc{
+      color:#93a6bf; font-size:14px; line-height:1.55; overflow:hidden;
+      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+      min-height:calc(1.55em * 3);
+    }
+    .video-cta{
+      margin-top:auto; align-self:flex-start;
+      padding:10px 14px; border-radius:12px; border:0; background:#3fa0ff; color:#001528; font-weight:800; cursor:pointer;
+    }
 
     /* === 收合/展開：柔和漸層 + 膠囊按鈕 === */
     .grid-wrap{position:relative}
@@ -77,8 +90,7 @@
     .country-more-btn{
       display:inline-flex;align-items:center;gap:8px;justify-content:center;
       margin:12px auto 28px;padding:10px 16px;border-radius:999px;border:1px solid var(--card-border);
-      background:var(--card);color:var(--text);font-weight:800;cursor:pointer;
-      box-shadow:0 4px 12px rgba(0,0,0,.06)
+      background:var(--card);color:var(--text);font-weight:800;cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.06)
     }
     .country-more-btn:hover{transform:translateY(-1px)}
     .country-more-btn:active{transform:translateY(0)}
@@ -150,7 +162,7 @@
   <!-- 站內 JS（主題切換 / 漢堡選單等） -->
   <script src="script.js"></script>
 
-  <!-- 本頁邏輯：七大洲固定導覽 + 自動分類 + 美化收合 -->
+  <!-- 本頁邏輯：七大洲固定導覽 + 自動分類 + 收合/展開 + 國旗 SVG -->
   <script>
   (function(){
     'use strict';
@@ -169,7 +181,6 @@
       { key:'oceania',       label:'大洋洲' },
       { key:'antarctica',    label:'南極洲' },
     ];
-
     // 實際渲染時也會用到（加上 other 以容納未知）
     const CONTINENTS = [...CONTINENTS_7, { key:'other', label:'其他' }];
 
@@ -209,7 +220,7 @@
       { country:'伊朗', aliases:['伊朗','iran','ir'], continent:'asia' },
       { country:'不丹', aliases:['不丹','bhutan','bt'], continent:'asia' },
 
-      // 俄羅斯（此處歸在「亞洲」方便貝加爾湖等內容歸位）
+      // 俄羅斯（歸在「亞洲」以容納西伯利亞/貝加爾湖等）
       { country:'俄羅斯', aliases:['俄羅斯','russia','ru','西伯利亞','siberia'], continent:'asia' },
 
       { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
@@ -259,16 +270,16 @@
     const getFlag = (country) => COUNTRY_FLAGS[country] || '';
 
     // === 別名索引（國名 + 常見城市/地標）===
-    const ALIAS_EXACT = new Map();
-    const ALIAS_TEXT = [];
+    const ALIAS_EXACT = new Map();   // 用於 tags 精準命中
+    const ALIAS_TEXT  = [];          // 用於標題/描述包含比對
 
     // 國名（權重 2）
     for (const row of COUNTRY_INDEX) {
       for (const a of row.aliases) {
         const key = norm(a);
         const val = { country: row.country, continent: row.continent };
-        ALIAS_EXACT.set(key, val);                       // tags 完整比對
-        if (key.length >= 2) ALIAS_TEXT.push({ alias: key, ...val, weight: 2 });  // 內文/標題比對
+        ALIAS_EXACT.set(key, val);
+        if (key.length >= 2) ALIAS_TEXT.push({ alias: key, ...val, weight: 2 });
       }
     }
 
@@ -288,13 +299,10 @@
       ['東京','日本','asia'], ['大阪','日本','asia'], ['京都','日本','asia'], ['沖繩','日本','asia'],
       // 馬來西亞
       ['吉隆坡','馬來西亞','asia'], ['檳城','馬來西亞','asia'], ['亞庇','馬來西亞','asia'],
-      // 俄羅斯地標
-      ['貝加爾湖','俄羅斯','asia'], ['baikai','俄羅斯','asia'], ['baikal','俄羅斯','asia'],
-      // 肯亞地標
+      // 俄羅斯 / 肯亞 / 瑞士
+      ['貝加爾湖','俄羅斯','asia'], ['baikal','俄羅斯','asia'], ['baikai','俄羅斯','asia'],
       ['馬賽馬拉','肯亞','africa'], ['masai mara','肯亞','africa'],
-      // 瑞士常見城市
       ['蘇黎世','瑞士','europe'], ['日內瓦','瑞士','europe'],
-
       // 英文常見拼寫
       ['jakarta','印尼','asia'], ['bali','印尼','asia'], ['yogyakarta','印尼','asia'], ['bandung','印尼','asia'],
       ['surabaya','印尼','asia'], ['bangkok','泰國','asia'], ['chiang mai','泰國','asia'], ['phuket','泰國','asia'],
@@ -305,8 +313,8 @@
     for (const [alias, country, continent] of CITY_ALIASES) {
       const k = norm(alias);
       const val = { country, continent };
-      ALIAS_EXACT.set(k, val);                                  // tags 命中
-      ALIAS_TEXT.push({ alias: k, ...val, weight: 1 });          // 文字命中
+      ALIAS_EXACT.set(k, val);                         // tags 命中
+      ALIAS_TEXT.push({ alias: k, ...val, weight: 1 }); // 文字命中
     }
     // 長字優先；同長時「國名(2)」優先於「城市(1)」
     ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.weight));
@@ -400,7 +408,7 @@
 
         const contSection = document.createElement('section');
         contSection.id = `cont-${c.key}`;
-        contSection.innerHTML = `<h2 class="continent-title" style="margin:24px 0 12px;font-size:26px;font-weight:900;border-left:6px solid #3fa0ff;padding-left:10px;">${node.label}</h2><div class="continent-body"></div>`;
+        contSection.innerHTML = `<h2 class="continent-title">${node.label}</h2><div class="continent-body"></div>`;
         container.appendChild(contSection);
         const body = contSection.querySelector('.continent-body');
 
@@ -423,7 +431,7 @@
             </div>
             <div class="grid-wrap">
               <div class="video-grid"></div>
-              <div class="grid-fade"></div>
+              <div class="grid-fade" style="${bucket.items.length>6?'':'display:none'}"></div>
             </div>`;
           body.appendChild(block);
 
@@ -476,13 +484,16 @@
               btn.querySelector('.lbl').textContent = expanded ? '收合' : '顯示更多';
               const mc = btn.querySelector('.more-count');
               if (mc) mc.textContent = expanded ? '' : `（+${bucket.items.length - MAX_PER_COUNTRY}）`;
+              // 展開時把漸層收掉
+              const fade = wrap.querySelector('.grid-fade');
+              if (fade) fade.style.opacity = expanded ? '0' : '1';
             });
             block.appendChild(btn);
           }
         }
       }
 
-      // 僅把「國旗」轉成 SVG（避免描述中的 emoji 被放大）
+      // 只把「國旗」轉成 SVG（避免描述中的 emoji 被放大）
       if (window.twemoji) {
         document.querySelectorAll('.country-flag').forEach(node => {
           twemoji.parse(node, {
@@ -493,7 +504,7 @@
         });
       }
 
-      // 點卡片播放（若首頁有 openFullscreenPlayer 就沿用，否則新分頁）
+      // 點卡片播放（沿用首頁全螢幕播放器，否則新分頁）
       document.body.addEventListener('click', (e)=>{
         const btn = e.target?.closest?.('.video-cta');
         if (!btn) return;
