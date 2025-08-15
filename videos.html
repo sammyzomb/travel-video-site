@@ -61,18 +61,24 @@
   <div id="menu-overlay" class="menu-overlay"></div>
 
   <!-- 內容區：所有節目 -->
-  <main class="page-wrap">
-    <div class="page-head">
-      <h1>所有節目</h1>
-      <span class="hint">自動依「洲 → 國家／綜合」分組（從標題→標籤→說明文字偵測國家）</span>
+  <main class="page-wrap video-section" style="padding-top:16px;">
+    <div class="section-title-container page-head" style="margin-bottom:8px;">
+      <h2>所有節目</h2>
+      <span class="hint">（依「洲 → 國家／綜合」自動分組；可切換/摺疊）</span>
     </div>
+
+    <!-- 分類條：固定在頂 -->
+    <div class="continent-sticky">
+      <nav id="continentMenu" class="continent-menu"></nav>
+    </div>
+
     <div id="all-videos"><div class="placeholder">載入中…</div></div>
   </main>
 
   <!-- 站內 JS（主題切換 / 漢堡選單等） -->
   <script src="script.js"></script>
 
-  <!-- 本頁邏輯：橫向分類條 + 自動分類 + 洲摺疊動畫 + 國旗 SVG + 篩選 -->
+  <!-- 本頁邏輯：分類條 + 自動分類 + 摺疊 + 國旗 SVG + 篩選 -->
   <script>
   (function(){
     'use strict';
@@ -129,6 +135,7 @@
       { country:'土耳其', aliases:['土耳其','turkiye','turkey','tr'], continent:'asia' },
       { country:'伊朗', aliases:['伊朗','iran','ir'], continent:'asia' },
       { country:'不丹', aliases:['不丹','bhutan','bt'], continent:'asia' },
+      // 俄羅斯（歸在「亞洲」以容納西伯利亞等）
       { country:'俄羅斯', aliases:['俄羅斯','russia','ru','西伯利亞','siberia'], continent:'asia' },
 
       { country:'芬蘭', aliases:['芬蘭','finland','fi'], continent:'europe' },
@@ -221,8 +228,8 @@
     for (const [alias, country, continent] of CITY_ALIASES) {
       const k = norm(alias);
       const val = { country, continent };
-      ALIAS_EXACT.set(k, val);
-      ALIAS_TEXT.push({ alias: k, ...val, weight: 1 });
+      ALIAS_EXACT.set(k, val);                         // tags 命中
+      ALIAS_TEXT.push({ alias: k, ...val, weight: 1 }); // 文字命中
     }
     // 長字優先；同長時「國名(2)」優先於「城市(1)」
     ALIAS_TEXT.sort((a, b) => (b.alias.length - a.alias.length) || (b.weight - a.weight));
@@ -298,29 +305,23 @@
       // 渲染
       container.innerHTML = '';
 
-      // === 洲別固定導覽（七大洲） → 橫向分類條（含 sticky 外層） ===
-      const stickyWrap = document.createElement('div');
-      stickyWrap.className = 'continent-sticky';
-
-      const nav = document.createElement('nav');
-      nav.className = 'continent-menu';
-
-      function makeItem(key, zh, en){
-        const btn = document.createElement('button');
-        btn.className = 'continent-item';
-        btn.type = 'button';
-        btn.dataset.key = key;
-        btn.innerHTML = `<span class="zh">${zh}</span><span class="en">${en}</span>`;
-        return btn;
-      }
-
+      // === 洲別固定導覽（七大洲 + 全部） ===
+      const nav = $('#continentMenu');
       const mapEn = {
         asia:'Asia', europe:'Europe', north_america:'North America',
         south_america:'South America', africa:'Africa', oceania:'Oceania', antarctica:'Antarctica'
       };
-
+      function makeItem(key, zh, en){
+        const btn = document.createElement('button');
+        btn.className = 'continent-item';
+        btn.type = 'button';
+        if (key) btn.dataset.key = key;
+        btn.innerHTML = `<span class="zh">${zh}</span><span class="en">${en}</span>`;
+        return btn;
+      }
       CONTINENTS_7.forEach((c, i) => {
-        nav.appendChild(makeItem(c.key, c.label, mapEn[c.key] || ''));
+        const btn = makeItem(c.key, c.label, mapEn[c.key] || '');
+        nav.appendChild(btn);
         if (i < CONTINENTS_7.length - 1) {
           const divi = document.createElement('i');
           divi.className = 'divider';
@@ -328,42 +329,26 @@
           nav.appendChild(divi);
         }
       });
+      const divLast = document.createElement('i'); divLast.className = 'divider'; nav.appendChild(divLast);
+      const showAllBtn = makeItem('', '全部', 'All'); nav.appendChild(showAllBtn);
 
-      // 右側加「全部」
-      const divLast = document.createElement('i');
-      divLast.className = 'divider';
-      divLast.setAttribute('aria-hidden', 'true');
-      nav.appendChild(divLast);
-      const showAllBtn = document.createElement('button');
-      showAllBtn.className = 'continent-item';
-      showAllBtn.type = 'button';
-      showAllBtn.innerHTML = `<span class="zh">全部</span><span class="en">All</span>`;
-      nav.appendChild(showAllBtn);
-
-      stickyWrap.appendChild(nav);
-      container.appendChild(stickyWrap);
-
-      // === 各洲內容（可摺疊） ===
+      // === 各洲內容 ===
       for (const c of CONTINENTS) {
         const node = groups[c.key];
         if (!node) continue;
 
         const contSection = document.createElement('section');
-        contSection.id = `cont-${c.key}`;
         contSection.className = 'continent-section';
-
+        contSection.id = `cont-${c.key}`;
         contSection.innerHTML = `
           <div class="continent-head">
             <h2 class="continent-title">${node.label}</h2>
-            <button class="cont-toggle" type="button" aria-expanded="true" aria-controls="body-${c.key}" data-key="${c.key}">
-              <span class="sym">−</span>
-            </button>
+            <button class="cont-toggle" type="button" aria-expanded="true"><span class="sym">−</span></button>
           </div>
-          <div class="continent-body" id="body-${c.key}">
-            <div class="continent-body-inner"></div>
-          </div>`;
+          <div class="continent-body"><div class="continent-body-inner"></div></div>`;
         container.appendChild(contSection);
-        const body = contSection.querySelector('.continent-body-inner');
+
+        const bodyInner = contSection.querySelector('.continent-body-inner');
 
         const entries = Object.entries(node.countries).sort((a,b)=>{
           const A = a[1].label === '綜合' ? '~~~' : a[1].label;
@@ -386,7 +371,7 @@
               <div class="video-grid"></div>
               <div class="grid-fade" style="${bucket.items.length>6?'':'display:none'}"></div>
             </div>`;
-          body.appendChild(block);
+          bodyInner.appendChild(block);
 
           const wrap = block.querySelector('.grid-wrap');
           const grid = wrap.querySelector('.video-grid');
@@ -472,175 +457,110 @@
       /* =========================
          導覽互動：active / 篩選 / 錨點 / 自動展開
          ========================= */
-      const navItems = nav.querySelectorAll('.continent-item'); // 含七洲，不含最後的「全部」（下方另行處理）
+      const nav = $('#continentMenu');
+      const navItems = nav.querySelectorAll('.continent-item'); // 含七洲＋全部
+      const showAllBtn = Array.from(navItems).find(b=>!b.dataset.key);
 
       function setActive(key){
         navItems.forEach(el => el.classList.toggle('active', el.dataset.key === key));
-        showAllBtn.classList.toggle('active', !key); // 沒 key 代表顯示全部
+        if (showAllBtn) showAllBtn.classList.toggle('active', !key);
       }
 
-      // 展開/收合輔助：供切換時呼叫（國家層級）
-      function collapseAllCountryGrids(){
-        const wraps = document.querySelectorAll('.grid-wrap');
-        wraps.forEach(wrap=>{
-          const grid = wrap.querySelector('.video-grid');
-          const total = grid ? grid.children.length : 0;
-          const max = 6; // 與渲染時一致
-          const btn = wrap.parentElement.querySelector('.country-more-btn');
+      // 取得所有洲的 section 節點（id 形如 cont-asia）
+      const allContinentSections = () => Array.from(document.querySelectorAll('.continent-section'));
 
-          wrap.classList.remove('is-expanded');
-          if (total > max) {
-            wrap.classList.add('is-collapsed');
-            const fade = wrap.querySelector('.grid-fade');
-            if (fade) fade.style.opacity = '1';
-            if (btn){
-              btn.classList.remove('expanded');
-              const lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = '顯示更多';
-              const mc  = btn.querySelector('.more-count'); if (mc) mc.textContent = `（+${Math.max(total - max, 0)}）`;
-            }
-          } else {
-            wrap.classList.remove('is-collapsed');
-            if (btn){
-              btn.classList.remove('expanded');
-              const lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = '';
-              const mc  = btn.querySelector('.more-count'); if (mc) mc.textContent = '';
-            }
-          }
-        });
-      }
-
-      function expandFirstCountryIn(contKey){
-        const sec = document.getElementById(`cont-${contKey}`);
-        if (!sec) return;
-        const firstWrap = sec.querySelector('.grid-wrap');
-        if (!firstWrap) return;
-
-        const grid = firstWrap.querySelector('.video-grid');
-        const total = grid ? grid.children.length : 0;
-        const max = 6; // 與渲染時一致
-        const btn = firstWrap.parentElement.querySelector('.country-more-btn');
-
-        if (total > max){
-          firstWrap.classList.remove('is-collapsed');
-          firstWrap.classList.add('is-expanded');
-          const fade = firstWrap.querySelector('.grid-fade');
-          if (fade) fade.style.opacity = '0';
-          if (btn){
-            btn.classList.add('expanded');
-            const lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = '收合';
-            const mc  = btn.querySelector('.more-count'); if (mc) mc.textContent = '';
-          }
-        }
-      }
-
-      /* ========== 洲摺疊動畫工具（洲層級） ========== */
-      function setSectionExpanded(key, expanded){
-        const sec = document.getElementById(`cont-${key}`);
-        if (!sec) return;
+      function collapseContinent(sec, collapse=true){
         const body = sec.querySelector('.continent-body');
-        const btn  = sec.querySelector('.cont-toggle');
+        const btn = sec.querySelector('.cont-toggle');
         if (!body || !btn) return;
 
-        const full = body.scrollHeight;
-
-        if (expanded){
-          sec.classList.remove('is-collapsed');
-          body.style.maxHeight = '0px';
-          requestAnimationFrame(()=>{ body.style.maxHeight = full + 'px'; });
-          btn.setAttribute('aria-expanded','true');
-          const sym = btn.querySelector('.sym'); if (sym) sym.textContent = '−';
-        }else{
-          body.style.maxHeight = full + 'px';
-          requestAnimationFrame(()=>{ body.style.maxHeight = '0px'; });
+        if (collapse){
+          // 轉為摺疊
+          const h = body.scrollHeight;
+          body.style.maxHeight = h + 'px'; // 設初始值讓動畫從實高收起
+          requestAnimationFrame(()=>{
+            body.style.maxHeight = '0px';
+            sec.classList.add('is-collapsed');
+          });
           btn.setAttribute('aria-expanded','false');
-          const sym = btn.querySelector('.sym'); if (sym) sym.textContent = '+';
-          body.addEventListener('transitionend', function onEnd(e){
-            if (e.propertyName === 'max-height'){
-              sec.classList.add('is-collapsed');
-              body.removeEventListener('transitionend', onEnd);
+          btn.querySelector('.sym').textContent = '+';
+        } else {
+          // 展開
+          sec.classList.remove('is-collapsed');
+          const h = body.scrollHeight;
+          body.style.maxHeight = h + 'px';
+          btn.setAttribute('aria-expanded','true');
+          btn.querySelector('.sym').textContent = '−';
+          // 動畫結束後移除 max-height 讓內容自適應
+          body.addEventListener('transitionend', function tidy(e){
+            if (e.propertyName === 'max-height') {
+              body.style.maxHeight = '';
+              body.removeEventListener('transitionend', tidy);
             }
           });
         }
       }
-      function expandOnly(key){
-        const all = Array.from(document.querySelectorAll('[id^="cont-"]')).map(n=>n.id.replace('cont-',''));
-        all.forEach(k => setSectionExpanded(k, k===key));
-      }
-      // 綁定每個洲右側的 +/− 按鈕
-      document.querySelectorAll('.cont-toggle').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const key = btn.dataset.key;
-          const expanded = btn.getAttribute('aria-expanded') === 'true';
-          setSectionExpanded(key, !expanded);
-        });
-      });
 
-      // 導覽點擊行為（七洲）
+      function filterByContinent(key){
+        setActive(key);
+        allContinentSections().forEach(sec=>{
+          const isTarget = sec.id === `cont-${key}`;
+          // 目標洲：展開；其他洲：摺疊但仍顯示（非 display:none）
+          if (isTarget) {
+            collapseContinent(sec, false);
+          } else {
+            collapseContinent(sec, true);
+          }
+        });
+        // 更新 hash
+        const url = new URL(window.location);
+        url.hash = `cont-${key}`;
+        history.replaceState(null, "", url);
+        // 捲動就位（讓分類條保持在頂）
+        const sticky = document.querySelector('.continent-sticky');
+        if (sticky) window.scrollTo({ top: sticky.offsetTop - 8, behavior: 'smooth' });
+      }
+
+      function showAll(){
+        setActive(null);
+        allContinentSections().forEach(sec=>collapseContinent(sec, false));
+        const url = new URL(window.location);
+        url.hash = '';
+        history.replaceState(null, "", url);
+      }
+
+      // 綁定導覽點擊行為
       navItems.forEach(el=>{
         el.addEventListener('click', (ev)=>{
           ev.preventDefault();
           const key = el.dataset.key;
-          setActive(key);
-          expandOnly(key);               // 其他洲摺疊，不隱藏
-          // 更新 hash
-          const url = new URL(window.location);
-          url.hash = `cont-${key}`;
-          history.replaceState(null, "", url);
-          // 捲動就位
-          const target = document.getElementById(`cont-${key}`);
-          if (target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-
-          // 切換洲時自動展開該洲第一個國家，並收合其他
-          collapseAllCountryGrids();
-          expandFirstCountryIn(key);
+          if (!key) { showAll(); return; }
+          filterByContinent(key);
         }, { passive:false });
       });
 
-      // 「全部」按鈕：全部展開
-      showAllBtn.addEventListener('click', (ev)=>{
-        ev.preventDefault();
-        setActive(null);
-        const all = Array.from(document.querySelectorAll('[id^="cont-"]')).map(n=>n.id.replace('cont-',''));
-        all.forEach(k=> setSectionExpanded(k, true));
-        const url = new URL(window.location);
-        url.hash = '';
-        history.replaceState(null, "", url);
-        collapseAllCountryGrids(); // 顯示全部時保持所有國家收合
-      }, { passive:false });
+      // 每個洲自己的 +/− 切換
+      allContinentSections().forEach(sec=>{
+        const btn = sec.querySelector('.cont-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', ()=>{
+          const collapsed = !btn.closest('.continent-section').classList.contains('is-collapsed');
+          collapseContinent(sec, collapsed);
+        });
+      });
 
       // 載入時根據 hash 套用
       (function initFromHash(){
         const h = location.hash.replace(/^#/, '');
         const mm = h.match(/^cont\-(asia|europe|north_america|south_america|africa|oceania|antarctica)$/);
-        if (mm) {
-          setActive(mm[1]);
-          expandOnly(mm[1]);
-          collapseAllCountryGrids();
-          expandFirstCountryIn(mm[1]);
-        } else {
-          // 預設：全部展開，但國家層級保持收合
-          setActive(null);
-          const all = Array.from(document.querySelectorAll('[id^="cont-"]')).map(n=>n.id.replace('cont-',''));
-          all.forEach(k=> setSectionExpanded(k, true));
-          collapseAllCountryGrids();
-        }
+        if (mm) filterByContinent(mm[1]); else showAll();
       })();
 
       // hash 改變時也同步
       window.addEventListener('hashchange', ()=>{
         const h = location.hash.replace(/^#/, '');
         const mm = h.match(/^cont\-(asia|europe|north_america|south_america|africa|oceania|antarctica)$/);
-        if (mm) {
-          setActive(mm[1]);
-          expandOnly(mm[1]);
-          collapseAllCountryGrids();
-          expandFirstCountryIn(mm[1]);
-        } else {
-          setActive(null);
-          const all = Array.from(document.querySelectorAll('[id^="cont-"]')).map(n=>n.id.replace('cont-',''));
-          all.forEach(k=> setSectionExpanded(k, true));
-          collapseAllCountryGrids();
-        }
+        if (mm) filterByContinent(mm[1]); else showAll();
       });
     })();
   })();
