@@ -303,3 +303,15 @@ body.menu-open {
   transition: transform 0.2s, background-color 0.2s;
 }
 .close-player-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+.close-player-btn:hover { 
+  background: rgba(255, 255, 255, 0.2); 
+  transform: scale(1.1); 
+}
+
+/* --- 洲別導覽區塊：拉寬到版面 90% 並置中 --- */
+.continent-nav {
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
