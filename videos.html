@@ -33,11 +33,14 @@
   background:var(--bg);
   border-bottom:1px solid var(--card-border);
   overflow-x:auto;
-  overflow-y:hidden;                 /* 防止 ::after 造成直向捲動 */
+  overflow-y:hidden; /* 防止 ::after 造成直向捲動 */
   -webkit-overflow-scrolling:touch;
-  white-space:nowrap;                /* 避免子項換行 */
+  white-space:nowrap; /* 避免子項換行 */
   box-sizing:border-box;
   mask-image: linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%); /* 新增這行 */
+}
+
 }
 
 /* 置中軌道：所有洲按鈕與分隔線都放這裡（一定要有這層） */
