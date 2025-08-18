@@ -428,72 +428,78 @@
 
       // 渲染
       container.innerHTML = '';
-
       // === 洲別固定導覽（七大洲） → 橫向分類條 ===
-      const nav = document.createElement('nav');
-      nav.className = 'continent-menu';
+const nav = document.createElement('nav');
+nav.className = 'continent-menu';
 
-      // 線條 SVG 小圖示（非 emoji）
-      const ICON_SVGS = {
-        asia: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a8 8 0 0 1 0 20M12 2a8 8 0 0 0 0 20"></path></svg>`,
-        europe: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M7 12a5 5 0 0 0 10 0 5 7 0 0 0-10 0z"></path></svg>`,
-        north_america: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M8 8l3 2 1 3 4 1"></path></svg>`,
-        south_america: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M10 8l2 3-1 3 1 3"></path></svg>`,
-        africa: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M9 7l5 1 2 3-2 4-4 1"></path></svg>`,
-        oceania: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M14 15l2 1M9 16l1-2"></path></svg>`,
-        antarctica: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M8 15h8M10 9h4"></path></svg>`,
-        all: `<svg class="icon" viewBox="0 0 24 24"><path d="M12 3l2.7 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.3-.5L12 3z"></path></svg>`
-      };
+/* 內層軌道（一定要有這層，所有按鈕與分隔線都放這裡） */
+const track = document.createElement('div');
+track.className = 'continent-track';
 
-      function makeItem(key, zh, en){
-        const btn = document.createElement('button');
-        btn.className = 'continent-item';
-        btn.type = 'button';
-        btn.dataset.key = key;
-        const icon = ICON_SVGS[key] || ICON_SVGS.asia;
-        btn.innerHTML = `
-          ${icon}
-          <span class="label">
-            <span class="zh">${zh}</span>
-            <span class="en">${en}</span>
-          </span>`;
-        return btn;
-      }
+// 線條 SVG 小圖示（非 emoji）
+const ICON_SVGS = {
+  asia: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a8 8 0 0 1 0 20M12 2a8 8 0 0 0 0 20"></path></svg>`,
+  europe: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M7 12a5 5 0 0 0 10 0 5 7 0 0 0-10 0z"></path></svg>`,
+  north_america: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M8 8l3 2 1 3 4 1"></path></svg>`,
+  south_america: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M10 8l2 3-1 3 1 3"></path></svg>`,
+  africa: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M9 7l5 1 2 3-2 4-4 1"></path></svg>`,
+  oceania: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M14 15l2 1M9 16l1-2"></path></svg>`,
+  antarctica: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M8 15h8M10 9h4"></path></svg>`,
+  all: `<svg class="icon" viewBox="0 0 24 24"><path d="M12 3l2.7 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.3-.5L12 3z"></path></svg>`
+};
 
-      const mapEn = {
-        asia:'Asia', europe:'Europe', north_america:'North America',
-        south_america:'South America', africa:'Africa', oceania:'Oceania', antarctica:'Antarctica'
-      };
+function makeItem(key, zh, en){
+  const btn = document.createElement('button');
+  btn.className = 'continent-item';
+  btn.type = 'button';
+  btn.dataset.key = key;
+  const icon = ICON_SVGS[key] || ICON_SVGS.asia;
+  btn.innerHTML = `
+    ${icon}
+    <span class="label">
+      <span class="zh">${zh}</span>
+      <span class="en">${en}</span>
+    </span>`;
+  return btn;
+}
 
-      CONTINENTS_7.forEach((c, i) => {
-        const btn = makeItem(c.key, c.label, mapEn[c.key] || '');
-        nav.appendChild(btn);
-        if (i < CONTINENTS_7.length - 1) {
-          const divi = document.createElement('i');
-          divi.className = 'divider';
-          divi.setAttribute('aria-hidden', 'true');
-          nav.appendChild(divi);
-        }
-      });
+const mapEn = {
+  asia:'Asia', europe:'Europe', north_america:'North America',
+  south_america:'South America', africa:'Africa', oceania:'Oceania', antarctica:'Antarctica'
+};
 
-      // 右側加上一顆「全部」
-      const divLast = document.createElement('i');
-      divLast.className = 'divider';
-      divLast.setAttribute('aria-hidden', 'true');
-      nav.appendChild(divLast);
-      const showAllBtn = document.createElement('button');
-      showAllBtn.className = 'continent-item';
-      showAllBtn.type = 'button';
-      showAllBtn.innerHTML = `
-        ${ICON_SVGS.all}
-        <span class="label">
-          <span class="zh">全部</span>
-          <span class="en">All</span>
-        </span>`;
-      nav.appendChild(showAllBtn);
+CONTINENTS_7.forEach((c, i) => {
+  const btn = makeItem(c.key, c.label, mapEn[c.key] || '');
+  track.appendChild(btn);                       // ← 改：append 到 track
+  if (i < CONTINENTS_7.length - 1) {
+    const divi = document.createElement('i');
+    divi.className = 'divider';
+    divi.setAttribute('aria-hidden', 'true');
+    track.appendChild(divi);                   // ← 改：append 到 track
+  }
+});
 
-      container.appendChild(nav);
+// 右側加上一顆「全部」
+const divLast = document.createElement('i');
+divLast.className = 'divider';
+divLast.setAttribute('aria-hidden', 'true');
+track.appendChild(divLast);                    // ← 改：append 到 track
 
+const showAllBtn = document.createElement('button');
+showAllBtn.className = 'continent-item';
+showAllBtn.type = 'button';
+showAllBtn.innerHTML = `
+  ${ICON_SVGS.all}
+  <span class="label">
+    <span class="zh">全部</span>
+    <span class="en">All</span>
+  </span>`;
+track.appendChild(showAllBtn);                 // ← 改：append 到 track
+
+nav.appendChild(track);                        // ← 關鍵：把 track 放到 nav
+container.appendChild(nav);
+
+    
       // === 各洲內容 ===
       for (const c of CONTINENTS) {
         const node = groups[c.key];
