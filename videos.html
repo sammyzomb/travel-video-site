@@ -16,7 +16,13 @@
   <!-- 本頁樣式（極簡主題橋接 + 橫向分類條 + 卡片等高 + 區塊收合 + 標籤/徽章） -->
   <style>
     :root{ --bg:#ffffff; --text:#111827; --card:#ffffff; --card-border:rgba(0,0,0,.06); }
+    --accent:#e0b46a;         /* 金色（依 index.html） */
+    --active-bg:#f6f6f6;      /* 被選取時的淺灰底（亮色主題） */
+   }
     .dark-theme{ --bg:#0b1620; --text:#e5eef9; --card:#0f2133; --card-border:rgba(255,255,255,.08); }
+    --bg:#0b1620; --text:#e5eef9; --card:#0f2133; --card-border:rgba(255,255,255,.08);
+    /* 新增：暗色主題時的選取底色 */
+   --active-bg:#0f2133;
     body{ background:var(--bg); color:var(--text); margin:0; }
 
     .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5%; }
@@ -24,40 +30,49 @@
     .page-head h1 { font-weight:900; font-size:28px; margin:0; }
     .hint { color:#8aa4c2; font-size:14px; }
 
-    /* === 七大洲橫向分類條（中文粗體＋英文小字＋上方小圖示） === */
-    .continent-menu{
-      display:flex; justify-content:center; align-items:center; gap:0;
-      border-bottom:1px solid var(--card-border); padding:10px 0;
-      font-family:'Noto Sans TC', sans-serif;
-      background:var(--bg);
-    }
-    .continent-item{
-      appearance:none; background:none; border:0; cursor:pointer;
-      padding:6px 16px 8px; text-align:center; line-height:1.15;
-      transition:color .2s ease;
-      position:relative;
-    }
-    .continent-item .icon{
-      display:block; font-size:18px; line-height:1; margin-bottom:4px;
-      filter: saturate(1.05);
-    }
-    .continent-item .zh{ display:block; font-weight:900; color:var(--text); font-size:16px; letter-spacing:.02em;}
-    .continent-item .en{ display:block; font-size:12px; color:#8aa4c2; margin-top:2px;}
+    /* === 七大洲導覽（依 index.html 風格：中文粗＋英文小，無圖示，選取金色＋淺灰底） === */
+.continent-menu{
+  position: sticky; top: 64px; /* 可依你的 navbar 高度微調 */
+  z-index: 20;
+  display:flex; align-items:stretch; gap:0;
+  padding:0; background:var(--bg);
+  border-bottom:1px solid var(--card-border);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.continent-item{
+  appearance:none; background:none; border:0; cursor:pointer;
+  display:flex; align-items:center;
+  padding:12px 20px; margin:0;
+  text-align:left; line-height:1.15; position:relative;
+  flex:0 0 auto; /* 手機可橫向滑動 */
+}
+.continent-item .zh{ display:block; font-weight:900; color:var(--text); font-size:16px; letter-spacing:.02em; }
+.continent-item .en{ display:block; font-size:12px; color:#8aa4c2; margin-top:2px; }
 
-    .divider{ width:1px; height:24px; background:#bcd3ff; display:inline-block; }
+.divider{ width:1px; height:34px; align-self:center; background:var(--card-border); }
+@media (max-width:900px){ .divider{ display:none; } }
 
-    .continent-item:hover .zh,
-    .continent-item:hover .en{ color:#0b69ff; }
-    .continent-item.active .zh,
-    .continent-item.active .en{ color:#0b69ff; }
-    .continent-item.active::after{
-      content:""; position:absolute; left:12px; right:12px; bottom:-11px;
-      height:2px; background:#0b69ff; border-radius:2px;
-    }
+/* hover：金色文字（同 index.html 的感覺） */
+.continent-item:hover .zh,
+.continent-item:hover .en{ color:var(--accent); }
 
-    .dark-theme .divider{ background:rgba(112,162,255,.6); }
-    .dark-theme .continent-menu{ border-bottom-color:rgba(255,255,255,.1); }
-    .dark-theme .continent-item .en{ color:#93a6bf; }
+/* active：整塊淡灰底＋金色字 */
+.continent-item.active{ background:var(--active-bg); }
+.continent-item.active .zh,
+.continent-item.active .en{ color:var(--accent); }
+
+/* 暗色主題的微調 */
+.dark-theme .continent-menu{ border-bottom-color:rgba(255,255,255,.1); }
+.dark-theme .divider{ background:rgba(255,255,255,.12); }
+.dark-theme .continent-item .en{ color:#93a6bf; }
+
+@media (max-width:768px){
+  .continent-item{ padding:10px 14px; }
+  .continent-item .zh{ font-size:15px; }
+  .continent-item .en{ font-size:11px; }
+}
+
+   
 
     @media (max-width:768px){
       .continent-item{ padding:6px 10px 8px; }
