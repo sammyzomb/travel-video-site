@@ -25,64 +25,65 @@
     .hint { color:#8aa4c2; font-size:14px; }
 
     /* === 七大洲導覽（index.html 風格：線條SVG + 中文粗／英文小 + 直線分隔） === */
-    /* === 七大洲導覽（index 風格）=== */
-.continent-menu{
+ .continent-menu{
   position: sticky; top: 64px;
   z-index: 20;
-  display:flex; align-items:center; gap:0;
-  padding:10px 8px 14px;              /* ⬅ 增加底部空間，避免底線把容器撐出直向捲軸 */
+  display:block;                          /* 用外層 block + 內層軌道置中 */
+  padding:10px 0 14px;                    /* 底線不會撐出直向捲軸 */
   background:var(--bg);
   border-bottom:1px solid var(--card-border);
-  overflow-x:auto;
-  overflow-y:hidden;                   /* ⬅ 禁止直向捲軸 */
+  overflow-x:auto;                        /* 只允許水平捲動 */
+  overflow-y:hidden;                      /* 禁止垂直捲動 → 沒有右側拉霸 */
   -webkit-overflow-scrolling:touch;
+}
+/* 置中軌道：所有洲按鈕與分隔線都放這裡 */
+.continent-track{
+  display:inline-flex; align-items:center; gap:0;
+  width:max-content;                      /* 跟著內容寬 */
+  margin:0 auto;                          /* 在外層容器水平置中 */
+  padding:0 8px;
 }
 
 .continent-item{
   appearance:none; background:none; border:0; cursor:pointer;
   display:flex; align-items:center; gap:10px;
   padding:10px 18px; margin:0;
-  text-align:center;                   /* ⬅ 文字置中 */
+  text-align:center;                      /* 文字置中 */
   line-height:1.1; position:relative;
   flex:0 0 auto; transition: color .2s ease;
 }
-
 .continent-item .icon{
   width:20px; height:20px; flex:0 0 auto;
   stroke: currentColor; fill: none; stroke-width:1.5px; color:#8aa4c2;
 }
-
-/* 讓「中文 / 英文」在自己的小容器中置中對齊 */
-.continent-item .label{
-  display:flex; flex-direction:column; align-items:center;  /* ⬅ 置中 */
-}
+.continent-item .label{ display:flex; flex-direction:column; align-items:center; } /* 內容也置中 */
 .continent-item .label .zh{ font-weight:900; font-size:16px; color:var(--text); letter-spacing:.02em; }
 .continent-item .label .en{ font-size:12px; color:#8aa4c2; margin-top:2px; }
 
-/* 分隔線（桌面可見，手機隱藏） */
+/* 分隔線（桌面顯示，手機隱藏） */
 .divider{ width:1px; height:26px; background:var(--card-border); margin:0 2px; }
 @media (max-width:900px){ .divider{ display:none; } }
 
-/* 底線往內縮，不要超出容器高度 */
+/* hover/active 底線維持在容器內 */
 .continent-item::after{
-  content:""; position:absolute; left:18px; right:18px; bottom:-2px; /* ⬅ 從 -11px 改成 -2px */
-  height:2px; background:var(--accent); border-radius:2px;
+  content:""; position:absolute; left:18px; right:18px; bottom:-2px; /* 原本是 -11px */
+  height:2px; background:var(--accent, #e0b46a); border-radius:2px;
   transform:scaleX(0); transform-origin:center; transition:transform .18s ease-out;
 }
-.continent-item:hover{ color:var(--accent); }
+.continent-item:hover{ color:var(--accent, #e0b46a); }
 .continent-item:hover .label .zh,
-.continent-item:hover .label .en{ color:var(--accent); }
+.continent-item:hover .label .en{ color:var(--accent, #e0b46a); }
 .continent-item:hover::after{ transform:scaleX(1); }
 
-.continent-item.active{ color:var(--accent); background:transparent; }
+.continent-item.active{ color:var(--accent, #e0b46a); background:transparent; }
 .continent-item.active .label .zh,
-.continent-item.active .label .en{ color:var(--accent); }
+.continent-item.active .label .en{ color:var(--accent, #e0b46a); }
 .continent-item.active::after{ transform:scaleX(1); }
 
+.dark-theme .continent-menu{ border-bottom-color:rgba(255,255,255,.1); }
+.dark-theme .divider{ background:rgba(255,255,255,.12); }
+.dark-theme .continent-item .label .en{ color:#93a6bf; }
 
-    .dark-theme .continent-menu{ border-bottom-color:rgba(255,255,255,.1); }
-    .dark-theme .divider{ background:rgba(255,255,255,.12); }
-    .dark-theme .continent-item .label .en{ color:#93a6bf; }
 
     /* === 洲/國家標題 === */
     .continent-title { margin:24px 0 12px; font-size:26px; font-weight:900; border-left:6px solid #3fa0ff; padding-left:10px; }
