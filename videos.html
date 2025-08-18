@@ -24,25 +24,32 @@
     .page-head h1 { font-weight:900; font-size:28px; margin:0; }
     .hint { color:#8aa4c2; font-size:14px; }
 
-    /* === 七大洲橫向分類條（中英文上下＋豎線分隔） === */
+    /* === 七大洲橫向分類條（中文粗體＋英文小字＋上方小圖示） === */
     .continent-menu{
       display:flex; justify-content:center; align-items:center; gap:0;
       border-bottom:1px solid var(--card-border); padding:10px 0;
       font-family:'Noto Sans TC', sans-serif;
+      background:var(--bg);
     }
     .continent-item{
       appearance:none; background:none; border:0; cursor:pointer;
-      padding:0 16px; text-align:center; line-height:1.15;
+      padding:6px 16px 8px; text-align:center; line-height:1.15;
+      transition:color .2s ease;
+      position:relative;
+    }
+    .continent-item .icon{
+      display:block; font-size:18px; line-height:1; margin-bottom:4px;
+      filter: saturate(1.05);
     }
     .continent-item .zh{ display:block; font-weight:900; color:var(--text); font-size:16px; letter-spacing:.02em;}
     .continent-item .en{ display:block; font-size:12px; color:#8aa4c2; margin-top:2px;}
-    .divider{ width:1px; height:22px; background:#bcd3ff; display:inline-block; }
+
+    .divider{ width:1px; height:24px; background:#bcd3ff; display:inline-block; }
 
     .continent-item:hover .zh,
     .continent-item:hover .en{ color:#0b69ff; }
     .continent-item.active .zh,
     .continent-item.active .en{ color:#0b69ff; }
-    .continent-item.active{ position:relative; }
     .continent-item.active::after{
       content:""; position:absolute; left:12px; right:12px; bottom:-11px;
       height:2px; background:#0b69ff; border-radius:2px;
@@ -53,9 +60,10 @@
     .dark-theme .continent-item .en{ color:#93a6bf; }
 
     @media (max-width:768px){
-      .continent-item{ padding:0 10px; }
+      .continent-item{ padding:6px 10px 8px; }
       .continent-item .zh{ font-size:15px; }
       .continent-item .en{ font-size:11px; }
+      .continent-item .icon{ font-size:16px; }
     }
 
     /* === 洲/國家標題 === */
@@ -412,19 +420,35 @@
       const nav = document.createElement('nav');
       nav.className = 'continent-menu';
 
-      function makeItem(key, zh, en){
-        const btn = document.createElement('button');
-        btn.className = 'continent-item';
-        btn.type = 'button';
-        btn.dataset.key = key;
-        btn.innerHTML = `<span class="zh">${zh}</span><span class="en">${en}</span>`;
-        return btn;
-      }
-
       const mapEn = {
         asia:'Asia', europe:'Europe', north_america:'North America',
         south_america:'South America', africa:'Africa', oceania:'Oceania', antarctica:'Antarctica'
       };
+
+      /* 新增：icon 對應 */
+      const ICONS = {
+        asia: '🌏',
+        europe: '🌍',
+        north_america: '🌎',
+        south_america: '🌎',
+        africa: '🌍',
+        oceania: '🌏',
+        antarctica: '🧊',
+        all: '⭐'
+      };
+
+      function makeItem(key, zh, en){
+        const btn = document.createElement('button');
+        btn.className = 'continent-item';
+        btn.type = 'button';
+        const icon = ICONS[key] || '🗺️';
+        btn.dataset.key = key;
+        btn.innerHTML = `
+          <span class="icon">${icon}</span>
+          <span class="zh">${zh}</span>
+          <span class="en">${en}</span>`;
+        return btn;
+      }
 
       CONTINENTS_7.forEach((c, i) => {
         const btn = makeItem(c.key, c.label, mapEn[c.key] || '');
@@ -445,7 +469,10 @@
       const showAllBtn = document.createElement('button');
       showAllBtn.className = 'continent-item';
       showAllBtn.type = 'button';
-      showAllBtn.innerHTML = `<span class="zh">全部</span><span class="en">All</span>`;
+      showAllBtn.innerHTML = `
+        <span class="icon">${ICONS.all}</span>
+        <span class="zh">全部</span>
+        <span class="en">All</span>`;
       nav.appendChild(showAllBtn);
 
       container.appendChild(nav);
