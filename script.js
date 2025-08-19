@@ -313,15 +313,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
     }
   })();
-/* ===== 即將播出 v2.2｜標準版（自動偵測欄位 + 圖片 fallback + 標題淨化）===== */
-(function UpNext_v22(){
+  
+  /* ===== 即將播出 v2.2w｜標準版（自動偵測欄位 + 星期·時間 + 圖片 fallback）===== */
+(function UpNext_v22w(){
   const grid = document.getElementById('schedule-spotlight');
   if (!grid) return;
 
   const cf = (typeof contentfulClient !== 'undefined') ? contentfulClient : null;
   if (!cf){ console.warn('[upnext] contentfulClient not found'); return; }
 
-  // 先上樣式與骨架
+  // 先上樣式與骨架（避免閃白）
   injectLocalStyles();
   grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
 
@@ -333,17 +334,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const BLOCK_START = { '00-06':0,'06-12':6,'12-18':12,'18-24':18 };
   const BLOCK_LABEL = { '00-06':'00–06','06-12':'06–12','12-18':'12–18','18-24':'18–24' };
   const BLOCK_CLASS = { '00-06':'blk-00','06-12':'blk-06','12-18':'blk-12','18-24':'blk-18' };
+
   function normalizeBlock(v){
     if(!v) return '';
     v = String(v).trim().replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\s+/g,'');
     const map={ '0-6':'00-06','00-6':'00-06','6-12':'06-12','12-18':'12-18','18-24':'18-24' };
     return map[v]||v;
   }
-  // 清掉像「2025-08-19_12-18 」這類前綴
-  function cleanSchedTitle(s){
-    return String(s||'').replace(/^\d{4}-\d{2}-\d{2}[_\s-]*\d{1,2}[-–]\d{1,2}\s*/,'');
+  function fmtDate(d){
+    const w = ['週日','週一','週二','週三','週四','週五','週六'][d.getDay()];
+    const m  = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${m}.${dd} ${w}`;   // 例：08.19 週一
   }
-  // 縮圖 fallback：CF Asset → YouTube → 佔位
   function bestThumb(vf, field){
     const u = vf?.[field]?.fields?.file?.url;
     if (u) return u.startsWith('http') ? u : ('https:'+u);
@@ -371,24 +374,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const FIELD = {
         schedule: {
           title: 'title',
-          airDate: guessKey(v=>typeof v==='string' && /^\d{4}-\d{2}-\d{2}/.test(v)) || 'airDate',
-          block: guessKey(v=>typeof v==='string' && /(\d{1,2}\s*[-–]\s*\d{1,2})/.test(v)) || 'block',
-          slotIndex: guessKey(v=>typeof v==='number' && v>=0 && v<=11) || 'slotIndex',
-          video: guessKey(v=> (v && typeof v==='object' && v.fields) || (Array.isArray(v) && v[0]?.fields)) || 'video',
+          airDate:    guessKey(v=>typeof v==='string' && /^\d{4}-\d{2}-\d{2}/.test(v)) || 'airDate',
+          block:      guessKey(v=>typeof v==='string' && /(\d{1,2}\s*[-–]\s*\d{1,2})/.test(v)) || 'block',
+          slotIndex:  guessKey(v=>typeof v==='number' && v>=0 && v<=11) || 'slotIndex',
+          video:      guessKey(v=> (v && typeof v==='object' && v.fields) || (Array.isArray(v) && v[0]?.fields)) || 'video',
           isPremiere: guessKey(v=>typeof v==='boolean') || 'isPremiere'
         },
         video: { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youTubeId' }
       };
-
-      // 找出影片裡真正裝 Asset 的欄位
+      // 找出影片裡真正裝 Asset 的欄位，以及可能的 youtubeId 欄位
       const anyVideo =
         (items.find(it=>it.fields?.[FIELD.schedule.video]?.fields)?.fields?.[FIELD.schedule.video]?.fields) ||
         (items.find(it=>Array.isArray(it.fields?.[FIELD.schedule.video]))?.fields?.[FIELD.schedule.video]?.[0]?.fields);
       if (anyVideo){
-        for (const k of Object.keys(anyVideo)){
-          if (anyVideo[k]?.fields?.file?.url){ FIELD.video.thumbnail = k; break; }
-        }
-        // YouTube 欄位也試著找（兼容不同命名）
+        for (const k of Object.keys(anyVideo)){ if (anyVideo[k]?.fields?.file?.url){ FIELD.video.thumbnail = k; break; } }
         if (!('youTubeId' in anyVideo) && !('youtubeId' in anyVideo)){
           FIELD.video.youtubeId = ['youTubeId','youtubeId','YouTubeID','ytId'].find(k=>k in anyVideo) || FIELD.video.youtubeId;
         }
@@ -414,18 +413,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const vf = (Array.isArray(vref) ? vref[0] : vref)?.fields;
         if (!vf) return;
 
-        const title = vf[FIELD.video.title] || cleanSchedTitle(f[FIELD.schedule.title]) || '未命名節目';
+        const title = vf[FIELD.video.title] || f[FIELD.schedule.title] || '未命名節目';
         const desc  = vf[FIELD.video.description] || '';
         const img   = bestThumb(vf, FIELD.video.thumbnail);
 
         rows.push({
           at: begin.getTime(),
+          date: fmtDate(begin),             // ★ 含星期
           time: hhmm(begin),
           block: blk,
           isPremiere: !!f[FIELD.schedule.isPremiere],
           title: oneLine(title),
-          desc: ellipsis(desc, 72),
-          img, href: 'videos.html'
+          desc:  ellipsis(desc, 72),
+          img,
+          href: 'videos.html'
         });
       });
 
@@ -438,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <img class="spot-img" loading="lazy" src="${r.img}"
                onerror="this.onerror=null;this.src='https://picsum.photos/1200/675?blur=2';" alt="">
           <div class="spot-grad"></div>
-          <div class="spot-chip spot-time">🕗 ${r.time}</div>
+          <div class="spot-chip spot-time">${r.date} · ${r.time}</div>   <!-- ★ 星期 · 時間 -->
           <div class="spot-chip spot-block">${BLOCK_LABEL[r.block]||''}</div>
           ${r.isPremiere ? `<div class="spot-badge">首播</div>` : ``}
           <div class="spot-meta">
@@ -459,32 +460,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function injectLocalStyles(){
-    if (document.getElementById('upnext-v2-style')) return;
-    const css = document.createElement('style');
-    css.id = 'upnext-v2-style';
+    const old = document.getElementById('upnext-v2-style'); if (old) old.remove();
+    const css = document.createElement('style'); css.id='upnext-v2-style';
     css.textContent = `
-      .schedule-spotlight-grid{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
-      @media(max-width:1200px){.schedule-spotlight-grid{grid-template-columns:repeat(3,1fr)}}
+      .schedule-spotlight-grid{display:grid;gap:20px;grid-template-columns:repeat(3,minmax(0,1fr))}
+      @media(min-width:1400px){.schedule-spotlight-grid{grid-template-columns:repeat(4,1fr)}}
       @media(max-width:900px){.schedule-spotlight-grid{grid-template-columns:repeat(2,1fr)}}
       @media(max-width:640px){.schedule-spotlight-grid{grid-template-columns:1fr}}
-      .spot-card{position:relative;display:block;border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 24px rgba(0,0,0,.06);
-                 transform:translateY(6px);opacity:0;animation:upfade .36s ease forwards}
+      .spot-card{position:relative;display:block;border-radius:20px;overflow:hidden;border:1px solid rgba(0,0,0,.06);
+                 box-shadow:0 10px 24px rgba(0,0,0,.06);transform:translateY(6px);opacity:0;animation:upfade .32s ease forwards}
       @media(prefers-color-scheme:dark){.spot-card{border-color:rgba(255,255,255,.12);box-shadow:0 14px 32px rgba(0,0,0,.25)}}
       .spot-card:hover{transform:translateY(0) scale(1.01)}
-      .spot-img{width:100%;height:240px;object-fit:cover;display:block;filter:brightness(.9)}
-      .spot-grad{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.06))}
-      .spot-meta{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45)}
-      .spot-title{font-weight:800;line-height:1.26;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .spot-img{width:100%;aspect-ratio:16/9;height:auto;object-fit:cover;display:block;filter:brightness(.94)}
+      .spot-grad{position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.55) 100%)}
+      .spot-meta{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;overflow:hidden;text-shadow:0 1px 4px rgba(0,0,0,.35)}
+      .spot-title{font-weight:800;font-size:18px;line-height:1.28;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
       .spot-desc{opacity:.95;font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .spot-chip{position:absolute;padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px;backdrop-filter:saturate(140%) blur(4px);border:1px solid rgba(255,255,255,.25);color:#fff}
-      .spot-time{left:12px;bottom:12px;background:rgba(0,0,0,.45)}
+      @media(max-width:640px){.spot-desc{display:none}}
+      .spot-chip{position:absolute;padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px;color:#fff;
+                 backdrop-filter:saturate(140%) blur(4px);border:1px solid rgba(255,255,255,.22)}
+      .spot-time{left:12px;bottom:12px;background:rgba(8,8,8,.45)}
       .spot-block{right:12px;top:12px}
       .spot-badge{position:absolute;left:12px;top:12px;background:rgba(224,180,106,.95);color:#111;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid rgba(0,0,0,.2)}
       .blk-00 .spot-block{background:linear-gradient(135deg,#4b79a1,#283e51)}
       .blk-06 .spot-block{background:linear-gradient(135deg,#2ea043,#0f5132)}
       .blk-12 .spot-block{background:linear-gradient(135deg,#d39e38,#8c6c1a)}
       .blk-18 .spot-block{background:linear-gradient(135deg,#2563eb,#0f1e5a)}
-      .spot-skel{height:240px;border-radius:18px;background:linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.1), rgba(0,0,0,.05));animation:sk 1.2s ease-in-out infinite alternate}
+      .spot-skel{aspect-ratio:16/9;border-radius:20px;background:linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.1), rgba(0,0,0,.05));animation:sk 1.2s ease-in-out infinite alternate}
       @media(prefers-color-scheme:dark){.spot-skel{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.1), rgba(255,255,255,.06))}}
       .spot-empty{grid-column:1/-1;padding:22px;border:1px dashed rgba(0,0,0,.18);border-radius:14px;text-align:center}
       .spot-btn{margin-left:8px;display:inline-block;padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,.22);text-decoration:none;font-weight:800}
@@ -494,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(css);
   }
 })();
+
 
 
 
