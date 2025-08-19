@@ -313,9 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (container) container.innerHTML = `<p style="color:#999;">目前無法載入精選節目。</p>`;
     }
   })();
-
-/* ===== 即將播出 v2.1｜標準版（自動偵測欄位 ID + block 正規化）===== */
-(function UpNext_v21(){
+/* ===== 即將播出 v2.2｜標準版（自動偵測欄位 + 圖片 fallback + 標題淨化）===== */
+(function UpNext_v22(){
   const grid = document.getElementById('schedule-spotlight');
   if (!grid) return;
 
@@ -326,12 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {
   injectLocalStyles();
   grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
 
-  // 工具
+  // Utils
   const esc = s => String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const oneLine = s => (s||'').replace(/\s+/g,' ').trim();
   const ellipsis = (s,n)=>{ s = oneLine(s); return s.length>n ? s.slice(0,n).trim()+'…' : s; };
   const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  const assetUrl = a => { const u=a?.fields?.file?.url||''; return u?(u.startsWith('http')?u:('https:'+u)):'https://picsum.photos/1200/675?blur=2'; };
   const BLOCK_START = { '00-06':0,'06-12':6,'12-18':12,'18-24':18 };
   const BLOCK_LABEL = { '00-06':'00–06','06-12':'06–12','12-18':'12–18','18-24':'18–24' };
   const BLOCK_CLASS = { '00-06':'blk-00','06-12':'blk-06','12-18':'blk-12','18-24':'blk-18' };
@@ -341,89 +339,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const map={ '0-6':'00-06','00-6':'00-06','6-12':'06-12','12-18':'12-18','18-24':'18-24' };
     return map[v]||v;
   }
+  // 清掉像「2025-08-19_12-18 」這類前綴
+  function cleanSchedTitle(s){
+    return String(s||'').replace(/^\d{4}-\d{2}-\d{2}[_\s-]*\d{1,2}[-–]\d{1,2}\s*/,'');
+  }
+  // 縮圖 fallback：CF Asset → YouTube → 佔位
+  function bestThumb(vf, field){
+    const u = vf?.[field]?.fields?.file?.url;
+    if (u) return u.startsWith('http') ? u : ('https:'+u);
+    const yid = vf?.youTubeId || vf?.youtubeId || vf?.YouTubeID;
+    if (yid) return `https://i.ytimg.com/vi/${yid}/hqdefault.jpg`;
+    return 'https://picsum.photos/1200/675?blur=2';
+  }
 
-  // 1) 抓資料（不設 airDate 篩選，前端自己挑未來的）
+  // 抓全部後在前端挑「未來的最近 3–4 筆」
   cf.getEntries({ content_type:'scheduleItem', include:2, limit:1000, order:'fields.airDate' })
     .then(res=>{
       const items = res.items||[];
-      if (!items.length){
-        showEmpty(); return;
-      }
+      if (!items.length){ return showEmpty(); }
 
-      // 2) 自動偵測欄位 ID
+      // 自動偵測欄位 ID
       const sample = items.find(x=>x?.fields) || items[0];
       const keys = Object.keys(sample.fields||{});
-
-      // 嘗試從大量筆資料中找最合理的 key
       const guessKey = (tester) => {
         for (const k of keys){
-          let ok = 0, total = 0;
-          for (const it of items){
-            const v = it.fields?.[k];
-            total++; if (tester(v)) ok++;
-            if (ok>=3) break; // 足夠信心就提前結束
-          }
+          let ok=0; for (const it of items){ if (tester(it.fields?.[k])) { ok++; if (ok>=3) break; } }
           if (ok>=3) return k;
         }
         return null;
       };
-
-      const kAir   = guessKey(v => typeof v==='string' && /^\d{4}-\d{2}-\d{2}/.test(v));
-      const kBlock = guessKey(v => typeof v==='string' && /(\d{1,2}\s*[-–]\s*\d{1,2})/.test(v));
-      const kSlot  = guessKey(v => typeof v==='number' && v>=0 && v<=11);
-      const kVideo = guessKey(v => (v && typeof v==='object' && v.fields) || (Array.isArray(v) && v[0]?.fields));
-      const kPrem  = guessKey(v => typeof v==='boolean');
-
-      // 覆寫用到的欄位 key
       const FIELD = {
         schedule: {
-          title: 'title',                      // entry title 幾乎一定是 title
-          airDate: kAir || 'airDate',
-          block: kBlock || 'block',
-          slotIndex: kSlot || 'slotIndex',
-          video: kVideo || 'video',
-          isPremiere: kPrem || 'isPremiere'
+          title: 'title',
+          airDate: guessKey(v=>typeof v==='string' && /^\d{4}-\d{2}-\d{2}/.test(v)) || 'airDate',
+          block: guessKey(v=>typeof v==='string' && /(\d{1,2}\s*[-–]\s*\d{1,2})/.test(v)) || 'block',
+          slotIndex: guessKey(v=>typeof v==='number' && v>=0 && v<=11) || 'slotIndex',
+          video: guessKey(v=> (v && typeof v==='object' && v.fields) || (Array.isArray(v) && v[0]?.fields)) || 'video',
+          isPremiere: guessKey(v=>typeof v==='boolean') || 'isPremiere'
         },
-        video: { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youtubeId' }
+        video: { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youTubeId' }
       };
 
-      // 影片縮圖欄位自動偵測（找第一個像 Asset 的欄位）
-      const anyVideo = (items.find(it=>it.fields?.[FIELD.schedule.video]?.fields) || {}).fields?.[FIELD.schedule.video]?.fields
-                    || (items.find(it=>Array.isArray(it.fields?.[FIELD.schedule.video]))?.fields?.[FIELD.schedule.video]?.[0]?.fields);
+      // 找出影片裡真正裝 Asset 的欄位
+      const anyVideo =
+        (items.find(it=>it.fields?.[FIELD.schedule.video]?.fields)?.fields?.[FIELD.schedule.video]?.fields) ||
+        (items.find(it=>Array.isArray(it.fields?.[FIELD.schedule.video]))?.fields?.[FIELD.schedule.video]?.[0]?.fields);
       if (anyVideo){
         for (const k of Object.keys(anyVideo)){
           if (anyVideo[k]?.fields?.file?.url){ FIELD.video.thumbnail = k; break; }
         }
+        // YouTube 欄位也試著找（兼容不同命名）
+        if (!('youTubeId' in anyVideo) && !('youtubeId' in anyVideo)){
+          FIELD.video.youtubeId = ['youTubeId','youtubeId','YouTubeID','ytId'].find(k=>k in anyVideo) || FIELD.video.youtubeId;
+        }
       }
+      console.info('[upnext] keys:', FIELD);
 
-      console.info('[upnext] detected keys:', FIELD);
-
-      // 3) 轉成我們需要的 rows
+      // 整理 rows
       const now = new Date();
       const rows = [];
-
       items.forEach(it=>{
         const f = it.fields||{};
         const air = f[FIELD.schedule.airDate];
         const blk = normalizeBlock(f[FIELD.schedule.block]);
-        const slot= Number(f[FIELD.schedule.slotIndex]||0);
-        const vref= f[FIELD.schedule.video];
-
+        const slot = Number(f[FIELD.schedule.slotIndex]||0);
+        const vref = f[FIELD.schedule.video];
         if (!air || !blk || isNaN(slot) || !vref) return;
 
         const begin = new Date(air);
-        const h0 = BLOCK_START[blk] ?? 0;
-        begin.setHours(h0,0,0,0);
-        begin.setMinutes(begin.getMinutes()+ slot*30);
-
+        begin.setHours(BLOCK_START[blk] ?? 0, 0, 0, 0);
+        begin.setMinutes(begin.getMinutes() + slot*30);
         if (begin <= now) return;
 
-        const videoFields = (Array.isArray(vref) ? vref[0] : vref)?.fields;
-        if (!videoFields) return; // 影片未發佈或連結錯誤
+        const vf = (Array.isArray(vref) ? vref[0] : vref)?.fields;
+        if (!vf) return;
 
-        const title = f[FIELD.schedule.title] || videoFields[FIELD.video.title] || '未命名節目';
-        const desc  = videoFields[FIELD.video.description] || '';
-        const img   = assetUrl(videoFields[FIELD.video.thumbnail]);
+        const title = vf[FIELD.video.title] || cleanSchedTitle(f[FIELD.schedule.title]) || '未命名節目';
+        const desc  = vf[FIELD.video.description] || '';
+        const img   = bestThumb(vf, FIELD.video.thumbnail);
 
         rows.push({
           at: begin.getTime(),
@@ -431,21 +424,19 @@ document.addEventListener('DOMContentLoaded', () => {
           block: blk,
           isPremiere: !!f[FIELD.schedule.isPremiere],
           title: oneLine(title),
-          desc:  ellipsis(desc, 72),
-          img,
-          href: 'videos.html'
+          desc: ellipsis(desc, 72),
+          img, href: 'videos.html'
         });
       });
 
       rows.sort((a,b)=>a.at-b.at);
-      const take = rows.length>=4 ? 4 : Math.min(rows.length,3);
-      const list = rows.slice(0,take);
-
-      if (!list.length){ showEmpty(); return; }
+      const list = rows.slice(0, rows.length>=4 ? 4 : Math.min(rows.length,3));
+      if (!list.length) return showEmpty();
 
       grid.innerHTML = list.map((r,i)=>`
         <a class="spot-card ${BLOCK_CLASS[r.block]||'blk-12'}" href="${r.href}" style="animation-delay:${i*0.05}s">
-          <img class="spot-img" loading="lazy" src="${r.img}" alt="">
+          <img class="spot-img" loading="lazy" src="${r.img}"
+               onerror="this.onerror=null;this.src='https://picsum.photos/1200/675?blur=2';" alt="">
           <div class="spot-grad"></div>
           <div class="spot-chip spot-time">🕗 ${r.time}</div>
           <div class="spot-chip spot-block">${BLOCK_LABEL[r.block]||''}</div>
@@ -503,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(css);
   }
 })();
+
 
 
   // === 全螢幕播放器（點精選卡片播放）===
