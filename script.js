@@ -314,85 +314,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
- /* ===== 即將播出 v2｜標準版（修正版：block 正規化 + 日期範圍更寬）===== */
+  /* ===== 即將播出 v2｜標準版（強化版：block 正規化 + 不限日期抓取）===== */
 (function UpNext_v2(){
   const grid = document.getElementById('schedule-spotlight');
   if (!grid) return;
 
-  // 用你現有的 Contentful client
   const cf = (typeof contentfulClient !== 'undefined') ? contentfulClient : null;
   if (!cf){ console.warn('[upnext] contentfulClient not found'); return; }
 
-  // 若欄位 ID 不同，只改這裡
+  // 若欄位 ID 與你不同，只要改這裡
   const FIELD = {
     schedule: { title:'title', airDate:'airDate', block:'block', slotIndex:'slotIndex', video:'video', isPremiere:'isPremiere' },
     video:    { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youtubeId' }
   };
 
-  // 時段：起始小時 / 標籤 / 色帶 class
+  // 時段設定
   const BLOCK_START = { '00-06':0, '06-12':6, '12-18':12, '18-24':18 };
   const BLOCK_LABEL = { '00-06':'00–06', '06-12':'06–12', '12-18':'12–18', '18-24':'18–24' };
   const BLOCK_CLASS = { '00-06':'blk-00', '06-12':'blk-06', '12-18':'blk-12', '18-24':'blk-18' };
 
-  // 工具
+  // Utils
   const esc = s => String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const oneLine = s => (s||'').replace(/\s+/g,' ').trim();
   const ellipsis = (s,n)=>{ s = oneLine(s); return s.length>n ? s.slice(0,n).trim()+'…' : s; };
-  const toDateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const ymd = d => toDateOnly(d).toISOString().slice(0,10);
   const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   const assetUrl = a => {
     const u = a?.fields?.file?.url || '';
     return u ? (u.startsWith('http') ? u : ('https:'+u)) : 'https://picsum.photos/1200/675?blur=2';
   };
-  // ★ 把各種破折號/空白正規化成 00-06 / 06-12 / 12-18 / 18-24
+
+  // ★ 正規化時段字串（處理長破折號、空白、0-6 -> 00-06 等）
   function normalizeBlock(v){
     if(!v) return '';
     v = String(v).trim().replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\s+/g,'');
-    // 常見容錯
     const map = { '0-6':'00-06','00-6':'00-06','6-12':'06-12','12-18':'12-18','18-24':'18-24' };
     return map[v] || v;
   }
+
   function startDateOf(entry){
     try{
       const f   = entry.fields;
-      const d   = new Date(f[FIELD.schedule.airDate]); // 支援 Date only / DateTime
+      const d   = new Date(f[FIELD.schedule.airDate]);     // 支援 Date only / DateTime
       const blk = normalizeBlock(f[FIELD.schedule.block]); // ★ 正規化
       const h0  = BLOCK_START[blk] ?? 0;
       const slot = Number(f[FIELD.schedule.slotIndex] || 0);
       d.setHours(h0,0,0,0);
-      d.setMinutes(d.getMinutes() + slot*30);            // 每槽 30 分
-      entry.__normBlock = blk;                            // 給後面用色帶
+      d.setMinutes(d.getMinutes() + slot*30);              // 每槽 30 分
+      entry.__normBlock = blk;
       return d;
     }catch(e){ return null; }
   }
+
   function buildHref(vf){
     // 之後若有播放頁可改：return `/watch.html?id=${vf[FIELD.video.youtubeId]}`;
     return 'videos.html';
   }
 
-  // 先放 skeleton，避免閃白
+  // Skeleton 先上
   injectLocalStyles();
   grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
 
   function load(){
     const now = new Date();
-    const d0 = new Date(now); d0.setDate(d0.getDate()-1);  // 昨天
-    const d1 = new Date(now); d1.setDate(d1.getDate()+2);  // 後兩天（更寬容）
 
+    // 不限日期篩選，直接抓最多 1000 筆，再在前端挑「未來」最近的 3–4 筆
     cf.getEntries({
       content_type: 'scheduleItem',
       include: 2,
-      limit: 400,
-      'fields.airDate[gte]': ymd(d0),
-      'fields.airDate[lte]': ymd(d1),
-      order: 'fields.airDate'
+      limit: 1000,
+      order: 'fields.airDate' // 先按日期排序，之後再依開始時間排序
     }).then(res=>{
       const rows = [];
       (res.items||[]).forEach(it=>{
         const begin = startDateOf(it);
         if (!begin || begin <= now) return;                 // 只取未來
-        const vf = it.fields[FIELD.schedule.video]?.fields; // 影片欄位
+        const vf = it.fields[FIELD.schedule.video]?.fields; // 影片欄位（需已發佈）
         if (!vf) return;
 
         rows.push({
@@ -417,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             目前沒有即將播出的節目
             <a class="spot-btn" href="schedule.html">查看完整節目表</a>
           </div>`;
+        console.info('[upnext] 取到排表筆數：', res.items?.length||0, '；未來時段筆數：', rows.length);
         return;
       }
 
@@ -474,10 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(css);
   }
 
-  // 首次載入＋每 60 秒更新
   load();
   setInterval(load, 60 * 1000);
 })();
+
 
 
   // === 全螢幕播放器（點精選卡片播放）===
