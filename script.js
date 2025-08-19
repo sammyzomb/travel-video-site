@@ -314,33 +314,165 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // === 節目表預告 ===
-  Promise.all([
-    fetch('program.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 program.json')),
-    fetch('videos.json').then(res => res.ok ? res.json() : Promise.reject('無法載入 videos.json'))
-  ])
-  .then(([programData, videosData]) => {
-    const container = document.getElementById('schedule-spotlight');
-    if (!container) return;
-    const videosMap = new Map(videosData.map(v => [v.id, v]));
-    const spotlightPrograms = programData.slice(0, 3);
-    spotlightPrograms.forEach(item => {
-      const info = videosMap.get(item.vid);
-      if (info) {
-        const a = document.createElement('a');
-        a.href = `video.html?id=${info.id}`;
-        a.className = 'schedule-card';
-        a.innerHTML = `
-          <img src="${info.thumb}" alt="${item.title}" class="schedule-card-img">
-          <div class="schedule-card-overlay">
-            <div class="schedule-card-time">${item.start}</div>
-            <div class="schedule-card-title">${item.title}</div>
+  /* ===== 即將播出 v2｜標準版（只作用在 #schedule-spotlight）===== */
+(function UpNext_v2(){
+  const grid = document.getElementById('schedule-spotlight');
+  if (!grid) return;
+
+  // 取用你專案既有的 Contentful Client
+  const cf = (typeof contentfulClient !== 'undefined') ? contentfulClient : null;
+  if (!cf){ console.warn('[upnext] contentfulClient not found'); return; }
+
+  // 若你的欄位 ID 與此不同，請在此對應修改即可
+  const FIELD = {
+    schedule: { title:'title', airDate:'airDate', block:'block', slotIndex:'slotIndex', video:'video', isPremiere:'isPremiere' },
+    video:    { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youtubeId' } // youtubeId 可無
+  };
+
+  // 時段→起始小時；色帶／標籤
+  const BLOCK_START = { '00-06':0, '06-12':6, '12-18':12, '18-24':18 };
+  const BLOCK_CLASS = { '00-06':'blk-00', '06-12':'blk-06', '12-18':'blk-12', '18-24':'blk-18' };
+  const BLOCK_LABEL = { '00-06':'00–06', '06-12':'06–12', '12-18':'12–18', '18-24':'18–24' };
+
+  // 小工具
+  const toDateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const ymd = d => toDateOnly(d).toISOString().slice(0,10);
+  const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const esc = s => String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  const oneLine = s => (s||'').replace(/\s+/g,' ').trim();
+  const ellipsis = (s,n)=>{ s = oneLine(s); return s.length>n ? s.slice(0,n).trim()+'…' : s; };
+  const assetUrl = a => {
+    const u = a?.fields?.file?.url || '';
+    return u ? (u.startsWith('http') ? u : ('https:'+u)) : 'https://picsum.photos/1200/675?blur=2';
+  };
+
+  // 版面：桌機最多 4 張，行動 1–2 欄；加上本區塊專用樣式
+  injectLocalStyles();
+  grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
+
+  function startDateOf(entry){
+    try{
+      const f = entry.fields;
+      const d = new Date(f[FIELD.schedule.airDate]);   // 支援 Date only / DateTime
+      const h0 = BLOCK_START[f[FIELD.schedule.block]] ?? 0;
+      const slot = Number(f[FIELD.schedule.slotIndex] || 0);
+      d.setHours(h0,0,0,0);
+      d.setMinutes(d.getMinutes() + slot*30);          // 每槽 30 分
+      return d;
+    }catch(e){ return null; }
+  }
+
+  function buildHref(vf){
+    // 之後有播放頁時可改：return `/watch.html?id=${vf[FIELD.video.youtubeId]}`;
+    return 'videos.html';
+  }
+
+  function load(){
+    const now = new Date();
+    const d0 = new Date(now); d0.setDate(d0.getDate()-1); // 往前一天避免跨日缺資料
+    const d1 = new Date(now); d1.setDate(d1.getDate()+1); // 往後一天
+
+    cf.getEntries({
+      content_type: 'scheduleItem',
+      include: 2,
+      limit: 300,
+      'fields.airDate[gte]': ymd(d0),
+      'fields.airDate[lte]': ymd(d1),
+      order: 'fields.airDate'
+    }).then(res=>{
+      const rows = [];
+      (res.items||[]).forEach(it=>{
+        const begin = startDateOf(it);
+        if (!begin || begin <= now) return; // 只取未來
+        const vf = it.fields[FIELD.schedule.video]?.fields; if (!vf) return;
+
+        rows.push({
+          at: begin.getTime(),
+          time: hhmm(begin),
+          block: it.fields[FIELD.schedule.block],
+          isPremiere: !!it.fields[FIELD.schedule.isPremiere],
+          title: oneLine(it.fields[FIELD.schedule.title] || vf[FIELD.video.title] || '未命名節目'),
+          desc: ellipsis(vf[FIELD.video.description] || '', 72),
+          img: assetUrl(vf[FIELD.video.thumbnail]),
+          href: buildHref(vf)
+        });
+      });
+
+      rows.sort((a,b)=>a.at-b.at);
+
+      // v2：有 4+ 筆時桌機顯示 4 張，否則顯示最多 3 張
+      const take = rows.length>=4 ? 4 : Math.min(rows.length, 3);
+      const list = rows.slice(0, take);
+
+      if (!list.length){
+        grid.innerHTML = `
+          <div class="spot-empty">
+            目前沒有即將播出的節目
+            <a class="spot-btn" href="schedule.html">查看完整節目表</a>
           </div>`;
-        container.appendChild(a);
+        return;
       }
+
+      grid.innerHTML = list.map((r,i)=>`
+        <a class="spot-card ${BLOCK_CLASS[r.block]||'blk-12'}" href="${r.href}" style="animation-delay:${i*0.05}s">
+          <img class="spot-img" loading="lazy" src="${r.img}" alt="">
+          <div class="spot-grad"></div>
+          <div class="spot-chip spot-time">🕗 ${r.time}</div>
+          <div class="spot-chip spot-block">${BLOCK_LABEL[r.block]||''}</div>
+          ${r.isPremiere ? `<div class="spot-badge">首播</div>` : ``}
+          <div class="spot-meta">
+            <div class="spot-title">${esc(r.title)}</div>
+            <div class="spot-desc">${esc(r.desc)}</div>
+          </div>
+        </a>
+      `).join('');
+    }).catch(err=>{
+      console.error('[upnext] load error', err);
     });
-  })
-  .catch(err => console.error('處理節目表預告時發生錯誤:', err));
+  }
+
+  function injectLocalStyles(){
+    if (document.getElementById('upnext-v2-style')) return;
+    const css = document.createElement('style');
+    css.id = 'upnext-v2-style';
+    css.textContent = `
+      .schedule-spotlight-grid{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
+      @media(max-width:1200px){.schedule-spotlight-grid{grid-template-columns:repeat(3,1fr)}}
+      @media(max-width:900px){.schedule-spotlight-grid{grid-template-columns:repeat(2,1fr)}}
+      @media(max-width:640px){.schedule-spotlight-grid{grid-template-columns:1fr}}
+      .spot-card{position:relative;display:block;border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 24px rgba(0,0,0,.06);
+                 transform:translateY(6px);opacity:0;animation:upfade .36s ease forwards;will-change:transform,opacity}
+      @media(prefers-color-scheme:dark){.spot-card{border-color:rgba(255,255,255,.12);box-shadow:0 14px 32px rgba(0,0,0,.25)}}
+      .spot-card:hover{transform:translateY(0) scale(1.01)}
+      .spot-img{width:100%;height:240px;object-fit:cover;display:block;filter:brightness(.9)}
+      .spot-grad{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.06))}
+      .spot-meta{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+      .spot-title{font-weight:800;line-height:1.26;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .spot-desc{opacity:.95;font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .spot-chip{position:absolute;padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px;backdrop-filter:saturate(140%) blur(4px);border:1px solid rgba(255,255,255,.25);color:#fff}
+      .spot-time{left:12px;bottom:12px;background:rgba(0,0,0,.45)}
+      .spot-block{right:12px;top:12px}
+      .spot-badge{position:absolute;left:12px;top:12px;background:rgba(224,180,106,.95);color:#111;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid rgba(0,0,0,.2)}
+      /* 不同時段色帶（右上角 chip） */
+      .blk-00 .spot-block{background:linear-gradient(135deg,#4b79a1,#283e51)}
+      .blk-06 .spot-block{background:linear-gradient(135deg,#2ea043,#0f5132)}
+      .blk-12 .spot-block{background:linear-gradient(135deg,#d39e38,#8c6c1a)}
+      .blk-18 .spot-block{background:linear-gradient(135deg,#2563eb,#0f1e5a)}
+      /* Skeleton / 空狀態 */
+      .spot-skel{height:240px;border-radius:18px;background:linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.1), rgba(0,0,0,.05));animation:sk 1.2s ease-in-out infinite alternate}
+      @media(prefers-color-scheme:dark){.spot-skel{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.1), rgba(255,255,255,.06))}}
+      .spot-empty{grid-column:1/-1;padding:22px;border:1px dashed rgba(0,0,0,.18);border-radius:14px;text-align:center}
+      .spot-btn{margin-left:8px;display:inline-block;padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,.22);text-decoration:none;font-weight:800}
+      @keyframes sk{to{filter:brightness(1.15)}}
+      @keyframes upfade{to{opacity:1;transform:translateY(0)}}
+    `;
+    document.head.appendChild(css);
+  }
+
+  // 首次載入＋每 60 秒更新（跨整點/半點自動換下一筆）
+  load();
+  setInterval(load, 60 * 1000);
+})();
 
   // === 全螢幕播放器（點精選卡片播放）===
   const fullscreenPlayerEl = document.getElementById('fullscreenPlayer');
