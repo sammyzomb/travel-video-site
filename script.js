@@ -314,68 +314,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  /* ===== 即將播出 v2｜標準版（只作用在 #schedule-spotlight）===== */
+ /* ===== 即將播出 v2｜標準版（修正版：block 正規化 + 日期範圍更寬）===== */
 (function UpNext_v2(){
   const grid = document.getElementById('schedule-spotlight');
   if (!grid) return;
 
-  // 取用你專案既有的 Contentful Client
+  // 用你現有的 Contentful client
   const cf = (typeof contentfulClient !== 'undefined') ? contentfulClient : null;
   if (!cf){ console.warn('[upnext] contentfulClient not found'); return; }
 
-  // 若你的欄位 ID 與此不同，請在此對應修改即可
+  // 若欄位 ID 不同，只改這裡
   const FIELD = {
     schedule: { title:'title', airDate:'airDate', block:'block', slotIndex:'slotIndex', video:'video', isPremiere:'isPremiere' },
-    video:    { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youtubeId' } // youtubeId 可無
+    video:    { title:'title', description:'description', thumbnail:'thumbnail', youtubeId:'youtubeId' }
   };
 
-  // 時段→起始小時；色帶／標籤
+  // 時段：起始小時 / 標籤 / 色帶 class
   const BLOCK_START = { '00-06':0, '06-12':6, '12-18':12, '18-24':18 };
-  const BLOCK_CLASS = { '00-06':'blk-00', '06-12':'blk-06', '12-18':'blk-12', '18-24':'blk-18' };
   const BLOCK_LABEL = { '00-06':'00–06', '06-12':'06–12', '12-18':'12–18', '18-24':'18–24' };
+  const BLOCK_CLASS = { '00-06':'blk-00', '06-12':'blk-06', '12-18':'blk-12', '18-24':'blk-18' };
 
-  // 小工具
-  const toDateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const ymd = d => toDateOnly(d).toISOString().slice(0,10);
-  const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  // 工具
   const esc = s => String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const oneLine = s => (s||'').replace(/\s+/g,' ').trim();
   const ellipsis = (s,n)=>{ s = oneLine(s); return s.length>n ? s.slice(0,n).trim()+'…' : s; };
+  const toDateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const ymd = d => toDateOnly(d).toISOString().slice(0,10);
+  const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   const assetUrl = a => {
     const u = a?.fields?.file?.url || '';
     return u ? (u.startsWith('http') ? u : ('https:'+u)) : 'https://picsum.photos/1200/675?blur=2';
   };
-
-  // 版面：桌機最多 4 張，行動 1–2 欄；加上本區塊專用樣式
-  injectLocalStyles();
-  grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
-
+  // ★ 把各種破折號/空白正規化成 00-06 / 06-12 / 12-18 / 18-24
+  function normalizeBlock(v){
+    if(!v) return '';
+    v = String(v).trim().replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\s+/g,'');
+    // 常見容錯
+    const map = { '0-6':'00-06','00-6':'00-06','6-12':'06-12','12-18':'12-18','18-24':'18-24' };
+    return map[v] || v;
+  }
   function startDateOf(entry){
     try{
-      const f = entry.fields;
-      const d = new Date(f[FIELD.schedule.airDate]);   // 支援 Date only / DateTime
-      const h0 = BLOCK_START[f[FIELD.schedule.block]] ?? 0;
+      const f   = entry.fields;
+      const d   = new Date(f[FIELD.schedule.airDate]); // 支援 Date only / DateTime
+      const blk = normalizeBlock(f[FIELD.schedule.block]); // ★ 正規化
+      const h0  = BLOCK_START[blk] ?? 0;
       const slot = Number(f[FIELD.schedule.slotIndex] || 0);
       d.setHours(h0,0,0,0);
-      d.setMinutes(d.getMinutes() + slot*30);          // 每槽 30 分
+      d.setMinutes(d.getMinutes() + slot*30);            // 每槽 30 分
+      entry.__normBlock = blk;                            // 給後面用色帶
       return d;
     }catch(e){ return null; }
   }
-
   function buildHref(vf){
-    // 之後有播放頁時可改：return `/watch.html?id=${vf[FIELD.video.youtubeId]}`;
+    // 之後若有播放頁可改：return `/watch.html?id=${vf[FIELD.video.youtubeId]}`;
     return 'videos.html';
   }
 
+  // 先放 skeleton，避免閃白
+  injectLocalStyles();
+  grid.innerHTML = `<div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div><div class="spot-skel"></div>`;
+
   function load(){
     const now = new Date();
-    const d0 = new Date(now); d0.setDate(d0.getDate()-1); // 往前一天避免跨日缺資料
-    const d1 = new Date(now); d1.setDate(d1.getDate()+1); // 往後一天
+    const d0 = new Date(now); d0.setDate(d0.getDate()-1);  // 昨天
+    const d1 = new Date(now); d1.setDate(d1.getDate()+2);  // 後兩天（更寬容）
 
     cf.getEntries({
       content_type: 'scheduleItem',
       include: 2,
-      limit: 300,
+      limit: 400,
       'fields.airDate[gte]': ymd(d0),
       'fields.airDate[lte]': ymd(d1),
       order: 'fields.airDate'
@@ -383,24 +391,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const rows = [];
       (res.items||[]).forEach(it=>{
         const begin = startDateOf(it);
-        if (!begin || begin <= now) return; // 只取未來
-        const vf = it.fields[FIELD.schedule.video]?.fields; if (!vf) return;
+        if (!begin || begin <= now) return;                 // 只取未來
+        const vf = it.fields[FIELD.schedule.video]?.fields; // 影片欄位
+        if (!vf) return;
 
         rows.push({
           at: begin.getTime(),
           time: hhmm(begin),
-          block: it.fields[FIELD.schedule.block],
+          block: it.__normBlock || normalizeBlock(it.fields[FIELD.schedule.block]),
           isPremiere: !!it.fields[FIELD.schedule.isPremiere],
           title: oneLine(it.fields[FIELD.schedule.title] || vf[FIELD.video.title] || '未命名節目'),
-          desc: ellipsis(vf[FIELD.video.description] || '', 72),
-          img: assetUrl(vf[FIELD.video.thumbnail]),
-          href: buildHref(vf)
+          desc:  ellipsis(vf[FIELD.video.description] || '', 72),
+          img:   assetUrl(vf[FIELD.video.thumbnail]),
+          href:  buildHref(vf)
         });
       });
 
       rows.sort((a,b)=>a.at-b.at);
-
-      // v2：有 4+ 筆時桌機顯示 4 張，否則顯示最多 3 張
       const take = rows.length>=4 ? 4 : Math.min(rows.length, 3);
       const list = rows.slice(0, take);
 
@@ -441,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
       @media(max-width:900px){.schedule-spotlight-grid{grid-template-columns:repeat(2,1fr)}}
       @media(max-width:640px){.schedule-spotlight-grid{grid-template-columns:1fr}}
       .spot-card{position:relative;display:block;border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 24px rgba(0,0,0,.06);
-                 transform:translateY(6px);opacity:0;animation:upfade .36s ease forwards;will-change:transform,opacity}
+                 transform:translateY(6px);opacity:0;animation:upfade .36s ease forwards}
       @media(prefers-color-scheme:dark){.spot-card{border-color:rgba(255,255,255,.12);box-shadow:0 14px 32px rgba(0,0,0,.25)}}
       .spot-card:hover{transform:translateY(0) scale(1.01)}
       .spot-img{width:100%;height:240px;object-fit:cover;display:block;filter:brightness(.9)}
@@ -453,12 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .spot-time{left:12px;bottom:12px;background:rgba(0,0,0,.45)}
       .spot-block{right:12px;top:12px}
       .spot-badge{position:absolute;left:12px;top:12px;background:rgba(224,180,106,.95);color:#111;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid rgba(0,0,0,.2)}
-      /* 不同時段色帶（右上角 chip） */
       .blk-00 .spot-block{background:linear-gradient(135deg,#4b79a1,#283e51)}
       .blk-06 .spot-block{background:linear-gradient(135deg,#2ea043,#0f5132)}
       .blk-12 .spot-block{background:linear-gradient(135deg,#d39e38,#8c6c1a)}
       .blk-18 .spot-block{background:linear-gradient(135deg,#2563eb,#0f1e5a)}
-      /* Skeleton / 空狀態 */
       .spot-skel{height:240px;border-radius:18px;background:linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.1), rgba(0,0,0,.05));animation:sk 1.2s ease-in-out infinite alternate}
       @media(prefers-color-scheme:dark){.spot-skel{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.1), rgba(255,255,255,.06))}}
       .spot-empty{grid-column:1/-1;padding:22px;border:1px dashed rgba(0,0,0,.18);border-radius:14px;text-align:center}
@@ -469,10 +474,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(css);
   }
 
-  // 首次載入＋每 60 秒更新（跨整點/半點自動換下一筆）
+  // 首次載入＋每 60 秒更新
   load();
   setInterval(load, 60 * 1000);
 })();
+
 
   // === 全螢幕播放器（點精選卡片播放）===
   const fullscreenPlayerEl = document.getElementById('fullscreenPlayer');
