@@ -185,12 +185,107 @@ body.menu-open {
   border-top-right-radius: 20px;
   transition: background-color 0.3s;
 }
-.section-title-container { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.section-title-container { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 24px; 
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .section-title-container h2 {
   font-family: var(--hero-title-font);
-  font-size: 1.8rem; color: var(--text-color); margin: 0;
+  font-size: 1.8rem; 
+  color: var(--text-color); 
+  margin: 0;
 }
-.section-title-container .title-icon { width: 28px; height: 28px; stroke: var(--primary-color); }
+
+.section-title-container .title-icon { 
+  width: 28px; 
+  height: 28px; 
+  stroke: var(--primary-color); 
+}
+
+.title-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.current-datetime-text {
+  font-size: 1rem;
+  color: var(--text-color);
+  font-weight: 500;
+  font-family: 'Montserrat', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-datetime-text .flip-clock {
+  background: var(--card-bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 60px;
+  transition: all 0.3s ease;
+}
+
+.current-datetime-text .flip-clock.date {
+  color: var(--text-color);
+  min-width: 80px;
+}
+
+.current-datetime-text .flip-clock.day {
+  color: var(--primary-color);
+  min-width: 70px;
+}
+
+.current-datetime-text .flip-clock.time {
+  color: var(--primary-color);
+  min-width: 60px;
+}
+
+.current-datetime-text .flip-clock::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  border-bottom: 1px solid var(--card-border);
+  pointer-events: none;
+}
+
+.current-datetime-text .flip-clock::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+  pointer-events: none;
+}
+
+.current-datetime-text .flip-clock:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--shadow-color);
+}
 .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .video-card {
   background: var(--card-bg);
@@ -268,23 +363,143 @@ body.menu-open {
   font-weight: 500;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
+/* 節目表CTA按鈕（優化版） */
 .section-cta-container {
   text-align: center;
   margin-top: 40px;
+  position: relative;
 }
+
+.section-cta-container::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-color) 50%, transparent 100%);
+  opacity: 0.6;
+}
+
 .section-cta-btn {
-  display: inline-block;
-  padding: 10px 24px;
-  background: var(--primary-color);
-  color: var(--cta-text-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #4a90e2 100%);
+  color: white;
   font-weight: 700;
-  border-radius: 99px;
+  font-size: 1.1rem;
+  border-radius: 50px;
   text-decoration: none;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 25px rgba(43, 113, 210, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
 }
+
+.section-cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  transition: left 0.6s ease;
+}
+
 .section-cta-btn:hover {
-  background: var(--primary-color-hover);
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #4a90e2 0%, var(--primary-color) 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 35px rgba(43, 113, 210, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.section-cta-btn:hover::before {
+  left: 100%;
+}
+
+.section-cta-btn:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 
+    0 6px 20px rgba(43, 113, 210, 0.3),
+    0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section-cta-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  transition: transform 0.3s ease;
+}
+
+.section-cta-btn:hover svg {
+  transform: translateX(4px);
+}
+
+/* 深色主題調整 */
+body.dark-theme .section-cta-container::before {
+  background: linear-gradient(90deg, transparent 0%, #ffd700 50%, transparent 100%);
+}
+
+body.dark-theme .section-cta-btn {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ffd700 100%);
+  color: #121821;
+  box-shadow: 
+    0 8px 25px rgba(255, 215, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: rgba(18, 24, 33, 0.2);
+}
+
+body.dark-theme .section-cta-btn:hover {
+  background: linear-gradient(135deg, #ffd700 0%, var(--primary-color) 100%);
+  box-shadow: 
+    0 12px 35px rgba(255, 215, 0, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.25);
+  border-color: rgba(18, 24, 33, 0.3);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .section-cta-container {
+    margin-top: 30px;
+  }
+  
+  .section-cta-btn {
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+  
+  .section-cta-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-cta-container {
+    margin-top: 25px;
+  }
+  
+  .section-cta-btn {
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    gap: 10px;
+  }
+  
+  .section-cta-btn svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 
@@ -396,5 +611,728 @@ body.menu-open {
 body.dark-theme .continent-menu{ border-bottom-color: var(--navbar-border); }
 body.dark-theme .divider{ background: var(--navbar-border); }
 body.dark-theme .continent-item .label .en{ color: var(--text-color-light); }
+
+
+/* --- 節目時間表樣式（橫幅版本）--- */
+.schedule-section {
+  padding: 40px 4%;
+  background: var(--section-bg);
+  position: relative;
+}
+
+.schedule-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-color) 50%, transparent 100%);
+  opacity: 0.3;
+}
+
+
+
+/* 橫幅節目表容器 */
+.schedule-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 32px var(--shadow-color),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--card-border);
+  position: relative;
+}
+
+.schedule-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, #4a90e2 50%, var(--primary-color) 100%);
+}
+
+/* 節目表導航箭頭 */
+.schedule-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #4a90e2 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 6px 20px rgba(43, 113, 210, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.schedule-nav-arrow:hover {
+  background: linear-gradient(135deg, #4a90e2 0%, var(--primary-color) 100%);
+  transform: translateY(-50%) scale(1.15);
+  box-shadow: 
+    0 10px 30px rgba(43, 113, 210, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.schedule-nav-arrow:active {
+  transform: translateY(-50%) scale(0.95);
+  box-shadow: 
+    0 4px 16px rgba(43, 113, 210, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.schedule-nav-arrow.left {
+  left: -28px;
+}
+
+.schedule-nav-arrow.right {
+  right: -28px;
+}
+
+.schedule-nav-arrow svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s ease;
+}
+
+.schedule-nav-arrow:hover svg {
+  fill: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  transform: scale(1.1);
+}
+
+/* 箭頭禁用狀態 */
+.schedule-nav-arrow.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-nav-arrow.disabled:hover {
+  transform: translateY(-50%);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-nav-arrow.disabled svg {
+  fill: #666;
+  filter: none;
+  transform: none;
+}
+
+/* 深色主題箭頭調整 */
+body.dark-theme .schedule-nav-arrow {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #FFD700 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 6px 20px rgba(255, 215, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .schedule-nav-arrow:hover {
+  background: linear-gradient(135deg, #FFD700 0%, var(--primary-color) 100%);
+  box-shadow: 
+    0 10px 30px rgba(255, 215, 0, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+body.dark-theme .schedule-nav-arrow svg {
+  fill: #121821;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+body.dark-theme .schedule-nav-arrow:hover svg {
+  fill: #121821;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+body.dark-theme .schedule-nav-arrow.disabled {
+  background: linear-gradient(135deg, #444 0%, #666 100%);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-theme .schedule-nav-arrow.disabled svg {
+  fill: #999;
+}
+
+/* 橫向滾動的節目列表 */
+.schedule-list {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 20px;
+  gap: 16px;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.schedule-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 節目卡片樣式（包含縮圖和描述） */
+.schedule-item {
+  flex: 0 0 320px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, #4a90e2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  z-index: 2;
+}
+
+.schedule-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(43, 113, 210, 0.15);
+  border-color: rgba(43, 113, 210, 0.2);
+}
+
+.schedule-item:hover::before {
+  transform: scaleX(1);
+}
+
+.schedule-item.current {
+  background: linear-gradient(135deg, rgba(43, 113, 210, 0.15) 0%, rgba(43, 113, 210, 0.05) 100%);
+  border-color: var(--primary-color);
+  border-width: 2px;
+  box-shadow: 0 12px 35px rgba(43, 113, 210, 0.3);
+  transform: scale(1.05);
+  position: relative;
+  z-index: 10;
+}
+
+.schedule-item.current::before {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, var(--primary-color) 0%, #ff6b6b 50%, var(--primary-color) 100%);
+  animation: shimmer 2s infinite;
+}
+
+.schedule-item.current::after {
+  content: "● 現正播放";
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 0.85rem;
+  color: white;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ff6b6b 100%);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: pulse 2s infinite;
+  z-index: 3;
+  box-shadow: 0 4px 15px rgba(43, 113, 210, 0.4);
+}
+
+/* 即將播出節目的樣式 */
+.schedule-item.next {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.02) 100%);
+  border-color: #ffd700;
+  border-width: 1.5px;
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
+  transform: scale(1.02);
+}
+
+.schedule-item.next::before {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.schedule-item.next .program-status {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 0.8rem;
+  color: #b8860b;
+  font-weight: 700;
+  background: rgba(255, 215, 0, 0.15);
+  padding: 6px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  z-index: 3;
+}
+
+/* 節目狀態標籤 */
+.program-status {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 16px;
+  z-index: 3;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* 節目縮圖區域 */
+.schedule-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.schedule-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.schedule-item:hover .schedule-thumbnail img {
+  transform: scale(1.05);
+}
+
+/* 節目時間（覆蓋在縮圖上） */
+.schedule-time {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 10px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+/* 首播徽章 */
+.premiere-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #111;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+/* 特別節目徽章 */
+.special-badge {
+  position: absolute;
+  top: 40px;
+  right: 12px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+/* 節目內容區域 */
+.schedule-content {
+  padding: 16px;
+}
+
+/* 節目標題 */
+.program-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  transition: color 0.3s ease;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.schedule-item:hover .program-title {
+  color: var(--primary-color);
+}
+
+/* 節目描述 */
+.program-description {
+  font-size: 0.85rem;
+  color: var(--text-color-light);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 節目元數據區域 */
+.schedule-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 節目分類 */
+.program-category {
+  font-size: 0.75rem;
+  color: var(--text-color-light);
+  background: rgba(43, 113, 210, 0.08);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid rgba(43, 113, 210, 0.1);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.schedule-item:hover .program-category {
+  background: rgba(43, 113, 210, 0.15);
+  border-color: rgba(43, 113, 210, 0.2);
+}
+
+/* 節目時長 */
+.schedule-duration {
+  font-size: 0.8rem;
+  color: var(--text-color-light);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.schedule-duration::before {
+  content: '⏱';
+  font-size: 0.7rem;
+}
+
+/* 滾動指示器 */
+.schedule-scroll-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  opacity: 0.6;
+}
+
+.scroll-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-color-light);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.scroll-dot.active {
+  background: var(--primary-color);
+  transform: scale(1.2);
+}
+
+/* 深色主題調整 */
+body.dark-theme .current-datetime-text {
+  color: var(--text-color);
+}
+
+body.dark-theme .current-datetime-text .flip-clock {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .current-datetime-text .flip-clock.date {
+  color: var(--text-color);
+}
+
+body.dark-theme .current-datetime-text .flip-clock.day {
+  color: var(--primary-color);
+}
+
+body.dark-theme .current-datetime-text .flip-clock.time {
+  color: var(--primary-color);
+}
+
+body.dark-theme .current-datetime-text .flip-clock::before {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+  border-bottom-color: var(--card-border);
+}
+
+body.dark-theme .current-datetime-text .flip-clock::after {
+  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+}
+
+body.dark-theme .current-datetime-text .flip-clock:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+body.dark-theme .schedule-item.current {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.08) 100%);
+  border-color: var(--primary-color);
+  border-width: 2px;
+  box-shadow: 0 12px 35px rgba(255, 215, 0, 0.4);
+  transform: scale(1.05);
+}
+
+body.dark-theme .schedule-item.current::before {
+  background: linear-gradient(90deg, var(--primary-color) 0%, #ff6b6b 50%, var(--primary-color) 100%);
+}
+
+body.dark-theme .schedule-item.current::after {
+  color: var(--cta-text-color);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ff6b6b 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+}
+
+/* 深色主題下的即將播出節目樣式 */
+body.dark-theme .schedule-item.next {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 215, 0, 0.04) 100%);
+  border-color: #ffd700;
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.25);
+}
+
+body.dark-theme .schedule-item.next .program-status {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+body.dark-theme .schedule-item:hover {
+  background: rgba(255, 215, 0, 0.05);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.2);
+}
+
+body.dark-theme .schedule-item:hover .program-title {
+  color: #ffd700;
+}
+
+body.dark-theme .program-category {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.2);
+}
+
+body.dark-theme .schedule-item:hover .program-category {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .schedule-section {
+    padding: 40px 4%;
+  }
+  
+
+  
+  .schedule-list {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .schedule-item {
+    flex: 0 0 280px;
+  }
+  
+  .schedule-thumbnail {
+    height: 140px;
+  }
+  
+  .schedule-time {
+    font-size: 1rem;
+    padding: 4px 8px;
+  }
+  
+  .program-title {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .program-description {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+  
+  .schedule-content {
+    padding: 12px;
+  }
+  
+  .schedule-item.current::after {
+    top: 8px;
+    right: 12px;
+    font-size: 0.7rem;
+    padding: 6px 8px;
+  }
+  
+  .schedule-item.next .program-status {
+    top: 8px;
+    right: 12px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+  
+  .schedule-item.current {
+    transform: scale(1.03);
+  }
+  
+  .schedule-item.next {
+    transform: scale(1.01);
+  }
+  
+  /* 移動端箭頭調整 */
+  .schedule-nav-arrow {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .schedule-nav-arrow.left {
+    left: -24px;
+  }
+  
+  .schedule-nav-arrow.right {
+    right: -24px;
+  }
+  
+  .schedule-nav-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-section {
+    padding: 30px 3%;
+  }
+  
+
+  
+  .schedule-list {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .schedule-item {
+    flex: 0 0 200px;
+    padding: 14px;
+  }
+  
+  .schedule-time {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+  
+  .program-title {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  
+  .program-category {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    margin-bottom: 8px;
+  }
+  
+  .schedule-duration {
+    font-size: 0.8rem;
+  }
+  
+  /* 小螢幕箭頭調整 */
+  .schedule-nav-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .schedule-nav-arrow.left {
+    left: -22px;
+  }
+  
+  .schedule-nav-arrow.right {
+    right: -22px;
+  }
+  
+  .schedule-nav-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* 動畫效果 */
+@keyframes scheduleCardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.schedule-item {
+  animation: scheduleCardSlideIn 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.schedule-item:nth-child(1) { animation-delay: 0.1s; }
+.schedule-item:nth-child(2) { animation-delay: 0.2s; }
+.schedule-item:nth-child(3) { animation-delay: 0.3s; }
+.schedule-item:nth-child(4) { animation-delay: 0.4s; }
+.schedule-item:nth-child(5) { animation-delay: 0.5s; }
+.schedule-item:nth-child(6) { animation-delay: 0.6s; }
+.schedule-item:nth-child(7) { animation-delay: 0.7s; }
+.schedule-item:nth-child(8) { animation-delay: 0.8s; }
 
 
