@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月曆節目管理 - 航向世界旅遊頻道</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header h1 { color: #2b71d2; margin-bottom: 10px; }
+    .header p { color: #666; }
+    
+    .calendar-controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .month-nav { display: flex; align-items: center; gap: 15px; }
+    .month-nav button { background: #2b71d2; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .month-nav button:hover { background: #1e5bb8; }
+    .current-month { font-size: 1.2rem; font-weight: 600; color: #333; }
+    
+    .calendar-grid { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #2b71d2; color: white; }
+    .calendar-header div { padding: 15px; text-align: center; font-weight: 600; }
+    
+    .calendar-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .calendar-day { min-height: 120px; border: 1px solid #eee; padding: 10px; position: relative; background: white; }
+    .calendar-day:hover { background: #f8f9fa; }
+    .calendar-day.other-month { background: #f8f9fa; color: #999; }
+    .calendar-day.today { background: #e3f2fd; border-color: #2b71d2; }
+    
+    .day-number { font-weight: 600; margin-bottom: 5px; color: #333; }
+    .day-programs { font-size: 0.8rem; }
+    .program-slot { 
+      background: #e8f5e8; 
+      border: 1px solid #4caf50; 
+      border-radius: 3px; 
+      padding: 2px 4px; 
+      margin-bottom: 2px; 
+      cursor: pointer;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .program-slot:hover { background: #c8e6c9; }
+    .program-slot.empty { 
+      background: #fff3cd; 
+      border-color: #ffc107; 
+      color: #856404;
+      font-style: italic;
+    }
+    .program-slot.empty:hover { background: #ffeaa7; }
+    
+    .program-modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.5); 
+      z-index: 1000;
+    }
+    .modal-content { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: white; 
+      padding: 30px; 
+      border-radius: 10px; 
+      width: 90%; 
+      max-width: 600px; 
+      max-height: 80vh; 
+      overflow-y: auto;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+    .form-group textarea { height: 80px; resize: vertical; }
+    
+    .btn { background: #2b71d2; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    .btn:hover { background: #1e5bb8; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    
+    .template-panel { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+    .template-card { 
+      background: #f8f9fa; 
+      border: 2px solid #e9ecef; 
+      border-radius: 8px; 
+      padding: 15px; 
+      cursor: pointer; 
+      transition: all 0.3s ease;
+    }
+    .template-card:hover { border-color: #2b71d2; background: #e3f2fd; }
+    .template-card.selected { border-color: #2b71d2; background: #e3f2fd; }
+    .template-card h4 { margin-bottom: 8px; color: #333; }
+    .template-card p { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+    
+    .status-bar { 
+      position: fixed; 
+      bottom: 20px; 
+      right: 20px; 
+      background: #333; 
+      color: white; 
+      padding: 15px 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1001;
+      display: none;
+    }
+    
+    .auto-fill-panel { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .auto-fill-options { display: flex; gap: 15px; margin-top: 15px; }
+    .auto-fill-option { 
+      background: #f8f9fa; 
+      border: 1px solid #ddd; 
+      border-radius: 5px; 
+      padding: 10px; 
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .auto-fill-option:hover { border-color: #2b71d2; background: #e3f2fd; }
+    
+    .stats { display: flex; gap: 20px; margin-top: 15px; }
+    .stat-item { 
+      background: #e3f2fd; 
+      padding: 10px 15px; 
+      border-radius: 5px; 
+      text-align: center;
+    }
+    .stat-number { font-size: 1.5rem; font-weight: 600; color: #2b71d2; }
+    .stat-label { font-size: 0.9rem; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📅 月曆節目管理系統</h1>
+      <p>直觀的月曆介面，輕鬆管理整個月的節目安排</p>
+    </div>
+    
+    <!-- 月曆控制 -->
+    <div class="calendar-controls">
+      <div class="month-nav">
+        <button onclick="previousMonth()">◀ 上個月</button>
+        <span class="current-month" id="currentMonth">2024年1月</span>
+        <button onclick="nextMonth()">下個月 ▶</button>
+      </div>
+             <div>
+         <button class="btn" onclick="saveToContentful()">💾 儲存到 Contentful</button>
+         <button class="btn btn-secondary" onclick="exportCalendar()">📤 匯出月曆</button>
+         <button class="btn" onclick="showAutoFillPanel()">🔧 自動填充</button>
+         <button class="btn btn-danger" onclick="logout()">🚪 登出</button>
+       </div>
+    </div>
+    
+    <!-- 自動填充面板 -->
+    <div class="auto-fill-panel" id="autoFillPanel" style="display: none;">
+      <h3>🔧 自動填充選項</h3>
+      <div class="auto-fill-options">
+        <div class="auto-fill-option" onclick="autoFillEmptySlots()">
+          <h4>🔄 自動填充空白時段</h4>
+          <p>使用現有節目自動填充沒有安排的時段</p>
+        </div>
+        <div class="auto-fill-option" onclick="generateWeeklyPattern()">
+          <h4>📅 生成週期模式</h4>
+          <p>根據週一至週日的模式自動安排節目</p>
+        </div>
+        <div class="auto-fill-option" onclick="duplicateWeek()">
+          <h4>📋 複製上週安排</h4>
+          <p>將上週的節目安排複製到本週</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 節目範本面板 -->
+    <div class="template-panel">
+      <h3>📋 節目範本庫</h3>
+      <p>點擊範本可快速添加到選定的時段</p>
+      <div class="template-grid" id="templateGrid">
+        <!-- 範本將由 JavaScript 動態生成 -->
+      </div>
+    </div>
+    
+    <!-- 統計資訊 -->
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-number" id="totalPrograms">0</div>
+        <div class="stat-label">總節目數</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="emptySlots">0</div>
+        <div class="stat-label">空白時段</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="coverageRate">0%</div>
+        <div class="stat-label">覆蓋率</div>
+      </div>
+    </div>
+    
+    <!-- 月曆網格 -->
+    <div class="calendar-grid">
+      <div class="calendar-header">
+        <div>星期日</div>
+        <div>星期一</div>
+        <div>星期二</div>
+        <div>星期三</div>
+        <div>星期四</div>
+        <div>星期五</div>
+        <div>星期六</div>
+      </div>
+      <div class="calendar-body" id="calendarBody">
+        <!-- 月曆內容將由 JavaScript 動態生成 -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- 節目編輯模態框 -->
+  <div class="program-modal" id="programModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">編輯節目</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      
+      <form id="programForm">
+        <input type="hidden" id="editDate">
+        <input type="hidden" id="editTime">
+        
+        <div class="form-group">
+          <label>播出時間：</label>
+          <input type="time" id="airTime" required>
+        </div>
+        
+        <div class="form-group">
+          <label>節目標題：</label>
+          <input type="text" id="title" placeholder="例如：早安世界 - 日本東京晨間漫步" required>
+        </div>
+        
+        <div class="form-group">
+          <label>節目時長（分鐘）：</label>
+          <input type="number" id="duration" min="15" max="180" value="60" required>
+        </div>
+        
+        <div class="form-group">
+          <label>節目分類：</label>
+          <select id="category" required>
+            <option value="">-- 選擇分類 --</option>
+            <option value="亞洲旅遊">亞洲旅遊</option>
+            <option value="歐洲旅遊">歐洲旅遊</option>
+            <option value="美洲旅遊">美洲旅遊</option>
+            <option value="美食旅遊">美食旅遊</option>
+            <option value="極地旅遊">極地旅遊</option>
+            <option value="自然旅遊">自然旅遊</option>
+            <option value="文化旅遊">文化旅遊</option>
+            <option value="冒險旅遊">冒險旅遊</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>節目描述：</label>
+          <textarea id="description" placeholder="簡短描述節目內容..."></textarea>
+        </div>
+        
+                 <div class="form-group">
+           <label>影片類型：</label>
+           <select id="videoType" onchange="toggleVideoInput()">
+             <option value="YouTube">YouTube</option>
+             <option value="MP4">MP4 檔案</option>
+           </select>
+         </div>
+         
+         <div class="form-group" id="youtubeGroup">
+           <label>YouTube ID：</label>
+           <input type="text" id="youtubeId" placeholder="例如：dQw4w9WgXcQ">
+         </div>
+         
+         <div class="form-group" id="mp4Group" style="display: none;">
+           <label>MP4 影片連結：</label>
+           <input type="url" id="mp4Url" placeholder="例如：https://your-domain.com/videos/travel-video.mp4">
+         </div>
+        
+        <div class="form-group">
+          <label>節目狀態：</label>
+          <select id="status">
+            <option value="首播">首播</option>
+            <option value="重播">重播</option>
+            <option value="特別節目">特別節目</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn">💾 儲存節目</button>
+        <button type="button" class="btn btn-danger" onclick="deleteProgram()">🗑️ 刪除節目</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 狀態欄 -->
+  <div class="status-bar" id="statusBar">
+    <span id="statusMessage"></span>
+  </div>
+
+  <script>
+    // 登入驗證檢查
+    function checkAuth() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      
+      if (!user || !loginTime) {
+        // 未登入，跳轉到登入頁面
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      // 檢查登入是否超過 8 小時
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff >= 8) {
+        // 登入已過期，清除 session 並跳轉到登入頁面
+        sessionStorage.removeItem('adminUser');
+        sessionStorage.removeItem('loginTime');
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      return JSON.parse(user);
+    }
+    
+    // 登出功能
+    function logout() {
+      sessionStorage.removeItem('adminUser');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'admin-login.html';
+    }
+    
+    // 全域變數
+    let currentDate = new Date();
+    let calendarData = {};
+    let selectedTemplate = null;
+    let selectedSlot = null;
+    let currentUser = null;
+    
+    // Contentful 設定
+    const contentfulClient = contentful.createClient({
+      space: 'os5wf90ljenp',
+      accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+    });
+    
+    // 節目範本
+    const templates = [
+      {
+        id: 'morning',
+        title: '早安世界',
+        duration: 60,
+        category: '亞洲旅遊',
+        description: '跟著我們一起探索{地點}的早晨，從當地市場到著名景點的寧靜時光',
+        status: '首播',
+        color: '#4caf50'
+      },
+      {
+        id: 'kitchen',
+        title: '世界廚房',
+        duration: 45,
+        category: '美食旅遊',
+        description: '深入{地點}，品嚐最道地的當地美食與特色料理',
+        status: '重播',
+        color: '#ff9800'
+      },
+      {
+        id: 'adventure',
+        title: '極地探險',
+        duration: 60,
+        category: '極地旅遊',
+        description: '在{地點}追尋極光的神秘蹤跡，體驗極地探險的刺激',
+        status: '特別節目',
+        color: '#2196f3'
+      },
+      {
+        id: 'city',
+        title: '城市漫步',
+        duration: 45,
+        category: '歐洲旅遊',
+        description: '沿著{地點}的街道漫步，感受這座城市的獨特魅力',
+        status: '重播',
+        color: '#9c27b0'
+      },
+      {
+        id: 'nature',
+        title: '自然奇觀',
+        duration: 60,
+        category: '自然旅遊',
+        description: '探索{地點}的自然奇觀，感受大自然的壯麗景色',
+        status: '首播',
+        color: '#8bc34a'
+      }
+    ];
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶登入狀態
+      currentUser = checkAuth();
+      if (!currentUser) return;
+      
+      // 更新頁面標題顯示用戶資訊
+      updateUserInfo();
+      
+      loadTemplates();
+      renderCalendar();
+      loadFromContentful();
+      updateStats();
+    });
+    
+    // 更新用戶資訊顯示
+    function updateUserInfo() {
+      const header = document.querySelector('.header h1');
+      if (header && currentUser) {
+        header.innerHTML = `📅 月曆節目管理系統 <span style="font-size: 0.8rem; color: #666; font-weight: normal;">- ${currentUser.name} (${currentUser.role})</span>`;
+      }
+    }
+    
+    // 載入範本
+    function loadTemplates() {
+      const grid = document.getElementById('templateGrid');
+      grid.innerHTML = templates.map(template => `
+        <div class="template-card" onclick="selectTemplate('${template.id}')" data-template="${template.id}">
+          <h4>${template.title}</h4>
+          <p>${template.duration}分鐘 | ${template.category}</p>
+          <p>${template.description.substring(0, 50)}...</p>
+        </div>
+      `).join('');
+    }
+    
+    // 選擇範本
+    function selectTemplate(templateId) {
+      // 移除之前的選擇
+      document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // 選擇新的範本
+      const card = document.querySelector(`[data-template="${templateId}"]`);
+      if (card) {
+        card.classList.add('selected');
+        selectedTemplate = templates.find(t => t.id === templateId);
+        showStatus('範本已選擇，點擊月曆中的空白時段來添加節目', 'info');
+      }
+    }
+    
+    // 渲染月曆
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      
+      // 更新標題
+      document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
+      
+      // 計算月曆數據
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay());
+      
+      const calendarBody = document.getElementById('calendarBody');
+      calendarBody.innerHTML = '';
+      
+      // 生成6週的月曆
+      for (let week = 0; week < 6; week++) {
+        for (let day = 0; day < 7; day++) {
+          const currentDay = new Date(startDate);
+          currentDay.setDate(startDate.getDate() + week * 7 + day);
+          
+          const isCurrentMonth = currentDay.getMonth() === month;
+          const isToday = currentDay.toDateString() === new Date().toDateString();
+          const dateString = currentDay.toISOString().split('T')[0];
+          
+          const dayElement = document.createElement('div');
+          dayElement.className = `calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`;
+          dayElement.setAttribute('data-date', dateString);
+          
+          dayElement.innerHTML = `
+            <div class="day-number">${currentDay.getDate()}</div>
+            <div class="day-programs" id="programs-${dateString}">
+              ${generateTimeSlots(dateString)}
+            </div>
+          `;
+          
+          calendarBody.appendChild(dayElement);
+        }
+      }
+      
+      // 添加點擊事件
+      addCalendarClickEvents();
+    }
+    
+    // 生成時間槽
+    function generateTimeSlots(dateString) {
+      const timeSlots = [
+        { time: '06:00', label: '06:00' },
+        { time: '07:00', label: '07:00' },
+        { time: '08:00', label: '08:00' },
+        { time: '09:00', label: '09:00' },
+        { time: '10:00', label: '10:00' },
+        { time: '11:00', label: '11:00' },
+        { time: '12:00', label: '12:00' },
+        { time: '13:00', label: '13:00' },
+        { time: '14:00', label: '14:00' },
+        { time: '15:00', label: '15:00' },
+        { time: '16:00', label: '16:00' },
+        { time: '17:00', label: '17:00' },
+        { time: '18:00', label: '18:00' },
+        { time: '19:00', label: '19:00' },
+        { time: '20:00', label: '20:00' },
+        { time: '21:00', label: '21:00' },
+        { time: '22:00', label: '22:00' },
+        { time: '23:00', label: '23:00' }
+      ];
+      
+      return timeSlots.map(slot => {
+        const slotKey = `${dateString}-${slot.time}`;
+        const program = calendarData[slotKey];
+        
+        if (program) {
+          return `<div class="program-slot" data-slot="${slotKey}" style="background-color: ${program.color || '#e8f5e8'}">
+            ${program.title}
+          </div>`;
+        } else {
+          return `<div class="program-slot empty" data-slot="${slotKey}">
+            ${slot.label} - 空白
+          </div>`;
+        }
+      }).join('');
+    }
+    
+    // 添加月曆點擊事件
+    function addCalendarClickEvents() {
+      document.querySelectorAll('.program-slot').forEach(slot => {
+        slot.addEventListener('click', function() {
+          const slotKey = this.getAttribute('data-slot');
+          const [date, time] = slotKey.split('-');
+          
+          if (this.classList.contains('empty')) {
+            // 空白時段 - 添加新節目
+            if (selectedTemplate) {
+              addProgramFromTemplate(date, time);
+            } else {
+              openProgramModal(date, time);
+            }
+          } else {
+            // 已有節目 - 編輯
+            openProgramModal(date, time, calendarData[slotKey]);
+          }
+        });
+      });
+    }
+    
+    // 從範本添加節目
+    function addProgramFromTemplate(date, time) {
+      const program = {
+        ...selectedTemplate,
+        title: selectedTemplate.title.replace('{地點}', '日本東京'), // 可以讓用戶選擇地點
+        airDate: date,
+        airTime: time,
+        color: selectedTemplate.color
+      };
+      
+      const slotKey = `${date}-${time}`;
+      calendarData[slotKey] = program;
+      
+      updateProgramSlot(slotKey, program);
+      updateStats();
+      showStatus(`已添加節目：${program.title}`, 'success');
+    }
+    
+    // 打開節目編輯模態框
+    function openProgramModal(date, time, program = null) {
+      document.getElementById('editDate').value = date;
+      document.getElementById('editTime').value = time;
+      document.getElementById('airTime').value = time;
+      
+      if (program) {
+        // 編輯現有節目
+        document.getElementById('modalTitle').textContent = '編輯節目';
+        document.getElementById('title').value = program.title;
+        document.getElementById('duration').value = program.duration;
+        document.getElementById('category').value = program.category;
+        document.getElementById('description').value = program.description;
+        document.getElementById('youtubeId').value = program.youtubeId || '';
+        document.getElementById('status').value = program.status;
+      } else {
+        // 新增節目
+        document.getElementById('modalTitle').textContent = '新增節目';
+        document.getElementById('programForm').reset();
+        document.getElementById('airTime').value = time;
+      }
+      
+      document.getElementById('programModal').style.display = 'block';
+    }
+    
+    // 關閉模態框
+    function closeModal() {
+      document.getElementById('programModal').style.display = 'none';
+    }
+    
+    // 儲存節目
+    document.getElementById('programForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!checkPermission('write')) {
+        showStatus('您沒有編輯節目的權限', 'error');
+        return;
+      }
+      
+      const date = document.getElementById('editDate').value;
+      const time = document.getElementById('airTime').value;
+      const slotKey = `${date}-${time}`;
+      
+             const videoType = document.getElementById('videoType').value;
+       const videoId = videoType === 'YouTube' 
+         ? document.getElementById('youtubeId').value 
+         : document.getElementById('mp4Url').value;
+       
+       const program = {
+         airDate: date,
+         airTime: time,
+         title: document.getElementById('title').value,
+         duration: parseInt(document.getElementById('duration').value),
+         category: document.getElementById('category').value,
+         description: document.getElementById('description').value,
+         videoType: videoType,
+         videoId: videoId,
+         status: document.getElementById('status').value,
+         color: '#e8f5e8',
+         createdBy: currentUser.email,
+         createdAt: new Date().toISOString()
+       };
+      
+      calendarData[slotKey] = program;
+      updateProgramSlot(slotKey, program);
+      updateStats();
+      closeModal();
+      showStatus('節目已儲存', 'success');
+    });
+    
+    // 檢查用戶權限
+    function checkPermission(permission) {
+      if (!currentUser) return false;
+      return currentUser.permissions.includes(permission);
+    }
+    
+    // 刪除節目
+    function deleteProgram() {
+      if (!checkPermission('delete')) {
+        showStatus('您沒有刪除節目的權限', 'error');
+        return;
+      }
+      
+      const date = document.getElementById('editDate').value;
+      const time = document.getElementById('editTime').value;
+      const slotKey = `${date}-${time}`;
+      
+      delete calendarData[slotKey];
+      updateProgramSlot(slotKey, null);
+      updateStats();
+      closeModal();
+      showStatus('節目已刪除', 'success');
+    }
+    
+    // 更新節目槽
+    function updateProgramSlot(slotKey, program) {
+      const slotElement = document.querySelector(`[data-slot="${slotKey}"]`);
+      if (slotElement) {
+        if (program) {
+          slotElement.className = 'program-slot';
+          slotElement.style.backgroundColor = program.color || '#e8f5e8';
+          slotElement.textContent = program.title;
+        } else {
+          const [date, time] = slotKey.split('-');
+          slotElement.className = 'program-slot empty';
+          slotElement.style.backgroundColor = '';
+          slotElement.textContent = `${time} - 空白`;
+        }
+      }
+    }
+    
+    // 更新統計
+    function updateStats() {
+      const totalSlots = Object.keys(calendarData).length;
+      const totalDays = 31; // 簡化計算
+      const totalTimeSlots = totalDays * 18; // 18個時段
+      const emptySlots = totalTimeSlots - totalSlots;
+      const coverageRate = Math.round((totalSlots / totalTimeSlots) * 100);
+      
+      document.getElementById('totalPrograms').textContent = totalSlots;
+      document.getElementById('emptySlots').textContent = emptySlots;
+      document.getElementById('coverageRate').textContent = `${coverageRate}%`;
+    }
+    
+    // 月曆導航
+    function previousMonth() {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+    }
+    
+    function nextMonth() {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+    }
+    
+    // 自動填充功能
+    function showAutoFillPanel() {
+      const panel = document.getElementById('autoFillPanel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    function autoFillEmptySlots() {
+      // 找到所有空白時段並自動填充
+      const emptySlots = document.querySelectorAll('.program-slot.empty');
+      let filledCount = 0;
+      
+      emptySlots.forEach((slot, index) => {
+        const slotKey = slot.getAttribute('data-slot');
+        const [date, time] = slotKey.split('-');
+        
+        // 使用循環的範本
+        const template = templates[index % templates.length];
+        const program = {
+          ...template,
+          title: template.title.replace('{地點}', '自動填充'),
+          airDate: date,
+          airTime: time,
+          color: template.color
+        };
+        
+        calendarData[slotKey] = program;
+        updateProgramSlot(slotKey, program);
+        filledCount++;
+      });
+      
+      updateStats();
+      showStatus(`已自動填充 ${filledCount} 個空白時段`, 'success');
+    }
+    
+    function generateWeeklyPattern() {
+      // 生成週期模式
+      const weekPattern = [
+        { template: templates[0], day: 1 }, // 週一：早安世界
+        { template: templates[1], day: 2 }, // 週二：世界廚房
+        { template: templates[2], day: 3 }, // 週三：極地探險
+        { template: templates[3], day: 4 }, // 週四：城市漫步
+        { template: templates[4], day: 5 }, // 週五：自然奇觀
+        { template: templates[0], day: 6 }, // 週六：早安世界
+        { template: templates[1], day: 0 }  // 週日：世界廚房
+      ];
+      
+      // 清空現有數據
+      calendarData = {};
+      
+      // 生成整個月的週期模式
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayOfWeek = date.getDay();
+        const pattern = weekPattern.find(p => p.day === dayOfWeek);
+        
+        if (pattern) {
+          const dateString = date.toISOString().split('T')[0];
+          const timeSlots = ['06:00', '12:00', '18:00']; // 主要時段
+          
+          timeSlots.forEach(time => {
+            const slotKey = `${dateString}-${time}`;
+            const program = {
+              ...pattern.template,
+              title: pattern.template.title.replace('{地點}', '週期安排'),
+              airDate: dateString,
+              airTime: time,
+              color: pattern.template.color
+            };
+            
+            calendarData[slotKey] = program;
+          });
+        }
+      }
+      
+      renderCalendar();
+      updateStats();
+      showStatus('已生成週期節目模式', 'success');
+    }
+    
+    // Contentful 整合
+    async function loadFromContentful() {
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        const monthString = month.toString().padStart(2, '0');
+        
+        const response = await contentfulClient.getEntries({
+          content_type: 'scheduleItem',
+          'fields.airDate[gte]': `${year}-${monthString}-01`,
+          'fields.airDate[lt]': `${year}-${monthString}-32`,
+          include: 2
+        });
+        
+        if (response.items && response.items.length > 0) {
+          response.items.forEach(item => {
+            const date = item.fields.airDate;
+            const time = item.fields.airTime || item.fields.播出時間;
+            const slotKey = `${date}-${time}`;
+            
+            calendarData[slotKey] = {
+              airDate: date,
+              airTime: time,
+              title: item.fields.title || item.fields.節目標題,
+              duration: item.fields.duration || item.fields.節目時長,
+              category: item.fields.category || item.fields.節目分類,
+              description: item.fields.description || item.fields.節目描述,
+              youtubeId: item.fields.youtubeId || item.fields.YouTubeID,
+              status: item.fields.status || item.fields.節目狀態,
+              color: '#e8f5e8'
+            };
+          });
+          
+          renderCalendar();
+          updateStats();
+          showStatus(`已從 Contentful 載入 ${response.items.length} 個節目`, 'success');
+        }
+      } catch (error) {
+        console.log('Contentful 載入失敗:', error);
+        showStatus('Contentful 載入失敗，使用本地數據', 'warning');
+      }
+    }
+    
+    async function saveToContentful() {
+      if (!checkPermission('publish')) {
+        showStatus('您沒有發布到 Contentful 的權限', 'error');
+        return;
+      }
+      
+      try {
+        showStatus('正在儲存到 Contentful...', 'info');
+        
+        const programs = Object.values(calendarData);
+        let savedCount = 0;
+        
+        for (const program of programs) {
+          try {
+            // 這裡應該調用 Contentful API 來創建或更新節目
+            // 由於這是演示版本，我們只記錄到控制台
+            console.log('儲存節目:', program);
+            savedCount++;
+          } catch (error) {
+            console.error('儲存節目失敗:', error);
+          }
+        }
+        
+        showStatus(`成功儲存 ${savedCount} 個節目到 Contentful`, 'success');
+      } catch (error) {
+        console.error('Contentful 儲存失敗:', error);
+        showStatus('Contentful 儲存失敗', 'error');
+      }
+    }
+    
+    // 匯出月曆
+    function exportCalendar() {
+      const data = {
+        month: currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1),
+        programs: Object.values(calendarData)
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `calendar-${data.month}.json`;
+      a.click();
+      
+      showStatus('月曆已匯出', 'success');
+    }
+    
+    // 顯示狀態
+    function showStatus(message, type) {
+      const statusBar = document.getElementById('statusBar');
+      const statusMessage = document.getElementById('statusMessage');
+      
+      statusMessage.textContent = message;
+      statusBar.style.display = 'block';
+      
+      // 根據類型設定顏色
+      statusBar.style.backgroundColor = type === 'success' ? '#4caf50' : 
+                                      type === 'error' ? '#f44336' : 
+                                      type === 'warning' ? '#ff9800' : '#333';
+      
+      setTimeout(() => {
+        statusBar.style.display = 'none';
+      }, 3000);
+    }
+    
+    // 切換影片輸入欄位
+    function toggleVideoInput() {
+      const videoType = document.getElementById('videoType').value;
+      const youtubeGroup = document.getElementById('youtubeGroup');
+      const mp4Group = document.getElementById('mp4Group');
+      
+      if (videoType === 'YouTube') {
+        youtubeGroup.style.display = 'block';
+        mp4Group.style.display = 'none';
+      } else {
+        youtubeGroup.style.display = 'none';
+        mp4Group.style.display = 'block';
+      }
+    }
+    
+    // 點擊外部關閉模態框
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('programModal');
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

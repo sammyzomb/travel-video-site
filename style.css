@@ -655,91 +655,74 @@ body.dark-theme .continent-item .label .en{ color: var(--text-color-light); }
   background: linear-gradient(90deg, var(--primary-color) 0%, #4a90e2 50%, var(--primary-color) 100%);
 }
 
-/* 節目表導航箭頭 */
+/* 節目表導航箭頭 - 極簡美觀設計 */
 .schedule-nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #4a90e2 100%);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 6px 20px rgba(43, 113, 210, 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.schedule-container:hover .schedule-nav-arrow {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .schedule-nav-arrow:hover {
-  background: linear-gradient(135deg, #4a90e2 0%, var(--primary-color) 100%);
-  transform: translateY(-50%) scale(1.15);
-  box-shadow: 
-    0 10px 30px rgba(43, 113, 210, 0.4),
-    0 6px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .schedule-nav-arrow:active {
   transform: translateY(-50%) scale(0.95);
-  box-shadow: 
-    0 4px 16px rgba(43, 113, 210, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .schedule-nav-arrow.left {
-  left: -28px;
+  left: -24px;
 }
 
 .schedule-nav-arrow.right {
-  right: -28px;
+  right: -24px;
 }
 
 .schedule-nav-arrow svg {
-  width: 24px;
-  height: 24px;
-  fill: white;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  width: 20px;
+  height: 20px;
+  fill: #333;
   transition: all 0.3s ease;
 }
 
 .schedule-nav-arrow:hover svg {
-  fill: white;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  fill: #000;
   transform: scale(1.1);
 }
 
 /* 箭頭禁用狀態 */
 .schedule-nav-arrow.disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   pointer-events: none;
-  background: linear-gradient(135deg, #ccc 0%, #999 100%);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.schedule-nav-arrow.disabled:hover {
-  transform: translateY(-50%);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.05);
+  background: rgba(200, 200, 200, 0.8);
 }
 
 .schedule-nav-arrow.disabled svg {
-  fill: #666;
-  filter: none;
-  transform: none;
+  fill: #999;
 }
 
 /* 深色主題箭頭調整 */
@@ -796,101 +779,53 @@ body.dark-theme .schedule-nav-arrow.disabled svg {
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* 節目卡片樣式（包含縮圖和描述） */
+/* 極簡節目卡片樣式 */
 .schedule-item {
-  flex: 0 0 320px;
+  flex: 0 0 300px;
   background: var(--card-bg);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--card-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
-.schedule-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-color) 0%, #4a90e2 100%);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-  z-index: 2;
-}
-
 .schedule-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(43, 113, 210, 0.15);
-  border-color: rgba(43, 113, 210, 0.2);
-}
-
-.schedule-item:hover::before {
-  transform: scaleX(1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .schedule-item.current {
-  background: linear-gradient(135deg, rgba(43, 113, 210, 0.15) 0%, rgba(43, 113, 210, 0.05) 100%);
-  border-color: var(--primary-color);
-  border-width: 2px;
-  box-shadow: 0 12px 35px rgba(43, 113, 210, 0.3);
-  transform: scale(1.05);
-  position: relative;
-  z-index: 10;
-}
-
-.schedule-item.current::before {
-  transform: scaleX(1);
-  background: linear-gradient(90deg, var(--primary-color) 0%, #ff6b6b 50%, var(--primary-color) 100%);
-  animation: shimmer 2s infinite;
+  border-left: 3px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.02);
+  transform: scale(1.01);
 }
 
 .schedule-item.current::after {
-  content: "● 現正播放";
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 0.85rem;
-  color: white;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #ff6b6b 100%);
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  animation: pulse 2s infinite;
-  z-index: 3;
-  box-shadow: 0 4px 15px rgba(43, 113, 210, 0.4);
+  content: "現正播出" !important;
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  color: white !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  background: #e74c3c !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  animation: pulse-dot 2s infinite !important;
+  z-index: 10 !important;
+  display: block !important;
 }
 
-/* 即將播出節目的樣式 */
-.schedule-item.next {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.02) 100%);
-  border-color: #ffd700;
-  border-width: 1.5px;
-  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
-  transform: scale(1.02);
+.schedule-item.upcoming {
+  border-left: 3px solid transparent;
+  opacity: 0.9;
 }
 
-.schedule-item.next::before {
-  transform: scaleX(1);
-  background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
-}
-
-.schedule-item.next .program-status {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 0.8rem;
-  color: #b8860b;
-  font-weight: 700;
-  background: rgba(255, 215, 0, 0.15);
-  padding: 6px 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  z-index: 3;
+.schedule-item.upcoming:hover {
+  opacity: 1;
 }
 
 /* 節目狀態標籤 */
@@ -935,82 +870,127 @@ body.dark-theme .schedule-nav-arrow.disabled svg {
   transform: scale(1.05);
 }
 
-/* 節目時間（覆蓋在縮圖上） */
+/* 節目時間（極簡樣式） */
 .schedule-time {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  font-size: 1.2rem;
-  font-weight: 800;
+  top: 8px;
+  left: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: white;
-  font-family: 'Montserrat', sans-serif;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 6px 10px;
-  border-radius: 8px;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 6px;
   z-index: 2;
 }
 
-/* 首播徽章 */
+/* 首播徽章（極簡樣式） */
 .premiere-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  color: #111;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  top: 8px;
+  right: 8px;
+  background: #f39c12;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 500;
   z-index: 2;
 }
 
-/* 特別節目徽章 */
+/* 特別節目徽章（極簡樣式） */
 .special-badge {
   position: absolute;
-  top: 40px;
-  right: 12px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  top: 28px;
+  right: 8px;
+  background: #e74c3c;
   color: white;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 500;
   z-index: 2;
 }
 
-/* 節目內容區域 */
+/* 極簡風格的節目狀態指示 */
+.schedule-item {
+  position: relative;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 現正播放節目的極簡樣式 */
+.schedule-item.current {
+  transform: scale(1.02);
+  border-left: 3px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.02);
+}
+
+.schedule-item.current::after {
+  content: '●';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #e74c3c;
+  font-size: 10px;
+  animation: pulse-dot 2s infinite;
+}
+
+/* 即將播出節目的樣式 */
+.schedule-item.upcoming {
+  border-left: 3px solid transparent;
+  opacity: 0.9;
+}
+
+.schedule-item.upcoming:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 隱藏原有的徽章 */
+.now-playing-badge,
+.upcoming-badge {
+  display: none !important;
+}
+
+/* 簡化的動畫效果 */
+@keyframes pulse-dot {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.05);
+  }
+}
+
+/* 節目內容區域（極簡樣式） */
 .schedule-content {
-  padding: 16px;
+  padding: 12px;
 }
 
 /* 節目標題 */
 .program-title {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-color);
-  line-height: 1.4;
-  margin-bottom: 8px;
-  transition: color 0.3s ease;
+  line-height: 1.3;
+  margin-bottom: 6px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.schedule-item:hover .program-title {
-  color: var(--primary-color);
-}
-
 /* 節目描述 */
 .program-description {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-color-light);
-  line-height: 1.5;
-  margin-bottom: 12px;
+  line-height: 1.4;
+  margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1022,41 +1002,35 @@ body.dark-theme .schedule-nav-arrow.disabled svg {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* 節目分類 */
 .program-category {
-  font-size: 0.75rem;
-  color: var(--text-color-light);
-  background: rgba(43, 113, 210, 0.08);
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: 1px solid rgba(43, 113, 210, 0.1);
-  transition: all 0.3s ease;
+  font-size: 0.7rem;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  border: 1px solid #e9ecef;
   flex-shrink: 0;
-}
-
-.schedule-item:hover .program-category {
-  background: rgba(43, 113, 210, 0.15);
-  border-color: rgba(43, 113, 210, 0.2);
 }
 
 /* 節目時長 */
 .schedule-duration {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-color-light);
-  font-weight: 600;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
 .schedule-duration::before {
   content: '⏱';
-  font-size: 0.7rem;
+  font-size: 0.65rem;
 }
 
 /* 滾動指示器 */

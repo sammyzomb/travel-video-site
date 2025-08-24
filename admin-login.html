@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理員登入 - 航向世界旅遊頻道</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .login-title {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .login-subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #2b71d2;
+      box-shadow: 0 0 0 3px rgba(43, 113, 210, 0.1);
+    }
+    
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+    
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(43, 113, 210, 0.3);
+    }
+    
+    .login-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .success-message {
+      background: #efe;
+      color: #3c3;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 0.8rem;
+    }
+    
+    .contentful-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
+    .contentful-info h4 {
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .contentful-info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .contentful-info li {
+      margin-bottom: 5px;
+      padding-left: 15px;
+      position: relative;
+    }
+    
+    .contentful-info li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #2b71d2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">📺</div>
+    <h1 class="login-title">管理員登入</h1>
+    <p class="login-subtitle">航向世界旅遊頻道 - 節目管理系統</p>
+    
+    <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">電子郵件</label>
+        <input type="email" id="email" name="email" required placeholder="請輸入您的 Contentful 帳號">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">密碼</label>
+        <input type="password" id="password" name="password" required placeholder="請輸入您的密碼">
+      </div>
+      
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span class="loading" id="loadingSpinner" style="display: none;"></span>
+        <span id="loginText">登入系統</span>
+      </button>
+    </form>
+    
+         <div class="contentful-info">
+       <h4>🔐 系統說明</h4>
+       <ul>
+         <li><strong>目前是模擬系統</strong> - 使用測試帳號</li>
+         <li>測試帳號：admin@travelchannel.com / password123</li>
+         <li>未來將整合真正的 Contentful 認證</li>
+         <li>所有操作都會記錄在 Contentful</li>
+       </ul>
+       <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+         <strong>💡 真正的 Contentful 整合：</strong><br>
+         需要設置 Contentful Management API Token 和用戶權限管理
+       </div>
+     </div>
+    
+    <div class="footer">
+      <p>© 2024 航向世界旅遊頻道</p>
+      <p>Powered by Contentful CMS</p>
+    </div>
+  </div>
+
+  <script>
+    // Contentful 設定
+    const contentfulClient = contentful.createClient({
+      space: 'os5wf90ljenp',
+      accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
+    });
+    
+    // 授權用戶列表 (實際應用中應該從 Contentful 獲取)
+    const authorizedUsers = [
+      {
+        email: 'admin@travelchannel.com',
+        name: '系統管理員',
+        role: 'admin',
+        permissions: ['read', 'write', 'delete', 'publish']
+      },
+      {
+        email: 'editor@travelchannel.com',
+        name: '節目編輯',
+        role: 'editor',
+        permissions: ['read', 'write']
+      },
+      {
+        email: 'viewer@travelchannel.com',
+        name: '節目查看者',
+        role: 'viewer',
+        permissions: ['read']
+      }
+    ];
+    
+    // 登入表單處理
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // 顯示載入狀態
+      showLoading(true);
+      hideMessages();
+      
+      try {
+        // 驗證用戶
+        const user = await authenticateUser(email, password);
+        
+        if (user) {
+          // 登入成功
+          showSuccess('登入成功！正在跳轉到管理系統...');
+          
+          // 儲存用戶資訊到 sessionStorage
+          sessionStorage.setItem('adminUser', JSON.stringify(user));
+          sessionStorage.setItem('loginTime', new Date().toISOString());
+          
+          // 延遲跳轉
+          setTimeout(() => {
+            window.location.href = 'admin-calendar.html';
+          }, 1500);
+          
+        } else {
+          showError('登入失敗：帳號或密碼錯誤');
+        }
+        
+      } catch (error) {
+        console.error('登入錯誤:', error);
+        showError('登入失敗：請檢查網路連線或聯絡系統管理員');
+      } finally {
+        showLoading(false);
+      }
+    });
+    
+    // 驗證用戶
+    async function authenticateUser(email, password) {
+      // 模擬 API 延遲
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 檢查是否為授權用戶
+      const user = authorizedUsers.find(u => u.email === email);
+      
+      if (user) {
+        // 這裡應該調用 Contentful 的認證 API
+        // 目前使用模擬驗證
+        if (password === 'password123') { // 實際應用中應該使用真實的密碼驗證
+          return user;
+        }
+      }
+      
+      return null;
+    }
+    
+    // 顯示載入狀態
+    function showLoading(show) {
+      const spinner = document.getElementById('loadingSpinner');
+      const loginText = document.getElementById('loginText');
+      const loginBtn = document.getElementById('loginBtn');
+      
+      if (show) {
+        spinner.style.display = 'inline-block';
+        loginText.textContent = '驗證中...';
+        loginBtn.disabled = true;
+      } else {
+        spinner.style.display = 'none';
+        loginText.textContent = '登入系統';
+        loginBtn.disabled = false;
+      }
+    }
+    
+    // 顯示錯誤訊息
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+    
+    // 顯示成功訊息
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+    }
+    
+    // 隱藏所有訊息
+    function hideMessages() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+    
+    // 檢查是否已經登入
+    function checkLoginStatus() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      
+      if (user && loginTime) {
+        // 檢查登入是否超過 8 小時
+        const loginDate = new Date(loginTime);
+        const now = new Date();
+        const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+        
+        if (hoursDiff < 8) {
+          // 仍在有效期間，直接跳轉到管理系統
+          window.location.href = 'admin-calendar.html';
+        } else {
+          // 登入已過期，清除 session
+          sessionStorage.removeItem('adminUser');
+          sessionStorage.removeItem('loginTime');
+        }
+      }
+    }
+    
+    // 頁面載入時檢查登入狀態
+    document.addEventListener('DOMContentLoaded', function() {
+      checkLoginStatus();
+    });
+  </script>
+</body>
+</html>
