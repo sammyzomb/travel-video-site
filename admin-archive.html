@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>歸檔管理 - 航向世界旅遊頻道</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header h1 { color: #2b71d2; margin-bottom: 10px; }
+    .header p { color: #666; }
+    
+    .admin-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #2b71d2; }
+    .stat-number { font-size: 2rem; font-weight: bold; color: #2b71d2; }
+    .stat-label { color: #666; margin-top: 5px; }
+    
+    .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .btn { background: #2b71d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+    .btn:hover { background: #1e5bb8; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-warning { background: #ffc107; color: #212529; }
+    .btn-warning:hover { background: #e0a800; }
+    
+    .filter-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group select, .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    
+    .programs-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .programs-table th, .programs-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    .programs-table th { background: #f8f9fa; font-weight: 600; color: #333; }
+    .programs-table tr:hover { background: #f8f9fa; }
+    
+    .program-thumbnail { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; }
+    .program-title { font-weight: 600; color: #333; }
+    .program-meta { font-size: 12px; color: #666; }
+    .program-stats { display: flex; gap: 10px; font-size: 12px; }
+    .program-actions { display: flex; gap: 5px; }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
+    
+    .status { padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+    .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+    
+    .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+    .pagination button { padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; }
+    .pagination button.active { background: #2b71d2; color: white; border-color: #2b71d2; }
+    .pagination button:hover:not(.active) { background: #f8f9fa; }
+    
+    .loading { text-align: center; padding: 40px; color: #666; }
+    .empty { text-align: center; padding: 60px; color: #666; }
+    
+    @media (max-width: 768px) {
+      .controls { flex-direction: column; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .programs-table { font-size: 12px; }
+      .programs-table th, .programs-table td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📺 歸檔管理系統</h1>
+      <p>管理已播出的節目歸檔，支援分類、標籤和統計分析</p>
+    </div>
+    
+    <div class="admin-panel">
+      <div id="status" class="status" style="display: none;"></div>
+      
+      <!-- 統計面板 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="total-programs">0</div>
+          <div class="stat-label">總節目數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="total-views">0</div>
+          <div class="stat-label">總觀看次數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avg-rating">0.0</div>
+          <div class="stat-label">平均評分</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="total-favorites">0</div>
+          <div class="stat-label">總收藏數</div>
+        </div>
+      </div>
+      
+      <!-- 控制按鈕 -->
+      <div class="controls">
+        <button class="btn" onclick="loadArchivedPrograms()">🔄 重新載入</button>
+        <button class="btn btn-success" onclick="runAutoArchive()">⚡ 執行自動歸檔</button>
+        <button class="btn btn-warning" onclick="exportData()">📊 匯出資料</button>
+        <button class="btn btn-secondary" onclick="showBulkEdit()">✏️ 批量編輯</button>
+      </div>
+      
+      <!-- 篩選器 -->
+      <div class="filter-section">
+        <h3 style="margin-bottom: 15px;">🔍 篩選節目</h3>
+        <div class="filter-grid">
+          <div class="form-group">
+            <label>國家/地區</label>
+            <select id="filter-country">
+              <option value="">全部國家</option>
+              <option value="日本">日本</option>
+              <option value="韓國">韓國</option>
+              <option value="泰國">泰國</option>
+              <option value="法國">法國</option>
+              <option value="義大利">義大利</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>節目分類</label>
+            <select id="filter-category">
+              <option value="">全部分類</option>
+              <option value="亞洲旅遊">亞洲旅遊</option>
+              <option value="歐洲旅遊">歐洲旅遊</option>
+              <option value="美食旅遊">美食旅遊</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>節目狀態</label>
+            <select id="filter-status">
+              <option value="">全部狀態</option>
+              <option value="archived">已歸檔</option>
+              <option value="popular">熱門</option>
+              <option value="recommended">推薦</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>最低評分</label>
+            <select id="filter-rating">
+              <option value="0">全部評分</option>
+              <option value="1">1星以上</option>
+              <option value="2">2星以上</option>
+              <option value="3">3星以上</option>
+              <option value="4">4星以上</option>
+              <option value="5">5星</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top: 15px;">
+          <button class="btn" onclick="applyFilters()">套用篩選</button>
+          <button class="btn btn-secondary" onclick="clearFilters()">清除篩選</button>
+        </div>
+      </div>
+      
+      <!-- 節目列表 -->
+      <div id="programs-container">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 編輯節目模態框 -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>編輯節目</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="editForm">
+        <div class="form-group">
+          <label>節目標題</label>
+          <input type="text" id="edit-title" required>
+        </div>
+        <div class="form-group">
+          <label>國家/地區</label>
+          <select id="edit-country" required>
+            <option value="日本">日本</option>
+            <option value="韓國">韓國</option>
+            <option value="泰國">泰國</option>
+            <option value="法國">法國</option>
+            <option value="義大利">義大利</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>節目分類</label>
+          <select id="edit-category" required>
+            <option value="亞洲旅遊">亞洲旅遊</option>
+            <option value="歐洲旅遊">歐洲旅遊</option>
+            <option value="美食旅遊">美食旅遊</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>子分類</label>
+          <select id="edit-subcategory">
+            <option value="美食">美食</option>
+            <option value="文化">文化</option>
+            <option value="自然">自然</option>
+            <option value="藝術">藝術</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>節目狀態</label>
+          <select id="edit-status" required>
+            <option value="archived">已歸檔</option>
+            <option value="popular">熱門</option>
+            <option value="recommended">推薦</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>評分</label>
+          <input type="number" id="edit-rating" min="0" max="5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label>觀看次數</label>
+          <input type="number" id="edit-views" min="0">
+        </div>
+        <div class="form-group">
+          <label>收藏次數</label>
+          <input type="number" id="edit-favorites" min="0">
+        </div>
+        <div class="form-group">
+          <label>備註</label>
+          <textarea id="edit-notes" rows="3"></textarea>
+        </div>
+        <div style="margin-top: 20px;">
+          <button type="submit" class="btn">保存變更</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let archivedPrograms = [];
+    let filteredPrograms = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      loadArchivedPrograms();
+    });
+    
+    // 載入歸檔節目
+    async function loadArchivedPrograms() {
+      try {
+        showStatus('載入中...', 'info');
+        
+        // 這裡應該調用您的 Contentful API
+        // 暫時使用模擬數據
+        const mockData = generateMockData();
+        archivedPrograms = mockData;
+        filteredPrograms = [...archivedPrograms];
+        
+        updateStatistics();
+        renderPrograms();
+        showStatus('載入完成', 'success');
+      } catch (error) {
+        console.error('載入失敗:', error);
+        showStatus('載入失敗: ' + error.message, 'error');
+      }
+    }
+    
+    // 生成模擬數據
+    function generateMockData() {
+      const countries = ['日本', '韓國', '泰國', '法國', '義大利'];
+      const categories = ['亞洲旅遊', '歐洲旅遊', '美食旅遊'];
+      const subcategories = ['美食', '文化', '自然', '藝術'];
+      const statuses = ['archived', 'popular', 'recommended'];
+      
+      const programs = [];
+      for (let i = 1; i <= 50; i++) {
+        programs.push({
+          id: `program-${i}`,
+          title: `旅遊節目 ${i} - ${countries[i % countries.length]}`,
+          country: countries[i % countries.length],
+          category: categories[i % categories.length],
+          subCategory: subcategories[i % subcategories.length],
+          status: statuses[i % statuses.length],
+          rating: Math.floor(Math.random() * 5) + 1,
+          viewCount: Math.floor(Math.random() * 10000),
+          favoriteCount: Math.floor(Math.random() * 500),
+          airDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+          videoId: `video${i}`,
+          thumbnail: `https://img.youtube.com/vi/video${i}/mqdefault.jpg`
+        });
+      }
+      return programs;
+    }
+    
+    // 更新統計數據
+    function updateStatistics() {
+      const stats = {
+        total: archivedPrograms.length,
+        totalViews: archivedPrograms.reduce((sum, p) => sum + p.viewCount, 0),
+        totalFavorites: archivedPrograms.reduce((sum, p) => sum + p.favoriteCount, 0),
+        avgRating: archivedPrograms.reduce((sum, p) => sum + p.rating, 0) / archivedPrograms.length
+      };
+      
+      document.getElementById('total-programs').textContent = stats.total;
+      document.getElementById('total-views').textContent = stats.totalViews.toLocaleString();
+      document.getElementById('avg-rating').textContent = stats.avgRating.toFixed(1);
+      document.getElementById('total-favorites').textContent = stats.totalFavorites.toLocaleString();
+    }
+    
+    // 渲染節目列表
+    function renderPrograms() {
+      const container = document.getElementById('programs-container');
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pagePrograms = filteredPrograms.slice(startIndex, endIndex);
+      
+      if (pagePrograms.length === 0) {
+        container.innerHTML = '<div class="empty">沒有找到符合條件的節目</div>';
+        return;
+      }
+      
+      let html = `
+        <table class="programs-table">
+          <thead>
+            <tr>
+              <th>縮圖</th>
+              <th>節目資訊</th>
+              <th>分類</th>
+              <th>統計</th>
+              <th>狀態</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      pagePrograms.forEach(program => {
+        html += `
+          <tr>
+            <td>
+              <img src="${program.thumbnail}" alt="${program.title}" class="program-thumbnail">
+            </td>
+            <td>
+              <div class="program-title">${program.title}</div>
+              <div class="program-meta">播出日期: ${new Date(program.airDate).toLocaleDateString('zh-TW')}</div>
+            </td>
+            <td>
+              <div>${program.country}</div>
+              <div class="program-meta">${program.category} - ${program.subCategory}</div>
+            </td>
+            <td>
+              <div class="program-stats">
+                <span>⭐ ${program.rating}</span>
+                <span>👁️ ${program.viewCount}</span>
+                <span>❤️ ${program.favoriteCount}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge ${program.status}">${getStatusText(program.status)}</span>
+            </td>
+            <td>
+              <div class="program-actions">
+                <button class="btn btn-small" onclick="editProgram('${program.id}')">編輯</button>
+                <button class="btn btn-small btn-secondary" onclick="deleteProgram('${program.id}')">刪除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      
+      // 添加分頁
+      const totalPages = Math.ceil(filteredPrograms.length / itemsPerPage);
+      if (totalPages > 1) {
+        html += '<div class="pagination">';
+        for (let i = 1; i <= totalPages; i++) {
+          html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        html += '</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 獲取狀態文字
+    function getStatusText(status) {
+      const statusMap = {
+        'archived': '已歸檔',
+        'popular': '熱門',
+        'recommended': '推薦'
+      };
+      return statusMap[status] || status;
+    }
+    
+    // 套用篩選
+    function applyFilters() {
+      const country = document.getElementById('filter-country').value;
+      const category = document.getElementById('filter-category').value;
+      const status = document.getElementById('filter-status').value;
+      const rating = parseInt(document.getElementById('filter-rating').value);
+      
+      filteredPrograms = archivedPrograms.filter(program => {
+        if (country && program.country !== country) return false;
+        if (category && program.category !== category) return false;
+        if (status && program.status !== status) return false;
+        if (rating && program.rating < rating) return false;
+        return true;
+      });
+      
+      currentPage = 1;
+      renderPrograms();
+      showStatus(`篩選完成，找到 ${filteredPrograms.length} 個節目`, 'success');
+    }
+    
+    // 清除篩選
+    function clearFilters() {
+      document.getElementById('filter-country').value = '';
+      document.getElementById('filter-category').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-rating').value = '0';
+      
+      filteredPrograms = [...archivedPrograms];
+      currentPage = 1;
+      renderPrograms();
+      showStatus('篩選已清除', 'info');
+    }
+    
+    // 執行自動歸檔
+    async function runAutoArchive() {
+      try {
+        showStatus('執行自動歸檔中...', 'info');
+        // 這裡應該調用自動歸檔邏輯
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 模擬處理時間
+        showStatus('自動歸檔完成', 'success');
+        loadArchivedPrograms(); // 重新載入數據
+      } catch (error) {
+        showStatus('自動歸檔失敗: ' + error.message, 'error');
+      }
+    }
+    
+    // 匯出資料
+    function exportData() {
+      const dataStr = JSON.stringify(filteredPrograms, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `archived-programs-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showStatus('資料匯出完成', 'success');
+    }
+    
+    // 編輯節目
+    function editProgram(programId) {
+      const program = archivedPrograms.find(p => p.id === programId);
+      if (!program) return;
+      
+      document.getElementById('edit-title').value = program.title;
+      document.getElementById('edit-country').value = program.country;
+      document.getElementById('edit-category').value = program.category;
+      document.getElementById('edit-subcategory').value = program.subCategory;
+      document.getElementById('edit-status').value = program.status;
+      document.getElementById('edit-rating').value = program.rating;
+      document.getElementById('edit-views').value = program.viewCount;
+      document.getElementById('edit-favorites').value = program.favoriteCount;
+      
+      document.getElementById('editForm').onsubmit = function(e) {
+        e.preventDefault();
+        saveProgram(programId);
+      };
+      
+      document.getElementById('editModal').style.display = 'block';
+    }
+    
+    // 保存節目
+    async function saveProgram(programId) {
+      try {
+        const program = archivedPrograms.find(p => p.id === programId);
+        if (!program) return;
+        
+        // 更新節目數據
+        program.title = document.getElementById('edit-title').value;
+        program.country = document.getElementById('edit-country').value;
+        program.category = document.getElementById('edit-category').value;
+        program.subCategory = document.getElementById('edit-subcategory').value;
+        program.status = document.getElementById('edit-status').value;
+        program.rating = parseFloat(document.getElementById('edit-rating').value);
+        program.viewCount = parseInt(document.getElementById('edit-views').value);
+        program.favoriteCount = parseInt(document.getElementById('edit-favorites').value);
+        
+        // 這裡應該調用 API 保存到 Contentful
+        // await contentful.updateEntry(programId, program);
+        
+        closeModal();
+        updateStatistics();
+        renderPrograms();
+        showStatus('節目更新成功', 'success');
+      } catch (error) {
+        showStatus('更新失敗: ' + error.message, 'error');
+      }
+    }
+    
+    // 刪除節目
+    async function deleteProgram(programId) {
+      if (!confirm('確定要刪除這個節目嗎？')) return;
+      
+      try {
+        // 這裡應該調用 API 刪除
+        // await contentful.deleteEntry(programId);
+        
+        archivedPrograms = archivedPrograms.filter(p => p.id !== programId);
+        filteredPrograms = filteredPrograms.filter(p => p.id !== programId);
+        
+        updateStatistics();
+        renderPrograms();
+        showStatus('節目刪除成功', 'success');
+      } catch (error) {
+        showStatus('刪除失敗: ' + error.message, 'error');
+      }
+    }
+    
+    // 關閉模態框
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+    
+    // 顯示狀態訊息
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      statusEl.style.display = 'block';
+      
+      setTimeout(() => {
+        statusEl.style.display = 'none';
+      }, 3000);
+    }
+    
+    // 分頁功能
+    function goToPage(page) {
+      currentPage = page;
+      renderPrograms();
+    }
+    
+    // 批量編輯（待實現）
+    function showBulkEdit() {
+      alert('批量編輯功能開發中...');
+    }
+  </script>
+</body>
+</html>
