@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台登入測試 - 航向世界旅遊頻道</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .test-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+    
+    .test-title {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    
+    .test-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .test-section h3 {
+      color: #2b71d2;
+      margin-bottom: 15px;
+    }
+    
+    .test-info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .test-info h4 {
+      color: #1976d2;
+      margin-bottom: 10px;
+    }
+    
+    .test-info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .test-info li {
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .test-info li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #4caf50;
+      font-weight: bold;
+    }
+    
+    .btn {
+      background: #2b71d2;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 5px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .btn:hover {
+      background: #1e5bb8;
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background: #28a745;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .btn-warning {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .btn-warning:hover {
+      background: #e0a800;
+    }
+    
+    .status-display {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .status-display h4 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .status-display pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1 class="test-title">🔐 後台登入系統測試</h1>
+    
+    <div class="test-info">
+      <h4>📋 測試說明</h4>
+      <ul>
+        <li>此頁面用於測試後台登入系統的功能</li>
+        <li>可以檢查登入狀態、清除登入資料</li>
+        <li>可以快速跳轉到各個後台頁面</li>
+        <li>用於診斷登入相關問題</li>
+      </ul>
+    </div>
+    
+    <div class="test-section">
+      <h3>🔍 登入狀態檢查</h3>
+      <div id="loginStatus" class="status-display">
+        <h4>當前登入狀態：</h4>
+        <pre id="statusContent">檢查中...</pre>
+      </div>
+      <button class="btn" onclick="checkLoginStatus()">🔄 重新檢查</button>
+      <button class="btn btn-warning" onclick="clearLoginData()">🗑️ 清除登入資料</button>
+    </div>
+    
+    <div class="test-section">
+      <h3>🚀 快速導航</h3>
+      <a href="admin-login.html" class="btn">🔑 登入頁面</a>
+      <a href="admin-dashboard.html" class="btn btn-success">🎛️ 主控台</a>
+      <a href="admin-calendar.html" class="btn btn-success">📅 月曆管理</a>
+      <a href="admin-schedule.html" class="btn btn-success">🎯 節目表管理</a>
+      <a href="admin-archive.html" class="btn btn-success">📺 歸檔管理</a>
+    </div>
+    
+    <div class="test-section">
+      <h3>📝 測試帳號資訊</h3>
+      <div class="test-info">
+        <h4>可用測試帳號：</h4>
+        <ul>
+          <li><strong>管理員帳號</strong>：admin@travelchannel.com / password123</li>
+          <li><strong>編輯帳號</strong>：editor@travelchannel.com / password123</li>
+          <li><strong>查看者帳號</strong>：viewer@travelchannel.com / password123</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h3>⚠️ 常見問題</h3>
+      <div class="test-info">
+        <h4>如果遇到問題：</h4>
+        <ul>
+          <li>確保使用正確的測試帳號</li>
+          <li>檢查瀏覽器是否支援 sessionStorage</li>
+          <li>清除瀏覽器快取和 cookies</li>
+          <li>檢查網路連線是否正常</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 檢查登入狀態
+    function checkLoginStatus() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      const statusContent = document.getElementById('statusContent');
+      
+      if (!user || !loginTime) {
+        statusContent.innerHTML = '❌ 未登入\n\n請前往登入頁面進行登入';
+        return;
+      }
+      
+      try {
+        const userData = JSON.parse(user);
+        const loginDate = new Date(loginTime);
+        const now = new Date();
+        const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+        
+        let status = '✅ 已登入\n\n';
+        status += `用戶：${userData.name}\n`;
+        status += `角色：${userData.role}\n`;
+        status += `權限：${userData.permissions.join(', ')}\n`;
+        status += `登入時間：${loginDate.toLocaleString()}\n`;
+        status += `已登入時數：${hoursDiff.toFixed(1)} 小時\n`;
+        
+        if (hoursDiff >= 8) {
+          status += '\n⚠️ 登入已過期（超過8小時）';
+        } else {
+          status += '\n✅ 登入狀態有效';
+        }
+        
+        statusContent.innerHTML = status;
+        
+      } catch (error) {
+        statusContent.innerHTML = '❌ 登入資料格式錯誤\n\n請清除登入資料後重新登入';
+      }
+    }
+    
+    // 清除登入資料
+    function clearLoginData() {
+      sessionStorage.removeItem('adminUser');
+      sessionStorage.removeItem('loginTime');
+      alert('登入資料已清除！');
+      checkLoginStatus();
+    }
+    
+    // 頁面載入時檢查狀態
+    document.addEventListener('DOMContentLoaded', function() {
+      checkLoginStatus();
+    });
+  </script>
+</body>
+</html>

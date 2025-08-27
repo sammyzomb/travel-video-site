@@ -35,6 +35,27 @@
     .status { padding: 10px; border-radius: 5px; margin-bottom: 15px; }
     .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    
+    .user-info { 
+      background: #e3f2fd; 
+      padding: 10px 15px; 
+      border-radius: 5px; 
+      margin-bottom: 15px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+    }
+    .user-info .user-details { color: #1976d2; font-weight: 500; }
+    .user-info .logout-btn { 
+      background: #f44336; 
+      color: white; 
+      border: none; 
+      padding: 5px 10px; 
+      border-radius: 3px; 
+      cursor: pointer; 
+      font-size: 12px;
+    }
+    .user-info .logout-btn:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -42,6 +63,17 @@
     <div class="header">
       <h1>🎯 節目表管理系統</h1>
       <p>輕鬆管理您的旅遊節目表，支援批量添加和範本功能</p>
+      <div style="margin-top: 15px;">
+        <a href="admin-dashboard.html" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">
+          🏠 返回主控台
+        </a>
+      </div>
+    </div>
+    
+    <!-- 用戶資訊顯示 -->
+    <div class="user-info" id="userInfo" style="display: none;">
+      <div class="user-details" id="userDetails"></div>
+      <button class="logout-btn" onclick="logout()">登出</button>
     </div>
     
     <div class="admin-panel">
@@ -145,6 +177,154 @@
   </div>
 
   <script>
+    // 統一的資料管理
+    const DATA_KEYS = {
+      PROGRAMS: 'tv_programs_data',
+      ARCHIVES: 'tv_archives_data',
+      TEMPLATES: 'tv_templates_data'
+    };
+    
+    let allPrograms = [];
+    
+    // 載入所有節目資料
+    function loadAllPrograms() {
+      try {
+        const savedData = localStorage.getItem(DATA_KEYS.PROGRAMS);
+        if (savedData) {
+          allPrograms = JSON.parse(savedData);
+          console.log(`節目表管理：已載入 ${allPrograms.length} 個節目資料`);
+          displayPrograms();
+        }
+      } catch (error) {
+        console.error('載入節目資料失敗:', error);
+      }
+    }
+    
+    // 儲存所有節目資料
+    function saveAllPrograms() {
+      try {
+        localStorage.setItem(DATA_KEYS.PROGRAMS, JSON.stringify(allPrograms));
+        console.log(`節目表管理：已儲存 ${allPrograms.length} 個節目資料`);
+        
+        // 觸發自定義事件，通知其他系統資料已更新
+        const event = new CustomEvent('programsDataUpdated', {
+          detail: { programs: allPrograms }
+        });
+        window.dispatchEvent(event);
+        
+        return allPrograms;
+      } catch (error) {
+        console.error('儲存節目資料失敗:', error);
+        return [];
+      }
+    }
+    
+    // 顯示節目列表
+    function displayPrograms() {
+      const container = document.getElementById('programsList');
+      if (!container) return;
+      
+      if (allPrograms.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">目前沒有節目資料</p>';
+        return;
+      }
+      
+      // 按日期排序
+      const sortedPrograms = allPrograms.sort((a, b) => new Date(a.airDate) - new Date(b.airDate));
+      
+      container.innerHTML = sortedPrograms.map(program => `
+        <div class="program-item">
+          <h3>${program.title}</h3>
+          <p class="time">📅 ${program.airDate} | ⏰ ${program.airTime} | ⏱️ ${program.duration}分鐘</p>
+          <p>📂 ${program.category} | 📊 ${program.status}</p>
+          <p>${program.description || '無描述'}</p>
+          <div style="margin-top: 10px;">
+            <button class="btn btn-secondary" onclick="editProgram('${program.airDate}-${program.airTime}')">編輯</button>
+            <button class="btn btn-danger" onclick="deleteProgram('${program.airDate}-${program.airTime}')">刪除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 編輯節目
+    function editProgram(slotKey) {
+      const program = allPrograms.find(p => `${p.airDate}-${p.airTime}` === slotKey);
+      if (program) {
+        // 填充表單
+        document.getElementById('title').value = program.title;
+        document.getElementById('duration').value = program.duration;
+        document.getElementById('category').value = program.category;
+        document.getElementById('description').value = program.description || '';
+        document.getElementById('youtubeId').value = program.youtubeId || '';
+        document.getElementById('status').value = program.status;
+        
+        showStatus('請修改節目資訊後點擊儲存', 'info');
+      }
+    }
+    
+    // 刪除節目
+    function deleteProgram(slotKey) {
+      if (confirm('確定要刪除這個節目嗎？')) {
+        allPrograms = allPrograms.filter(p => `${p.airDate}-${p.airTime}` !== slotKey);
+        saveAllPrograms();
+        displayPrograms();
+        showStatus('節目已刪除', 'success');
+      }
+    }
+    
+    // 監聽其他系統的資料更新
+    window.addEventListener('programsDataUpdated', function(event) {
+      console.log('節目表管理：收到資料更新通知');
+      loadAllPrograms();
+    });
+    
+    // 登入驗證檢查
+    function checkAuth() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      
+      if (!user || !loginTime) {
+        // 未登入，跳轉到登入頁面
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      // 檢查登入是否超過 8 小時
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff >= 8) {
+        // 登入已過期，清除 session 並跳轉到登入頁面
+        sessionStorage.removeItem('adminUser');
+        sessionStorage.removeItem('loginTime');
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      return JSON.parse(user);
+    }
+    
+    // 登出功能
+    function logout() {
+      sessionStorage.removeItem('adminUser');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'admin-login.html';
+    }
+    
+    // 更新用戶資訊顯示
+    function updateUserInfo() {
+      const userInfo = document.getElementById('userInfo');
+      const userDetails = document.getElementById('userDetails');
+      
+      if (currentUser) {
+        userInfo.style.display = 'flex';
+        userDetails.textContent = `歡迎，${currentUser.name} (${currentUser.role})`;
+      }
+    }
+    
+    // 全域變數
+    let currentUser = null;
     let programs = [];
     
     // 節目範本
@@ -334,6 +514,16 @@
     
     // 設定預設日期為今天
     document.getElementById('airDate').value = new Date().toISOString().split('T')[0];
+    
+    // 頁面載入時檢查登入狀態
+    document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶登入狀態
+      currentUser = checkAuth();
+      if (!currentUser) return;
+      
+      // 更新用戶資訊顯示
+      updateUserInfo();
+    });
   </script>
 </body>
 </html>

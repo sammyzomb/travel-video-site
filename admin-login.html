@@ -282,9 +282,9 @@
           sessionStorage.setItem('adminUser', JSON.stringify(user));
           sessionStorage.setItem('loginTime', new Date().toISOString());
           
-          // 延遲跳轉
+          // 延遲跳轉到主控台
           setTimeout(() => {
-            window.location.href = 'admin-calendar.html';
+            window.location.href = 'admin-dashboard.html';
           }, 1500);
           
         } else {
@@ -367,8 +367,8 @@
         const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
         
         if (hoursDiff < 8) {
-          // 仍在有效期間，直接跳轉到管理系統
-          window.location.href = 'admin-calendar.html';
+          // 仍在有效期間，直接跳轉到主控台
+          window.location.href = 'admin-dashboard.html';
         } else {
           // 登入已過期，清除 session
           sessionStorage.removeItem('adminUser');

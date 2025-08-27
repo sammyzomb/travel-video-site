@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台主控台 - 航向世界旅遊頻道</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 20px; 
+    }
+    
+    .header { 
+      background: white; 
+      padding: 30px; 
+      border-radius: 15px; 
+      margin-bottom: 30px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .header h1 { 
+      color: #2b71d2; 
+      margin-bottom: 10px; 
+      font-size: 2.5rem;
+    }
+    
+    .header p { 
+      color: #666; 
+      font-size: 1.1rem;
+    }
+    
+    .user-info { 
+      background: #e3f2fd; 
+      padding: 15px 20px; 
+      border-radius: 10px; 
+      margin-bottom: 30px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .user-info .user-details { 
+      color: #1976d2; 
+      font-weight: 600; 
+      font-size: 1.1rem;
+    }
+    
+    .user-info .logout-btn { 
+      background: #f44336; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .user-info .logout-btn:hover { 
+      background: #d32f2f; 
+      transform: translateY(-2px);
+    }
+    
+    .dashboard-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+      gap: 30px; 
+      margin-bottom: 30px;
+    }
+    
+    .module-card { 
+      background: white; 
+      padding: 30px; 
+      border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+    
+    .module-card:hover { 
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      border-color: #2b71d2;
+    }
+    
+    .module-icon { 
+      font-size: 4rem; 
+      margin-bottom: 20px; 
+      display: block;
+    }
+    
+    .module-title { 
+      color: #333; 
+      font-size: 1.5rem; 
+      font-weight: 600; 
+      margin-bottom: 15px;
+    }
+    
+    .module-description { 
+      color: #666; 
+      margin-bottom: 25px; 
+      line-height: 1.6;
+    }
+    
+    .module-stats { 
+      background: #f8f9fa; 
+      padding: 15px; 
+      border-radius: 10px; 
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .enter-btn { 
+      background: linear-gradient(135deg, #2b71d2, #1e5bb8); 
+      color: white; 
+      border: none; 
+      padding: 12px 30px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 1rem; 
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+    
+    .enter-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(43, 113, 210, 0.3);
+    }
+    
+    .quick-actions { 
+      background: white; 
+      padding: 25px; 
+      border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .quick-actions h3 { 
+      color: #2b71d2; 
+      margin-bottom: 20px; 
+      font-size: 1.3rem;
+    }
+    
+    .action-buttons { 
+      display: flex; 
+      gap: 15px; 
+      flex-wrap: wrap;
+    }
+    
+    .action-btn { 
+      background: #f8f9fa; 
+      color: #333; 
+      border: 2px solid #e9ecef; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 14px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .action-btn:hover { 
+      background: #2b71d2; 
+      color: white; 
+      border-color: #2b71d2;
+      transform: translateY(-2px);
+    }
+    
+    .status-indicator { 
+      display: inline-block; 
+      width: 10px; 
+      height: 10px; 
+      border-radius: 50%; 
+      margin-right: 8px;
+    }
+    
+    .status-online { background: #28a745; }
+    .status-offline { background: #dc3545; }
+    
+    @media (max-width: 768px) {
+      .dashboard-grid { 
+        grid-template-columns: 1fr; 
+        gap: 20px;
+      }
+      
+      .module-card { 
+        padding: 20px; 
+      }
+      
+      .action-buttons { 
+        flex-direction: column;
+      }
+      
+      .header h1 { 
+        font-size: 2rem; 
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎛️ 後台管理主控台</h1>
+      <p>航向世界旅遊頻道 - 節目管理系統</p>
+    </div>
+    
+    <!-- 用戶資訊顯示 -->
+    <div class="user-info" id="userInfo" style="display: none;">
+      <div class="user-details" id="userDetails"></div>
+      <button class="logout-btn" onclick="logout()">登出系統</button>
+    </div>
+    
+    <!-- 管理模組卡片 -->
+    <div class="dashboard-grid">
+      <!-- 月曆節目管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-calendar.html')">
+        <span class="module-icon">📅</span>
+        <h2 class="module-title">月曆節目管理</h2>
+        <p class="module-description">
+          以月曆形式管理節目排程，支援拖拽編輯、範本套用和批量操作。
+          適合視覺化節目安排和時間管理。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">進入月曆管理</button>
+      </div>
+      
+      <!-- 節目表管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-schedule.html')">
+        <span class="module-icon">🎯</span>
+        <h2 class="module-title">節目表管理</h2>
+        <p class="module-description">
+          傳統列表式節目管理，支援批量添加、CSV匯入匯出和範本功能。
+          適合大量節目資料的快速處理。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">進入節目表管理</button>
+      </div>
+      
+      <!-- 歸檔管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-archive.html')">
+        <span class="module-icon">📺</span>
+        <h2 class="module-title">歸檔管理</h2>
+        <p class="module-description">
+          管理已播出的節目歸檔，支援分類篩選、統計分析和批量編輯。
+          適合節目資料的長期管理和分析。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">進入歸檔管理</button>
+      </div>
+    </div>
+    
+    <!-- 快速操作 -->
+    <div class="quick-actions">
+      <h3>⚡ 快速操作</h3>
+      <div class="action-buttons">
+        <a href="admin-test.html" class="action-btn">🔧 系統測試</a>
+        <a href="admin-login.html" class="action-btn">🔑 重新登入</a>
+        <button class="action-btn" onclick="clearCache()">🗑️ 清除快取</button>
+        <button class="action-btn" onclick="showSystemInfo()">ℹ️ 系統資訊</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 登入驗證檢查
+    function checkAuth() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      
+      if (!user || !loginTime) {
+        // 未登入，跳轉到登入頁面
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      // 檢查登入是否超過 8 小時
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff >= 8) {
+        // 登入已過期，清除 session 並跳轉到登入頁面
+        sessionStorage.removeItem('adminUser');
+        sessionStorage.removeItem('loginTime');
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      return JSON.parse(user);
+    }
+    
+    // 登出功能
+    function logout() {
+      sessionStorage.removeItem('adminUser');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'admin-login.html';
+    }
+    
+    // 更新用戶資訊顯示
+    function updateUserInfo() {
+      const userInfo = document.getElementById('userInfo');
+      const userDetails = document.getElementById('userDetails');
+      
+      if (currentUser) {
+        userInfo.style.display = 'flex';
+        userDetails.innerHTML = `
+          <span class="status-indicator status-online"></span>
+          歡迎，${currentUser.name} (${currentUser.role}) | 
+          登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
+        `;
+      }
+    }
+    
+    // 導航到指定模組
+    function navigateToModule(url) {
+      // 添加過渡動畫效果
+      document.body.style.opacity = '0.7';
+      setTimeout(() => {
+        window.location.href = url;
+      }, 300);
+    }
+    
+    // 清除快取
+    function clearCache() {
+      if (confirm('確定要清除瀏覽器快取嗎？這將清除所有暫存的資料。')) {
+        sessionStorage.clear();
+        localStorage.clear();
+        alert('快取已清除！請重新登入。');
+        window.location.href = 'admin-login.html';
+      }
+    }
+    
+    // 顯示系統資訊
+    function showSystemInfo() {
+      const info = `
+系統資訊：
+- 瀏覽器：${navigator.userAgent}
+- 螢幕解析度：${screen.width}x${screen.height}
+- 登入用戶：${currentUser.name}
+- 用戶角色：${currentUser.role}
+- 登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
+- 系統時間：${new Date().toLocaleString()}
+      `;
+      alert(info);
+    }
+    
+    // 全域變數
+    let currentUser = null;
+    
+    // 頁面載入時檢查登入狀態
+    document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶登入狀態
+      currentUser = checkAuth();
+      if (!currentUser) return;
+      
+      // 更新用戶資訊顯示
+      updateUserInfo();
+      
+      // 添加頁面載入動畫
+      document.body.style.opacity = '0';
+      setTimeout(() => {
+        document.body.style.transition = 'opacity 0.5s ease';
+        document.body.style.opacity = '1';
+      }, 100);
+    });
+  </script>
+</body>
+</html>

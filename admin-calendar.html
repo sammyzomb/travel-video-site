@@ -149,20 +149,21 @@
       <p>直觀的月曆介面，輕鬆管理整個月的節目安排</p>
     </div>
     
-    <!-- 月曆控制 -->
-    <div class="calendar-controls">
-      <div class="month-nav">
-        <button onclick="previousMonth()">◀ 上個月</button>
-        <span class="current-month" id="currentMonth">2024年1月</span>
-        <button onclick="nextMonth()">下個月 ▶</button>
-      </div>
-             <div>
-         <button class="btn" onclick="saveToContentful()">💾 儲存到 Contentful</button>
-         <button class="btn btn-secondary" onclick="exportCalendar()">📤 匯出月曆</button>
-         <button class="btn" onclick="showAutoFillPanel()">🔧 自動填充</button>
-         <button class="btn btn-danger" onclick="logout()">🚪 登出</button>
+         <!-- 月曆控制 -->
+     <div class="calendar-controls">
+       <div class="month-nav">
+         <button onclick="previousMonth()">◀ 上個月</button>
+         <span class="current-month" id="currentMonth">2024年1月</span>
+         <button onclick="nextMonth()">下個月 ▶</button>
        </div>
-    </div>
+              <div>
+          <button class="btn btn-secondary" onclick="window.location.href='admin-dashboard.html'">🏠 返回主控台</button>
+          <button class="btn" onclick="saveToContentful()">💾 儲存到 Contentful</button>
+          <button class="btn btn-secondary" onclick="exportCalendar()">📤 匯出月曆</button>
+          <button class="btn" onclick="showAutoFillPanel()">🔧 自動填充</button>
+          <button class="btn btn-danger" onclick="logout()">🚪 登出</button>
+        </div>
+     </div>
     
     <!-- 自動填充面板 -->
     <div class="auto-fill-panel" id="autoFillPanel" style="display: none;">
@@ -353,6 +354,57 @@
     let selectedSlot = null;
     let currentUser = null;
     
+    // 統一的資料管理
+    const DATA_KEYS = {
+      PROGRAMS: 'tv_programs_data',
+      ARCHIVES: 'tv_archives_data',
+      TEMPLATES: 'tv_templates_data'
+    };
+    
+    // 載入所有節目資料
+    function loadAllPrograms() {
+      try {
+        const savedData = localStorage.getItem(DATA_KEYS.PROGRAMS);
+        if (savedData) {
+          const allPrograms = JSON.parse(savedData);
+          // 將所有節目資料轉換為月曆格式
+          allPrograms.forEach(program => {
+            const slotKey = `${program.airDate}-${program.airTime}`;
+            calendarData[slotKey] = program;
+          });
+          console.log(`已載入 ${allPrograms.length} 個節目資料`);
+        }
+      } catch (error) {
+        console.error('載入節目資料失敗:', error);
+      }
+    }
+    
+    // 儲存所有節目資料
+    function saveAllPrograms() {
+      try {
+        const allPrograms = Object.values(calendarData);
+        localStorage.setItem(DATA_KEYS.PROGRAMS, JSON.stringify(allPrograms));
+        console.log(`已儲存 ${allPrograms.length} 個節目資料`);
+        return allPrograms;
+      } catch (error) {
+        console.error('儲存節目資料失敗:', error);
+        return [];
+      }
+    }
+    
+    // 同步資料到其他系統
+    function syncDataToOtherSystems() {
+      const allPrograms = saveAllPrograms();
+      
+      // 觸發自定義事件，通知其他系統資料已更新
+      const event = new CustomEvent('programsDataUpdated', {
+        detail: { programs: allPrograms }
+      });
+      window.dispatchEvent(event);
+      
+      console.log('資料已同步到其他系統');
+    }
+    
     // Contentful 設定
     const contentfulClient = contentful.createClient({
       space: 'os5wf90ljenp',
@@ -416,6 +468,9 @@
       
       // 更新頁面標題顯示用戶資訊
       updateUserInfo();
+      
+      // 載入統一資料
+      loadAllPrograms();
       
       loadTemplates();
       renderCalendar();
@@ -486,16 +541,26 @@
           const isToday = currentDay.toDateString() === new Date().toDateString();
           const dateString = currentDay.toISOString().split('T')[0];
           
+          // 檢查是否為過去的日期（日期在今天之前）
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // 設定為今天的開始時間
+          const isPastDate = currentDay < today;
+          
           const dayElement = document.createElement('div');
           dayElement.className = `calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`;
           dayElement.setAttribute('data-date', dateString);
           
-          dayElement.innerHTML = `
-            <div class="day-number">${currentDay.getDate()}</div>
-            <div class="day-programs" id="programs-${dateString}">
-              ${generateTimeSlots(dateString)}
-            </div>
-          `;
+          // 如果是過去的日期，完全隱藏
+          if (isPastDate) {
+            dayElement.style.display = 'none';
+          } else {
+             dayElement.innerHTML = `
+               <div class="day-number">${currentDay.getMonth() + 1}/${currentDay.getDate()}</div>
+               <div class="day-programs" id="programs-${dateString}">
+                 ${generateTimeSlots(dateString)}
+               </div>
+             `;
+           }
           
           calendarBody.appendChild(dayElement);
         }
@@ -650,8 +715,12 @@
       calendarData[slotKey] = program;
       updateProgramSlot(slotKey, program);
       updateStats();
+      
+      // 同步資料到其他系統
+      syncDataToOtherSystems();
+      
       closeModal();
-      showStatus('節目已儲存', 'success');
+      showStatus('節目已儲存並同步到其他系統', 'success');
     });
     
     // 檢查用戶權限
@@ -674,8 +743,12 @@
       delete calendarData[slotKey];
       updateProgramSlot(slotKey, null);
       updateStats();
+      
+      // 同步資料到其他系統
+      syncDataToOtherSystems();
+      
       closeModal();
-      showStatus('節目已刪除', 'success');
+      showStatus('節目已刪除並同步到其他系統', 'success');
     }
     
     // 更新節目槽

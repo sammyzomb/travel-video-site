@@ -67,6 +67,27 @@
     .loading { text-align: center; padding: 40px; color: #666; }
     .empty { text-align: center; padding: 60px; color: #666; }
     
+    .user-info { 
+      background: #e3f2fd; 
+      padding: 10px 15px; 
+      border-radius: 5px; 
+      margin-bottom: 15px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+    }
+    .user-info .user-details { color: #1976d2; font-weight: 500; }
+    .user-info .logout-btn { 
+      background: #f44336; 
+      color: white; 
+      border: none; 
+      padding: 5px 10px; 
+      border-radius: 3px; 
+      cursor: pointer; 
+      font-size: 12px;
+    }
+    .user-info .logout-btn:hover { background: #d32f2f; }
+    
     @media (max-width: 768px) {
       .controls { flex-direction: column; }
       .filter-grid { grid-template-columns: 1fr; }
@@ -80,6 +101,17 @@
     <div class="header">
       <h1>📺 歸檔管理系統</h1>
       <p>管理已播出的節目歸檔，支援分類、標籤和統計分析</p>
+      <div style="margin-top: 15px;">
+        <a href="admin-dashboard.html" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">
+          🏠 返回主控台
+        </a>
+      </div>
+    </div>
+    
+    <!-- 用戶資訊顯示 -->
+    <div class="user-info" id="userInfo" style="display: none;">
+      <div class="user-details" id="userDetails"></div>
+      <button class="logout-btn" onclick="logout()">登出</button>
     </div>
     
     <div class="admin-panel">
@@ -248,6 +280,217 @@
   </div>
 
   <script>
+    // 統一的資料管理
+    const DATA_KEYS = {
+      PROGRAMS: 'tv_programs_data',
+      ARCHIVES: 'tv_archives_data',
+      TEMPLATES: 'tv_templates_data'
+    };
+    
+    let allPrograms = [];
+    let archivedPrograms = [];
+    
+    // 載入所有節目資料
+    function loadAllPrograms() {
+      try {
+        const savedData = localStorage.getItem(DATA_KEYS.PROGRAMS);
+        if (savedData) {
+          allPrograms = JSON.parse(savedData);
+          console.log(`歸檔管理：已載入 ${allPrograms.length} 個節目資料`);
+        }
+        
+        const savedArchives = localStorage.getItem(DATA_KEYS.ARCHIVES);
+        if (savedArchives) {
+          archivedPrograms = JSON.parse(savedArchives);
+          console.log(`歸檔管理：已載入 ${archivedPrograms.length} 個歸檔節目`);
+        }
+        
+        updateStats();
+        displayArchivedPrograms();
+      } catch (error) {
+        console.error('載入節目資料失敗:', error);
+      }
+    }
+    
+    // 儲存歸檔資料
+    function saveArchivedPrograms() {
+      try {
+        localStorage.setItem(DATA_KEYS.ARCHIVES, JSON.stringify(archivedPrograms));
+        console.log(`歸檔管理：已儲存 ${archivedPrograms.length} 個歸檔節目`);
+        
+        // 觸發自定義事件，通知其他系統資料已更新
+        const event = new CustomEvent('archivesDataUpdated', {
+          detail: { archives: archivedPrograms }
+        });
+        window.dispatchEvent(event);
+        
+        return archivedPrograms;
+      } catch (error) {
+        console.error('儲存歸檔資料失敗:', error);
+        return [];
+      }
+    }
+    
+    // 更新統計資訊
+    function updateStats() {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 計算已播出節目（今天之前的節目）
+      const pastPrograms = allPrograms.filter(p => p.airDate < today);
+      
+      // 計算未播出節目（今天及之後的節目）
+      const futurePrograms = allPrograms.filter(p => p.airDate >= today);
+      
+      // 更新統計卡片
+      document.getElementById('totalPrograms').textContent = allPrograms.length;
+      document.getElementById('archivedPrograms').textContent = archivedPrograms.length;
+      document.getElementById('pastPrograms').textContent = pastPrograms.length;
+      document.getElementById('futurePrograms').textContent = futurePrograms.length;
+    }
+    
+    // 顯示歸檔節目
+    function displayArchivedPrograms() {
+      const container = document.getElementById('archivedProgramsList');
+      if (!container) return;
+      
+      if (archivedPrograms.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">目前沒有歸檔節目</p>';
+        return;
+      }
+      
+      // 按日期排序
+      const sortedArchives = archivedPrograms.sort((a, b) => new Date(b.airDate) - new Date(a.airDate));
+      
+      container.innerHTML = sortedArchives.map(program => `
+        <tr>
+          <td>
+            <img src="${program.thumbnail || 'https://picsum.photos/80/60'}" alt="${program.title}" class="program-thumbnail">
+          </td>
+          <td>
+            <div class="program-title">${program.title}</div>
+            <div class="program-meta">${program.category} | ${program.status}</div>
+          </td>
+          <td>${program.airDate}</td>
+          <td>${program.airTime}</td>
+          <td>${program.duration}分鐘</td>
+          <td>
+            <div class="program-actions">
+              <button class="btn btn-small btn-success" onclick="restoreProgram('${program.airDate}-${program.airTime}')">還原</button>
+              <button class="btn btn-small btn-danger" onclick="deleteArchive('${program.airDate}-${program.airTime}')">永久刪除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // 歸檔節目
+    function archiveProgram(slotKey) {
+      const program = allPrograms.find(p => `${p.airDate}-${p.airTime}` === slotKey);
+      if (program) {
+        // 添加到歸檔列表
+        archivedPrograms.push({
+          ...program,
+          archivedAt: new Date().toISOString(),
+          archivedBy: currentUser.email
+        });
+        
+        // 從節目列表中移除
+        allPrograms = allPrograms.filter(p => `${p.airDate}-${p.airTime}` !== slotKey);
+        
+        // 儲存資料
+        localStorage.setItem(DATA_KEYS.PROGRAMS, JSON.stringify(allPrograms));
+        saveArchivedPrograms();
+        
+        updateStats();
+        displayArchivedPrograms();
+        showStatus('節目已歸檔', 'success');
+      }
+    }
+    
+    // 還原節目
+    function restoreProgram(slotKey) {
+      const program = archivedPrograms.find(p => `${p.airDate}-${p.airTime}` === slotKey);
+      if (program) {
+        // 從歸檔列表中移除
+        archivedPrograms = archivedPrograms.filter(p => `${p.airDate}-${p.airTime}` !== slotKey);
+        
+        // 添加回節目列表
+        allPrograms.push(program);
+        
+        // 儲存資料
+        localStorage.setItem(DATA_KEYS.PROGRAMS, JSON.stringify(allPrograms));
+        saveArchivedPrograms();
+        
+        updateStats();
+        displayArchivedPrograms();
+        showStatus('節目已還原', 'success');
+      }
+    }
+    
+    // 永久刪除歸檔
+    function deleteArchive(slotKey) {
+      if (confirm('確定要永久刪除這個歸檔節目嗎？此操作無法復原。')) {
+        archivedPrograms = archivedPrograms.filter(p => `${p.airDate}-${p.airTime}` !== slotKey);
+        saveArchivedPrograms();
+        updateStats();
+        displayArchivedPrograms();
+        showStatus('歸檔已永久刪除', 'success');
+      }
+    }
+    
+    // 監聽其他系統的資料更新
+    window.addEventListener('programsDataUpdated', function(event) {
+      console.log('歸檔管理：收到節目資料更新通知');
+      loadAllPrograms();
+    });
+    
+    // 登入驗證檢查
+    function checkAuth() {
+      const user = sessionStorage.getItem('adminUser');
+      const loginTime = sessionStorage.getItem('loginTime');
+      
+      if (!user || !loginTime) {
+        // 未登入，跳轉到登入頁面
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      // 檢查登入是否超過 8 小時
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff >= 8) {
+        // 登入已過期，清除 session 並跳轉到登入頁面
+        sessionStorage.removeItem('adminUser');
+        sessionStorage.removeItem('loginTime');
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      
+      return JSON.parse(user);
+    }
+    
+    // 登出功能
+    function logout() {
+      sessionStorage.removeItem('adminUser');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'admin-login.html';
+    }
+    
+    // 更新用戶資訊顯示
+    function updateUserInfo() {
+      const userInfo = document.getElementById('userInfo');
+      const userDetails = document.getElementById('userDetails');
+      
+      if (currentUser) {
+        userInfo.style.display = 'flex';
+        userDetails.textContent = `歡迎，${currentUser.name} (${currentUser.role})`;
+      }
+    }
+    
+    // 全域變數
+    let currentUser = null;
     let archivedPrograms = [];
     let filteredPrograms = [];
     let currentPage = 1;
@@ -255,6 +498,14 @@
     
     // 初始化
     document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶登入狀態
+      currentUser = checkAuth();
+      if (!currentUser) return;
+      
+      // 更新用戶資訊顯示
+      updateUserInfo();
+      
+      // 載入歸檔節目
       loadArchivedPrograms();
     });
     
