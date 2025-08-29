@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
           content_type: 'scheduleItem',
           'fields.airDate[gte]': today,
           'fields.airDate[lt]': new Date(taiwanTime.getFullYear(), taiwanTime.getMonth() + 1, 1).toISOString().split('T')[0],
-          order: 'fields.airDate,fields.airTime',
+          order: 'fields.airDate',
           include: 2
         });
         
@@ -1051,3 +1051,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 SS
+
