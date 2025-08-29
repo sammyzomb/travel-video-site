@@ -11,7 +11,7 @@ function escapeHtml(s='') {
 // 初始化 Contentful client
 const contentfulClient = contentful.createClient({
   space: 'os5wf90ljenp',
-        accessToken: 'YOUR_DELIVERY_TOKEN'
+  accessToken: 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0'
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1050,4 +1050,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-
+SS
