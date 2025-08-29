@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>創建最高管理者 - 旅遊影片管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        .password-requirements {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .password-requirements h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .requirement.valid {
+            color: #28a745;
+        }
+
+        .requirement.invalid {
+            color: #dc3545;
+        }
+
+        .requirement i {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-box p {
+            color: #424242;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👑 創建最高管理者</h1>
+            <p>設定系統的最高管理員帳號</p>
+        </div>
+
+        <div class="info-box">
+            <h4>📋 系統說明</h4>
+            <p>此系統使用硬編碼方式管理最高管理者，資料將儲存在瀏覽器的 sessionStorage 中。創建後即可使用指定帳號登入系統。</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="superAdminForm">
+            <div class="form-group">
+                <label for="email">電子郵件 *</label>
+                <input type="email" id="email" name="email" value="sammyzomb@gmail.com" readonly>
+                <small style="color: #666; font-size: 0.8rem;">此為預設最高管理者帳號</small>
+            </div>
+
+            <div class="form-group">
+                <label for="name">姓名 *</label>
+                <input type="text" id="name" name="name" required placeholder="請輸入您的姓名">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密碼 *</label>
+                <div class="password-container">
+                    <input type="password" id="password" name="password" value="Ddpeacemisb@" readonly>
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        👁️
+                    </button>
+                </div>
+                <small style="color: #666; font-size: 0.8rem;">此為預設最高管理者密碼</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">確認密碼 *</label>
+                <div class="password-container">
+                    <input type="password" id="confirmPassword" name="confirmPassword" value="Ddpeacemisb@" readonly>
+                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                        👁️
+                    </button>
+                </div>
+                <div id="password-match" style="margin-top: 5px; font-size: 13px; color: #28a745;">✅ 密碼已預設</div>
+            </div>
+
+            <div class="form-group">
+                <label for="securityCode">安全代碼 *</label>
+                <input type="password" id="securityCode" name="securityCode" required placeholder="請輸入安全代碼">
+                <small style="color: #666; font-size: 0.8rem;">安全代碼：SUPER_ADMIN_2024</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                創建最高管理者
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="admin-login.html">← 返回登入頁面</a>
+        </div>
+    </div>
+
+    <script>
+        // 密碼可見性切換
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+
+        // 顯示提示訊息
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        // 檢查是否已經存在最高管理者
+        function checkExistingSuperAdmin() {
+            const existingSuperAdmin = sessionStorage.getItem('superAdmin');
+            if (existingSuperAdmin) {
+                showAlert('最高管理者已存在！如需重新創建，請先清除瀏覽器資料。', 'error');
+                document.getElementById('submitBtn').disabled = true;
+                return true;
+            }
+            return false;
+        }
+
+        // 事件監聽器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否已存在最高管理者
+            if (checkExistingSuperAdmin()) {
+                return;
+            }
+
+            const form = document.getElementById('superAdminForm');
+
+            // 表單提交
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const email = formData.get('email');
+                const name = formData.get('name');
+                const password = formData.get('password');
+                const securityCode = formData.get('securityCode');
+
+                if (securityCode !== 'SUPER_ADMIN_2024') {
+                    showAlert('安全代碼錯誤！', 'error');
+                    return;
+                }
+
+                try {
+                    // 創建硬編碼的最高管理者
+                    const superAdmin = {
+                        id: 'super-admin-001',
+                        email: 'sammyzomb@gmail.com',
+                        name: name,
+                        password: 'Ddpeacemisb@',
+                        role: 'super_admin',
+                        permissions: ['all'],
+                        status: 'active',
+                        createdAt: new Date().toISOString(),
+                        lastLogin: null
+                    };
+
+                    // 儲存到 sessionStorage
+                    sessionStorage.setItem('superAdmin', JSON.stringify(superAdmin));
+                    
+                    showAlert('最高管理者創建成功！', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'admin-login.html';
+                    }, 2000);
+                } catch (error) {
+                    console.error('創建最高管理者時發生錯誤：', error);
+                    showAlert('創建過程中發生錯誤，請稍後再試。', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

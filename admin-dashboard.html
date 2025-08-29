@@ -226,34 +226,64 @@
     
     <!-- 管理模組卡片 -->
     <div class="dashboard-grid">
-      <!-- 月曆節目管理 -->
-      <div class="module-card" onclick="navigateToModule('admin-calendar.html')">
+      <!-- 統一節目管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-calendar-unified.html')">
         <span class="module-icon">📅</span>
-        <h2 class="module-title">月曆節目管理</h2>
+        <h2 class="module-title">統一節目管理</h2>
         <p class="module-description">
-          以月曆形式管理節目排程，支援拖拽編輯、範本套用和批量操作。
-          適合視覺化節目安排和時間管理。
+          整合月曆、週曆、日曆三種視圖的統一管理系統，類似 Google Calendar。
+          支援多視圖切換、節目編輯和統一資料管理。
         </p>
         <div class="module-stats">
           <span class="status-indicator status-online"></span>
           系統狀態：正常運作
         </div>
-        <button class="enter-btn">進入月曆管理</button>
+        <button class="enter-btn">進入統一管理</button>
       </div>
       
-      <!-- 節目表管理 -->
-      <div class="module-card" onclick="navigateToModule('admin-schedule.html')">
-        <span class="module-icon">🎯</span>
-        <h2 class="module-title">節目表管理</h2>
+      <!-- 節目範本管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-templates.html')">
+        <span class="module-icon">📋</span>
+        <h2 class="module-title">節目範本管理</h2>
         <p class="module-description">
-          傳統列表式節目管理，支援批量添加、CSV匯入匯出和範本功能。
-          適合大量節目資料的快速處理。
+          管理節目範本庫，支援範本創建、編輯和快速套用。
+          適合建立標準化節目格式和批量節目安排。
         </p>
         <div class="module-stats">
           <span class="status-indicator status-online"></span>
           系統狀態：正常運作
         </div>
-        <button class="enter-btn">進入節目表管理</button>
+        <button class="enter-btn">進入範本管理</button>
+      </div>
+      
+      <!-- 已上架節目管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-published-programs.html')">
+        <span class="module-icon">📺</span>
+        <h2 class="module-title">已上架節目管理</h2>
+        <p class="module-description">
+          查看和管理所有已上架到 Contentful 的節目。
+          支援篩選、統計和下架操作。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">進入上架管理</button>
+      </div>
+      
+      <!-- Contentful 同步狀態 -->
+      <div class="module-card" onclick="navigateToModule('contentful-sync-status.html')">
+        <span class="module-icon">🔄</span>
+        <h2 class="module-title">Contentful 同步狀態</h2>
+        <p class="module-description">
+          監控和管理節目同步到 Contentful 的狀態。
+          支援批量同步、進度追蹤和錯誤診斷。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">查看同步狀態</button>
       </div>
       
       <!-- 歸檔管理 -->
@@ -270,16 +300,32 @@
         </div>
         <button class="enter-btn">進入歸檔管理</button>
       </div>
+      
+      <!-- 用戶管理 -->
+      <div class="module-card" onclick="navigateToModule('admin-users-simple.html')">
+        <span class="module-icon">👥</span>
+        <h2 class="module-title">用戶管理</h2>
+        <p class="module-description">
+          管理系統用戶帳號、權限設定和活動記錄。
+          支援用戶創建、編輯、刪除和權限控制。
+        </p>
+        <div class="module-stats">
+          <span class="status-indicator status-online"></span>
+          系統狀態：正常運作
+        </div>
+        <button class="enter-btn">進入用戶管理</button>
+      </div>
     </div>
     
     <!-- 快速操作 -->
     <div class="quick-actions">
       <h3>⚡ 快速操作</h3>
       <div class="action-buttons">
-        <a href="admin-test.html" class="action-btn">🔧 系統測試</a>
+        <a href="debug-admin-system.html" class="action-btn">🔧 系統調試</a>
         <a href="admin-login.html" class="action-btn">🔑 重新登入</a>
         <button class="action-btn" onclick="clearCache()">🗑️ 清除快取</button>
         <button class="action-btn" onclick="showSystemInfo()">ℹ️ 系統資訊</button>
+        <a href="create-admin-simple.html" class="action-btn" id="createAdminBtn" style="display: none;">👤 創建管理員</a>
       </div>
     </div>
   </div>
@@ -323,14 +369,21 @@
     function updateUserInfo() {
       const userInfo = document.getElementById('userInfo');
       const userDetails = document.getElementById('userDetails');
+      const createAdminBtn = document.getElementById('createAdminBtn');
       
       if (currentUser) {
         userInfo.style.display = 'flex';
         userDetails.innerHTML = `
           <span class="status-indicator status-online"></span>
           歡迎，${currentUser.name} (${currentUser.role}) | 
-          登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
+          登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()} | 
+          <span style="color: #2b71d2; font-weight: 600;">版本：v1.2.0 (2025/08/28 18:30:00)</span>
         `;
+        
+        // 只有最高管理者才能看到創建管理員按鈕
+        if (currentUser.role === 'super_admin') {
+          createAdminBtn.style.display = 'inline-block';
+        }
       }
     }
     
@@ -363,6 +416,9 @@
 - 用戶角色：${currentUser.role}
 - 登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
 - 系統時間：${new Date().toLocaleString()}
+- 當前版本：v1.2.0
+- 版本發布：2025/08/28 18:30:00
+- 最後更新：2025/08/28
       `;
       alert(info);
     }

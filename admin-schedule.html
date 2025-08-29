@@ -319,7 +319,7 @@
       
       if (currentUser) {
         userInfo.style.display = 'flex';
-        userDetails.textContent = `歡迎，${currentUser.name} (${currentUser.role})`;
+        userDetails.innerHTML = `歡迎，${currentUser.name} (${currentUser.role}) | <span style="color: #2b71d2; font-weight: 600;">v1.2.0 (2025/08/28 10:35:00)</span>`;
       }
     }
     
