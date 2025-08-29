@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶管理 - 旅遊影片管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2196f3;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+        }
+
+        .user-details {
+            color: #1565c0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+            border: 2px solid transparent;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px 20px;
+            border-radius: 15px;
+            text-align: center;
+            border-left: 5px solid #2b71d2;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2b71d2 0%, #1e5bb8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            color: #495057;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 18px 20px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .users-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ip-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #495057;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .ip-unknown {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px dashed #dee2e6;
+        }
+
+        .users-table tr:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .users-table tr {
+            transition: all 0.3s ease;
+        }
+
+        .role-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .role-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .role-super-admin {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+        }
+
+        .role-editor {
+            background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+            color: #333;
+            border-color: #ffc107;
+        }
+
+        .role-viewer {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border-color: #6c757d;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .status-active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+        }
+
+        .status-inactive {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #2b71d2 0%, #1e5bb8 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(43, 113, 210, 0.3);
+            border: 2px solid transparent;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #1e5bb8 0%, #154a8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(43, 113, 210, 0.4);
+        }
+
+        .action-btn.delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .action-btn.delete:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+            border: 2px solid transparent;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #6c757d;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+            margin: 20px 0;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .create-admin-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            border: 2px solid transparent;
+        }
+
+        .create-admin-btn:hover {
+            background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px 15px;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .users-table {
+                font-size: 0.9rem;
+            }
+
+            .users-table th,
+            .users-table td {
+                padding: 12px 15px;
+            }
+
+            .role-badge {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+
+            .action-btn {
+                padding: 8px 14px;
+                font-size: 0.75rem;
+                margin-right: 5px;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .back-btn {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .users-table {
+                font-size: 0.8rem;
+            }
+
+            .users-table th,
+            .users-table td {
+                padding: 10px 12px;
+            }
+
+            .stat-card {
+                padding: 15px 10px;
+            }
+
+            .stat-number {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 用戶管理</h1>
+            <p>管理系統中的所有用戶帳號</p>
+        </div>
+
+        <div class="user-info">
+            <div class="user-details" id="userDetails">
+                載入中...
+            </div>
+            <button class="logout-btn" onclick="logout()">登出系統</button>
+        </div>
+
+        <div class="content">
+            <button class="back-btn" onclick="window.location.href='admin-dashboard.html'">
+                ← 返回主控台
+            </button>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">總用戶數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeUsers">0</div>
+                    <div class="stat-label">活躍用戶</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="superAdmins">0</div>
+                    <div class="stat-label">最高管理者</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="regularAdmins">0</div>
+                    <div class="stat-label">一般管理員</div>
+                </div>
+            </div>
+
+            <div id="usersTableContainer">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>電子郵件</th>
+                            <th>角色</th>
+                            <th>狀態</th>
+                            <th>創建時間</th>
+                            <th>最後登入</th>
+                            <th>最後登入 IP</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- 用戶資料將在這裡動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>目前沒有其他用戶</h3>
+                <p>您可以使用「創建管理員」功能來添加新的管理員帳號</p>
+                <button class="create-admin-btn" onclick="window.location.href='create-admin-simple.html'">
+                    👤 創建管理員
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        function checkAuth() {
+            const user = sessionStorage.getItem('adminUser');
+            const loginTime = sessionStorage.getItem('loginTime');
+            
+            if (!user || !loginTime) {
+                window.location.href = 'admin-login.html';
+                return null;
+            }
+            
+            const loginDate = new Date(loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+            
+            if (hoursDiff >= 8) {
+                sessionStorage.removeItem('adminUser');
+                sessionStorage.removeItem('loginTime');
+                window.location.href = 'admin-login.html';
+                return null;
+            }
+            
+            return JSON.parse(user);
+        }
+
+        // 登出功能
+        function logout() {
+            sessionStorage.removeItem('adminUser');
+            sessionStorage.removeItem('loginTime');
+            window.location.href = 'admin-login.html';
+        }
+
+        // 更新用戶資訊顯示
+        function updateUserInfo() {
+            const userDetails = document.getElementById('userDetails');
+            if (currentUser) {
+                userDetails.innerHTML = `
+                    <span style="color: #2b71d2; font-weight: 600;">歡迎，${currentUser.name} (${currentUser.role})</span> | 
+                    登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
+                `;
+            }
+        }
+
+        // 載入用戶資料
+        function loadUsers() {
+            const users = [];
+            
+            // 添加最高管理者
+            const superAdmin = sessionStorage.getItem('superAdmin');
+            if (superAdmin) {
+                users.push(JSON.parse(superAdmin));
+            }
+            
+            // 添加一般管理員
+            const admins = JSON.parse(sessionStorage.getItem('admins') || '[]');
+            users.push(...admins);
+            
+            return users;
+        }
+
+        // 更新統計資料
+        function updateStats(users) {
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('activeUsers').textContent = users.filter(u => u.status === 'active').length;
+            document.getElementById('superAdmins').textContent = users.filter(u => u.role === 'super_admin').length;
+            document.getElementById('regularAdmins').textContent = users.filter(u => u.role !== 'super_admin').length;
+        }
+
+        // 渲染用戶表格
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            const container = document.getElementById('usersTableContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (users.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="role-badge role-${user.role.replace('_', '-')}">
+                            ${getRoleDisplayName(user.role)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${user.status || 'active'}">
+                            ${user.status === 'active' ? '活躍' : '非活躍'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.createdAt).toLocaleString()}</td>
+                    <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '從未登入'}</td>
+                    <td>
+                        ${user.lastLoginIP ? 
+                            `<span class="ip-address">${user.lastLoginIP}</span>` : 
+                            '<span class="ip-unknown">未知</span>'
+                        }
+                    </td>
+                    <td>
+                        ${user.role !== 'super_admin' ? `
+                            <button class="action-btn" onclick="editUser('${user.id}')">編輯</button>
+                            <button class="action-btn delete" onclick="deleteUser('${user.id}')">刪除</button>
+                        ` : '<span style="color: #666; font-size: 0.8rem;">最高管理者</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 獲取角色顯示名稱
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                'super_admin': '最高管理者',
+                'admin': '管理員',
+                'editor': '編輯者',
+                'viewer': '檢視者'
+            };
+            return roleNames[role] || role;
+        }
+
+        // 編輯用戶
+        function editUser(userId) {
+            alert('編輯功能開發中...');
+        }
+
+        // 刪除用戶
+        function deleteUser(userId) {
+            if (confirm('確定要刪除此用戶嗎？此操作無法復原。')) {
+                const admins = JSON.parse(sessionStorage.getItem('admins') || '[]');
+                const updatedAdmins = admins.filter(admin => admin.id !== userId);
+                sessionStorage.setItem('admins', JSON.stringify(updatedAdmins));
+                
+                // 重新載入頁面
+                location.reload();
+            }
+        }
+
+        // 全域變數
+        let currentUser = null;
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = checkAuth();
+            if (!currentUser) return;
+            
+            updateUserInfo();
+            
+            const users = loadUsers();
+            updateStats(users);
+            renderUsersTable(users);
+        });
+    </script>
+</body>
+</html>

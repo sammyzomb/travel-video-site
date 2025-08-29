@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contentful 同步狀態</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <script src="contentful-sync-fixed.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header h1 { color: #2b71d2; margin-bottom: 10px; }
+    
+    .status-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .status-card h3 { color: #333; margin-bottom: 15px; }
+    
+    .btn { background: #2b71d2; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    .btn:hover { background: #1e5bb8; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    
+    .progress-bar { width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .progress-fill { height: 100%; background: #28a745; transition: width 0.3s ease; }
+    
+    .sync-results { max-height: 400px; overflow-y: auto; }
+    .sync-item { padding: 10px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 5px; }
+    .sync-item.success { background: #d4edda; border-color: #c3e6cb; }
+    .sync-item.error { background: #f8d7da; border-color: #f5c6cb; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .stat-number { font-size: 2rem; font-weight: bold; color: #2b71d2; }
+    .stat-label { color: #666; margin-top: 5px; }
+    
+    .connection-status { display: inline-block; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
+    .connection-status.connected { background: #d4edda; color: #155724; }
+    .connection-status.disconnected { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔄 Contentful 同步狀態</h1>
+      <p>監控和管理節目同步到 Contentful 的狀態</p>
+    </div>
+    
+    <div class="status-card">
+      <h3>📡 連接狀態</h3>
+      <div id="connectionStatus">
+        <span class="connection-status disconnected">檢查中...</span>
+      </div>
+      <button class="btn" onclick="testConnection()">測試連接</button>
+    </div>
+    
+    <div class="status-card">
+      <h3>📊 同步統計</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalPrograms">0</div>
+          <div class="stat-label">本地節目總數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="syncedPrograms">0</div>
+          <div class="stat-label">已同步節目</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pendingPrograms">0</div>
+          <div class="stat-label">待同步節目</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="failedPrograms">0</div>
+          <div class="stat-label">同步失敗</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status-card">
+      <h3>🔄 同步操作</h3>
+      <button class="btn btn-success" onclick="syncAllPrograms()">同步所有節目</button>
+      <button class="btn btn-warning" onclick="checkSyncStatus()">檢查同步狀態</button>
+      <button class="btn" onclick="viewLocalPrograms()">查看本地節目</button>
+      <button class="btn" onclick="viewContentfulPrograms()">查看 Contentful 節目</button>
+    </div>
+    
+    <div class="status-card">
+      <h3>📈 同步進度</h3>
+      <div class="progress-bar">
+        <div class="progress-fill" id="syncProgress" style="width: 0%"></div>
+      </div>
+      <div id="syncStatus">準備就緒</div>
+    </div>
+    
+    <div class="status-card">
+      <h3>📋 同步結果</h3>
+      <div class="sync-results" id="syncResults">
+        <p style="color: #666; text-align: center;">尚未執行同步操作</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let syncInProgress = false;
+    
+    // 頁面載入時初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      testConnection();
+      updateStats();
+    });
+    
+    // 測試 Contentful 連接
+    async function testConnection() {
+      const statusElement = document.getElementById('connectionStatus');
+      statusElement.innerHTML = '<span class="connection-status disconnected">測試中...</span>';
+      
+      try {
+        const result = await window.contentfulSyncFixed.testConnection();
+        if (result.success) {
+          statusElement.innerHTML = '<span class="connection-status connected">✅ 已連接</span>';
+        } else {
+          statusElement.innerHTML = '<span class="connection-status disconnected">❌ 連接失敗</span>';
+        }
+      } catch (error) {
+        statusElement.innerHTML = '<span class="connection-status disconnected">❌ 連接錯誤</span>';
+        console.error('連接測試失敗:', error);
+      }
+    }
+    
+    // 更新統計資訊
+    function updateStats() {
+      const calendarEvents = JSON.parse(localStorage.getItem('calendar_events') || '{}');
+      const publishedPrograms = JSON.parse(localStorage.getItem('published_programs') || '[]');
+      
+      let totalPrograms = 0;
+      Object.keys(calendarEvents).forEach(date => {
+        totalPrograms += calendarEvents[date].length;
+      });
+      
+      const syncedPrograms = publishedPrograms.length;
+      const pendingPrograms = totalPrograms - syncedPrograms;
+      
+      document.getElementById('totalPrograms').textContent = totalPrograms;
+      document.getElementById('syncedPrograms').textContent = syncedPrograms;
+      document.getElementById('pendingPrograms').textContent = Math.max(0, pendingPrograms);
+      document.getElementById('failedPrograms').textContent = '0'; // 需要從同步結果中獲取
+    }
+    
+    // 同步所有節目
+    async function syncAllPrograms() {
+      if (syncInProgress) {
+        alert('同步正在進行中，請稍候...');
+        return;
+      }
+      
+      syncInProgress = true;
+      const progressBar = document.getElementById('syncProgress');
+      const statusElement = document.getElementById('syncStatus');
+      const resultsElement = document.getElementById('syncResults');
+      
+      try {
+        // 檢查連接
+        const connectionTest = await window.contentfulSyncFixed.testConnection();
+        if (!connectionTest.success) {
+          throw new Error('Contentful 連接失敗');
+        }
+        
+        // 獲取所有節目
+        const calendarEvents = JSON.parse(localStorage.getItem('calendar_events') || '{}');
+        const allPrograms = [];
+        
+        Object.keys(calendarEvents).forEach(date => {
+          calendarEvents[date].forEach(event => {
+            allPrograms.push({
+              title: event.title,
+              airDate: date,
+              airTime: event.time,
+              duration: event.duration,
+              category: event.category,
+              description: event.description || '',
+              status: event.status,
+              videoType: event.videoType || '',
+              youtubeId: event.youtubeId || '',
+              mp4File: event.mp4File || ''
+            });
+          });
+        });
+        
+        if (allPrograms.length === 0) {
+          statusElement.textContent = '沒有節目需要同步';
+          return;
+        }
+        
+        statusElement.textContent = `開始同步 ${allPrograms.length} 個節目...`;
+        resultsElement.innerHTML = '';
+        
+        // 執行同步
+        const results = await window.contentfulSyncFixed.syncAllPrograms();
+        
+        // 顯示結果
+        displaySyncResults(results);
+        
+        // 更新統計
+        updateStats();
+        
+        statusElement.textContent = '同步完成';
+        progressBar.style.width = '100%';
+        
+      } catch (error) {
+        console.error('同步失敗:', error);
+        statusElement.textContent = '同步失敗: ' + error.message;
+        resultsElement.innerHTML = `<div class="sync-item error">❌ 同步失敗: ${error.message}</div>`;
+      } finally {
+        syncInProgress = false;
+      }
+    }
+    
+    // 顯示同步結果
+    function displaySyncResults(results) {
+      const resultsElement = document.getElementById('syncResults');
+      resultsElement.innerHTML = '';
+      
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      resultsElement.innerHTML = `
+        <div style="margin-bottom: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px;">
+          <strong>同步摘要:</strong> ${successCount} 成功, ${failCount} 失敗
+        </div>
+      `;
+      
+      results.forEach((result, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `sync-item ${result.success ? 'success' : 'error'}`;
+        
+        if (result.success) {
+          itemDiv.innerHTML = `
+            ✅ <strong>${result.program.title}</strong> (${result.program.airDate} ${result.program.airTime})
+            <br><small>同步成功</small>
+          `;
+        } else {
+          itemDiv.innerHTML = `
+            ❌ <strong>${result.program.title}</strong> (${result.program.airDate} ${result.program.airTime})
+            <br><small>錯誤: ${result.error}</small>
+          `;
+        }
+        
+        resultsElement.appendChild(itemDiv);
+      });
+    }
+    
+    // 檢查同步狀態
+    function checkSyncStatus() {
+      updateStats();
+      alert('同步狀態已更新');
+    }
+    
+    // 查看本地節目
+    function viewLocalPrograms() {
+      const calendarEvents = JSON.parse(localStorage.getItem('calendar_events') || '{}');
+      const allPrograms = [];
+      
+      Object.keys(calendarEvents).forEach(date => {
+        calendarEvents[date].forEach(event => {
+          allPrograms.push({
+            title: event.title,
+            date: date,
+            time: event.time,
+            category: event.category,
+            status: event.status
+          });
+        });
+      });
+      
+      console.log('本地節目:', allPrograms);
+      alert(`本地共有 ${allPrograms.length} 個節目\n請查看瀏覽器控制台獲取詳細資訊`);
+    }
+    
+    // 查看 Contentful 節目
+    async function viewContentfulPrograms() {
+      try {
+        // 這裡需要實現從 Contentful 獲取節目的功能
+        alert('此功能需要進一步實現 Contentful 讀取功能');
+      } catch (error) {
+        console.error('獲取 Contentful 節目失敗:', error);
+        alert('獲取 Contentful 節目失敗: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

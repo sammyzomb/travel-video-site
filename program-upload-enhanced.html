@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>節目上傳 - 旅遊影片管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2196f3;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+        }
+
+        .user-details {
+            color: #1565c0;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .upload-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .upload-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2b71d2;
+            box-shadow: 0 0 0 3px rgba(43, 113, 210, 0.1);
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #2b71d2;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: #1e5bb8;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #2b71d2;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #495057;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2b71d2 0%, #1e5bb8 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(43, 113, 210, 0.3);
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(43, 113, 210, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .preview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .preview-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .preview-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .preview-value {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .upload-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .container {
+                margin: 10px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .preview-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📺 節目上傳</h1>
+            <p>上傳和管理旅遊節目內容</p>
+        </div>
+
+        <div class="user-info">
+            <div class="user-details" id="userDetails">
+                載入中...
+            </div>
+            <button class="logout-btn" onclick="logout()">登出系統</button>
+        </div>
+
+        <div class="content">
+            <button class="back-btn" onclick="window.location.href='admin-dashboard.html'">
+                ← 返回主控台
+            </button>
+
+            <div class="upload-section">
+                <!-- 單一節目上傳 -->
+                <div class="upload-card">
+                    <h3>🎬 單一節目上傳</h3>
+                    
+                    <form id="singleUploadForm">
+                        <div class="form-group">
+                            <label>節目標題 *</label>
+                            <input type="text" id="title" placeholder="例如：早安世界 - 日本東京晨間漫步" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>節目分類 *</label>
+                            <select id="category" required>
+                                <option value="">-- 選擇分類 --</option>
+                                <option value="亞洲旅遊">亞洲旅遊</option>
+                                <option value="歐洲旅遊">歐洲旅遊</option>
+                                <option value="美洲旅遊">美洲旅遊</option>
+                                <option value="美食旅遊">美食旅遊</option>
+                                <option value="極地旅遊">極地旅遊</option>
+                                <option value="自然旅遊">自然旅遊</option>
+                                <option value="文化旅遊">文化旅遊</option>
+                                <option value="冒險旅遊">冒險旅遊</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>節目時長（分鐘）*</label>
+                            <input type="number" id="duration" min="15" max="180" value="60" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>節目描述</label>
+                            <textarea id="description" placeholder="簡短描述節目內容..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>影片類型 *</label>
+                            <select id="videoType" onchange="toggleVideoInput()">
+                                <option value="YouTube">YouTube</option>
+                                <option value="MP4">MP4 檔案</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="youtubeGroup">
+                            <label>YouTube ID</label>
+                            <input type="text" id="youtubeId" placeholder="例如：dQw4w9WgXcQ">
+                        </div>
+
+                        <div class="form-group" id="mp4Group" style="display: none;">
+                            <label>MP4 影片連結</label>
+                            <input type="url" id="mp4Url" placeholder="例如：https://your-domain.com/videos/travel-video.mp4">
+                        </div>
+
+                        <div class="form-group">
+                            <label>播出日期 *</label>
+                            <input type="date" id="airDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>播出時間 *</label>
+                            <input type="time" id="airTime" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>節目狀態</label>
+                            <select id="status">
+                                <option value="首播">首播</option>
+                                <option value="重播">重播</option>
+                                <option value="特別節目">特別節目</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">💾 上傳節目</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 重置</button>
+                    </form>
+                </div>
+
+                <!-- 批量上傳 -->
+                <div class="upload-card">
+                    <h3>📁 批量上傳</h3>
+                    
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">拖拽檔案到這裡或點擊選擇</div>
+                        <div class="upload-hint">支援 CSV、Excel 檔案格式</div>
+                        <input type="file" id="batchFile" accept=".csv,.xlsx,.xls" style="display: none;">
+                    </div>
+
+                    <div id="batchProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div id="progressText">準備中...</div>
+                    </div>
+
+                    <button type="button" class="btn btn-success" onclick="downloadTemplate()" style="margin-top: 15px;">
+                        📥 下載範本
+                    </button>
+                </div>
+            </div>
+
+            <!-- 預覽區域 -->
+            <div class="preview-section">
+                <h3>👀 上傳預覽</h3>
+                <div id="previewContainer">
+                    <div class="status-message status-info">
+                        請填寫節目資訊以查看預覽
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        function checkAuth() {
+            const user = sessionStorage.getItem('adminUser');
+            const loginTime = sessionStorage.getItem('loginTime');
+            
+            if (!user || !loginTime) {
+                window.location.href = 'admin-login.html';
+                return null;
+            }
+            
+            const loginDate = new Date(loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+            
+            if (hoursDiff >= 8) {
+                sessionStorage.removeItem('adminUser');
+                sessionStorage.removeItem('loginTime');
+                window.location.href = 'admin-login.html';
+                return null;
+            }
+            
+            return JSON.parse(user);
+        }
+
+        // 登出功能
+        function logout() {
+            sessionStorage.removeItem('adminUser');
+            sessionStorage.removeItem('loginTime');
+            window.location.href = 'admin-login.html';
+        }
+
+        // 更新用戶資訊顯示
+        function updateUserInfo() {
+            const userDetails = document.getElementById('userDetails');
+            if (currentUser) {
+                userDetails.innerHTML = `
+                    <span style="color: #2b71d2; font-weight: 600;">歡迎，${currentUser.name} (${currentUser.role})</span> | 
+                    登入時間：${new Date(sessionStorage.getItem('loginTime')).toLocaleString()}
+                `;
+            }
+        }
+
+        // 切換影片輸入類型
+        function toggleVideoInput() {
+            const videoType = document.getElementById('videoType').value;
+            const youtubeGroup = document.getElementById('youtubeGroup');
+            const mp4Group = document.getElementById('mp4Group');
+            
+            if (videoType === 'YouTube') {
+                youtubeGroup.style.display = 'block';
+                mp4Group.style.display = 'none';
+            } else {
+                youtubeGroup.style.display = 'none';
+                mp4Group.style.display = 'block';
+            }
+            
+            updatePreview();
+        }
+
+        // 更新預覽
+        function updatePreview() {
+            const title = document.getElementById('title').value;
+            const category = document.getElementById('category').value;
+            const duration = document.getElementById('duration').value;
+            const description = document.getElementById('description').value;
+            const videoType = document.getElementById('videoType').value;
+            const airDate = document.getElementById('airDate').value;
+            const airTime = document.getElementById('airTime').value;
+            const status = document.getElementById('status').value;
+
+            const previewContainer = document.getElementById('previewContainer');
+            
+            if (!title && !category && !duration) {
+                previewContainer.innerHTML = `
+                    <div class="status-message status-info">
+                        請填寫節目資訊以查看預覽
+                    </div>
+                `;
+                return;
+            }
+
+            previewContainer.innerHTML = `
+                <div class="preview-card">
+                    <div class="preview-title">${title || '未設定標題'}</div>
+                    <div class="preview-details">
+                        <div class="preview-item">
+                            <div class="preview-label">分類</div>
+                            <div class="preview-value">${category || '未選擇'}</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">時長</div>
+                            <div class="preview-value">${duration || '0'} 分鐘</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">播出日期</div>
+                            <div class="preview-value">${airDate || '未設定'}</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">播出時間</div>
+                            <div class="preview-value">${airTime || '未設定'}</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">影片類型</div>
+                            <div class="preview-value">${videoType}</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">狀態</div>
+                            <div class="preview-value">${status}</div>
+                        </div>
+                    </div>
+                    ${description ? `
+                        <div class="preview-item">
+                            <div class="preview-label">描述</div>
+                            <div class="preview-value">${description}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 重置表單
+        function resetForm() {
+            document.getElementById('singleUploadForm').reset();
+            updatePreview();
+        }
+
+        // 下載範本
+        function downloadTemplate() {
+            const csvContent = "節目標題,節目分類,節目時長,節目描述,影片類型,YouTube ID,MP4 連結,播出日期,播出時間,節目狀態\n早安世界 - 日本東京晨間漫步,亞洲旅遊,60,探索東京的早晨生活,YouTube,dQw4w9WgXcQ,,2025-08-29,08:00,首播";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '節目上傳範本.csv';
+            link.click();
+        }
+
+        // 檔案上傳處理
+        function setupFileUpload() {
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const batchFile = document.getElementById('batchFile');
+
+            fileUploadArea.addEventListener('click', () => {
+                batchFile.click();
+            });
+
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleBatchUpload(files[0]);
+                }
+            });
+
+            batchFile.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleBatchUpload(e.target.files[0]);
+                }
+            });
+        }
+
+        // 處理批量上傳
+        function handleBatchUpload(file) {
+            const progressBar = document.getElementById('batchProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressBar.style.display = 'block';
+            
+            // 模擬上傳進度
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `上傳中... ${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = '上傳完成！';
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                        progressFill.style.width = '0%';
+                    }, 2000);
+                }
+            }, 200);
+        }
+
+        // 單一節目上傳處理
+        document.getElementById('singleUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const programData = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                duration: parseInt(document.getElementById('duration').value),
+                description: document.getElementById('description').value,
+                videoType: document.getElementById('videoType').value,
+                videoId: document.getElementById('videoType').value === 'YouTube' 
+                    ? document.getElementById('youtubeId').value 
+                    : document.getElementById('mp4Url').value,
+                airDate: document.getElementById('airDate').value,
+                airTime: document.getElementById('airTime').value,
+                status: document.getElementById('status').value,
+                createdBy: currentUser.email,
+                createdAt: new Date().toISOString()
+            };
+
+            // 儲存到 sessionStorage（模擬資料庫）
+            const programs = JSON.parse(sessionStorage.getItem('programs') || '[]');
+            programs.push(programData);
+            sessionStorage.setItem('programs', JSON.stringify(programs));
+
+            // 顯示成功訊息
+            const previewContainer = document.getElementById('previewContainer');
+            previewContainer.innerHTML = `
+                <div class="status-message status-success">
+                    ✅ 節目上傳成功！節目已儲存到系統中。
+                </div>
+            `;
+
+            // 重置表單
+            setTimeout(() => {
+                resetForm();
+            }, 3000);
+        });
+
+        // 全域變數
+        let currentUser = null;
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = checkAuth();
+            if (!currentUser) return;
+            
+            updateUserInfo();
+            setupFileUpload();
+            
+            // 設定預設日期為今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('airDate').value = today;
+            
+            // 添加即時預覽
+            const formInputs = document.querySelectorAll('#singleUploadForm input, #singleUploadForm select, #singleUploadForm textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 class ContentfulAPI {
   constructor() {
     this.spaceId = 'os5wf90ljenp';
-    this.deliveryToken = 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0';
+    this.deliveryToken = 'YOUR_DELIVERY_TOKEN';
     this.managementToken = null; // 需要從環境變數獲取
     
     // 初始化 Contentful 客戶端

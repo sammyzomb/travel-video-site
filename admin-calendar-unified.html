@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>統一節目管理系統</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header h1 { color: #2b71d2; margin-bottom: 10px; }
+    
+    .view-controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    
+    .view-buttons { display: flex; gap: 10px; }
+    .view-btn { background: #f8f9fa; color: #495057; border: 2px solid #e9ecef; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+    .view-btn.active { background: #2b71d2; color: white; border-color: #2b71d2; }
+    .view-btn:hover { background: #e3f2fd; border-color: #2b71d2; }
+    .view-btn.active:hover { background: #1e5bb8; }
+    
+    .nav-controls { display: flex; align-items: center; gap: 15px; }
+    .nav-btn { background: #2b71d2; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .nav-btn:hover { background: #1e5bb8; }
+    .current-date { font-size: 1.2rem; font-weight: 600; color: #333; min-width: 200px; text-align: center; }
+    .today-btn { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .today-btn:hover { background: #218838; }
+    
+    .view { display: none; }
+    .view.active { display: block; }
+    
+    .calendar-grid { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #2b71d2; color: white; }
+    .calendar-header div { padding: 15px; text-align: center; font-weight: 600; }
+    .calendar-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+         .calendar-day { min-height: 120px; border: 1px solid #eee; padding: 8px; position: relative; background: white; cursor: pointer; }
+     .calendar-day:hover { background: #f8f9fa; }
+     .calendar-day.other-month { background: #f8f9fa; color: #999; }
+     .calendar-day.today { background: #e3f2fd; border-color: #2b71d2; }
+     
+     .day-number { font-weight: 600; margin-bottom: 8px; color: #333; font-size: 0.9rem; }
+     .day-events { position: relative; }
+     
+     /* Google 日曆風格的節目顯示 */
+     .event { 
+       background: #e8f5e8; 
+       border: 1px solid #4caf50; 
+       border-radius: 3px; 
+       padding: 2px 6px; 
+       font-size: 0.65rem; 
+       margin-bottom: 1px; 
+       cursor: pointer; 
+       overflow: hidden; 
+       text-overflow: ellipsis; 
+       white-space: nowrap;
+       line-height: 1.2;
+       max-width: 100%;
+       position: relative;
+     }
+     .event:hover { background: #c8e6c9; }
+     .event.prime-time { background: #ffe8e8; border-color: #ff6b6b; }
+     .event.first-air { background: #fff3cd; border-color: #ffc107; }
+     
+     /* 更多節目指示器 */
+     .more-events-indicator {
+       background: #f0f0f0;
+       border: 1px solid #ddd;
+       border-radius: 3px;
+       padding: 2px 6px;
+       font-size: 0.6rem;
+       color: #666;
+       cursor: pointer;
+       text-align: center;
+       margin-top: 2px;
+       font-style: italic;
+     }
+     .more-events-indicator:hover {
+       background: #e0e0e0;
+     }
+     
+     /* 節目工具提示 */
+     .event-tooltip {
+       position: absolute;
+       background: rgba(0,0,0,0.9);
+       color: white;
+       padding: 8px 12px;
+       border-radius: 6px;
+       font-size: 0.8rem;
+       z-index: 1000;
+       pointer-events: none;
+       opacity: 0;
+       transition: opacity 0.3s ease;
+       max-width: 250px;
+       word-wrap: break-word;
+       white-space: normal;
+       top: 100%;
+       left: 0;
+       margin-top: 5px;
+     }
+     
+     .event:hover .event-tooltip {
+       opacity: 1;
+     }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+    .form-group textarea { height: 80px; resize: vertical; }
+    
+    .btn { background: #2b71d2; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    .btn:hover { background: #1e5bb8; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    
+    .status-bar { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1001; display: none; }
+    
+    /* 週視圖和日視圖樣式 */
+    .week-row, .day-row { transition: background-color 0.2s ease; }
+    .week-row:hover, .day-row:hover { background-color: #f8f9fa; }
+    .time-cell { user-select: none; }
+    .day-cell, .event-cell { transition: background-color 0.2s ease; }
+    .day-cell:hover, .event-cell:hover { background-color: #e3f2fd !important; }
+    
+    /* 週視圖特殊樣式 */
+    #weekView .calendar-header { 
+      grid-template-columns: 80px repeat(7, 1fr); 
+      background: #2b71d2; 
+      color: white; 
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    #weekView .calendar-body { 
+      display: block; 
+      background: white;
+      max-height: 70vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #ccc transparent;
+    }
+    
+    /* 自定義滾動條 */
+    #weekView .calendar-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #weekView .calendar-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    #weekView .calendar-body::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
+    
+    #weekView .calendar-body::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+    
+    /* 週視圖行樣式 */
+    .week-row {
+      display: grid !important;
+      grid-template-columns: 80px repeat(7, 1fr) !important;
+      border-bottom: 1px solid #eee;
+      background: white;
+      min-height: 30px;
+    }
+    
+    /* 週視圖時間列樣式 */
+    #weekView .time-cell {
+      min-width: 80px;
+      max-width: 80px;
+      width: 80px;
+      box-sizing: border-box;
+      font-size: 0.75rem;
+      padding: 4px 6px;
+    }
+    
+    /* 週視圖日期單元格樣式 */
+    #weekView .day-cell {
+      min-height: 30px;
+      max-height: 60px;
+      overflow: hidden;
+      position: relative;
+      padding: 2px;
+    }
+    
+    /* 週視圖節目樣式 */
+    #weekView .event {
+      font-size: 0.7rem;
+      padding: 2px 4px;
+      margin: 1px 0;
+      border-radius: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    /* 週視圖節目懸停效果 */
+    #weekView .event:hover {
+      transform: scale(1.02);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    
+    /* 週視圖節目工具提示 */
+    #weekView .event-tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      max-width: 300px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+    
+    #weekView .event:hover .event-tooltip {
+      opacity: 1;
+    }
+    
+    /* 日視圖特殊樣式 */
+    #dayView .calendar-header { 
+      grid-template-columns: 80px 1fr; 
+      background: #2b71d2; 
+      color: white; 
+    }
+    #dayView .calendar-body { 
+      display: block; 
+      background: white;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 0;
+    }
+    
+    /* 日視圖行樣式 */
+    .day-row {
+      display: grid !important;
+      grid-template-columns: 80px 1fr !important;
+      border-bottom: 1px solid #eee;
+      background: white;
+      min-height: 60px;
+      width: 100%;
+    }
+    
+    /* 確保日視圖容器有足夠高度 */
+    #dayView .calendar-grid {
+      height: auto;
+      min-height: 70vh;
+      width: 100%;
+    }
+    
+    /* 日視圖時間列樣式 */
+    #dayView .time-cell {
+      min-width: 80px;
+      max-width: 80px;
+      width: 80px;
+      box-sizing: border-box;
+    }
+    
+    /* 日視圖節目列樣式 */
+    #dayView .event-cell {
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    
+         /* 過去日期樣式 */
+     .calendar-day.past-date {
+       background-color: #f8f9fa !important;
+       color: #999 !important;
+     }
+     
+     .calendar-day.past-date .day-number {
+       color: #999 !important;
+     }
+     
+     .calendar-day.past-date .event {
+       opacity: 0.6;
+     }
+     
+     /* 月曆視圖的節目計數指示器 */
+     .event-count-badge {
+       position: absolute;
+       top: 5px;
+       right: 5px;
+       background: #2b71d2;
+       color: white;
+       border-radius: 50%;
+       width: 20px;
+       height: 20px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       font-size: 0.7rem;
+       font-weight: 600;
+       z-index: 5;
+     }
+     
+     /* 節目時間標籤 */
+     .event-time-label {
+       font-weight: 600;
+       color: #333;
+       font-size: 0.6rem;
+       margin-right: 3px;
+     }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📅 統一節目管理系統</h1>
+      <p>整合月曆、週曆、日曆三種視圖，統一管理所有節目安排</p>
+    </div>
+    
+    <div class="view-controls">
+      <div class="view-buttons">
+        <button class="view-btn active" onclick="switchView('month')">📅 月曆視圖</button>
+        <button class="view-btn" onclick="switchView('week')">📊 週曆視圖</button>
+        <button class="view-btn" onclick="switchView('day')">📋 日曆視圖</button>
+      </div>
+      
+      <div class="nav-controls">
+        <button class="nav-btn" onclick="previousPeriod()">◀</button>
+        <div class="current-date" id="currentDate">2024年8月</div>
+        <button class="nav-btn" onclick="nextPeriod()">▶</button>
+                 <button class="today-btn" onclick="goToToday()">今天</button>
+         <button class="btn" style="background: #6c757d; margin-left: 10px;" onclick="debugEvents()">🔍 調試節目</button>
+         <button class="btn" style="background: #28a745; margin-left: 10px;" onclick="syncAllToContentful()">🔄 同步到 Contentful</button>
+      </div>
+    </div>
+    
+    <div class="view active" id="monthView">
+      <div class="calendar-grid">
+        <div class="calendar-header">
+          <div>星期日</div><div>星期一</div><div>星期二</div><div>星期三</div>
+          <div>星期四</div><div>星期五</div><div>星期六</div>
+        </div>
+        <div class="calendar-body" id="monthCalendarBody"></div>
+      </div>
+    </div>
+    
+    <div class="view" id="weekView">
+      <div class="calendar-grid">
+        <div class="calendar-header" id="weekHeader">
+          <div>時間</div><div>星期日</div><div>星期一</div><div>星期二</div>
+          <div>星期三</div><div>星期四</div><div>星期五</div><div>星期六</div>
+        </div>
+        <div class="calendar-body" id="weekCalendarBody"></div>
+      </div>
+    </div>
+    
+    <div class="view" id="dayView">
+      <div class="calendar-grid">
+        <div class="calendar-header" id="dayHeader">
+          <div>時間</div><div>節目安排</div>
+        </div>
+        <div class="calendar-body" id="dayCalendarBody"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 時間槽選擇器模態框 -->
+  <div class="modal" id="timeSlotModal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3>選擇播出時間</h3>
+        <button class="modal-close" onclick="closeTimeSlotModal()">&times;</button>
+      </div>
+      <div class="time-slot-grid" id="timeSlotGrid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; padding: 20px;">
+        <!-- 時間槽將在這裡動態生成 -->
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="eventModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">編輯節目</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      
+      <form id="eventForm">
+        <input type="hidden" id="editDate">
+        <input type="hidden" id="editTime">
+        
+        <div class="form-group">
+          <label>播出時間：</label>
+          <input type="time" id="airTime" required>
+        </div>
+        
+        <div class="form-group">
+          <label>影片類型：</label>
+          <select id="videoType" required onchange="toggleVideoFields()">
+            <option value="">-- 選擇影片類型 --</option>
+            <option value="YouTube">YouTube</option>
+            <option value="MP4">MP4 檔案</option>
+          </select>
+        </div>
+        
+        <div class="form-group" id="youtubeIdGroup" style="display: none;">
+          <label>YouTube ID：</label>
+          <input type="text" id="youtubeId" placeholder="例如：dQw4w9WgXcQ" onblur="fetchYouTubeInfo()">
+        </div>
+        
+        <div class="form-group" id="mp4FileGroup" style="display: none;">
+          <label>MP4 檔案：</label>
+          <input type="file" id="mp4File" accept=".mp4" onchange="handleFileUpload()">
+        </div>
+        
+        <div class="form-group">
+          <label>節目標題：</label>
+          <input type="text" id="title" placeholder="例如：早安世界 - 日本東京晨間漫步" required>
+        </div>
+        
+        <div class="form-group">
+          <label>節目時長：</label>
+          <select id="duration" required>
+            <option value="30" selected>30分鐘</option>
+            <option value="60">60分鐘</option>
+            <option value="90">90分鐘</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>節目分類：</label>
+          <select id="category" required>
+            <option value="">-- 選擇分類 --</option>
+            <option value="亞洲旅遊">亞洲旅遊</option>
+            <option value="歐洲旅遊">歐洲旅遊</option>
+            <option value="美洲旅遊">美洲旅遊</option>
+            <option value="美食旅遊">美食旅遊</option>
+            <option value="極地旅遊">極地旅遊</option>
+            <option value="自然旅遊">自然旅遊</option>
+            <option value="文化旅遊">文化旅遊</option>
+            <option value="冒險旅遊">冒險旅遊</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>節目描述：</label>
+          <textarea id="description" placeholder="簡短描述節目內容..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>節目狀態：</label>
+          <select id="status" required>
+            <option value="重播">重播</option>
+            <option value="首播">首播</option>
+            <option value="特別節目">特別節目</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn">💾 儲存節目</button>
+        <button type="button" class="btn btn-danger" onclick="deleteEvent()">🗑️ 刪除節目</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+        <button type="button" class="btn" style="background: #28a745;" onclick="publishToContentful()">🚀 上架節目</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="status-bar" id="statusBar">
+    <span id="statusMessage"></span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <script src="contentful-sync-fixed.js"></script>
+  <script>
+    let currentDate = new Date();
+    let currentView = 'month';
+    let events = {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      loadEvents();
+      renderCurrentView();
+      updateCurrentDateDisplay();
+    });
+    
+    function switchView(view) {
+      currentView = view;
+      
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(view + 'View').classList.add('active');
+      
+      renderCurrentView();
+    }
+    
+    function renderCurrentView() {
+      switch(currentView) {
+        case 'month': renderMonthView(); break;
+        case 'week': renderWeekView(); break;
+        case 'day': renderDayView(); break;
+      }
+    }
+    
+    function renderMonthView() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay());
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // 設定為今天的開始時間
+      
+      const calendarBody = document.getElementById('monthCalendarBody');
+      calendarBody.innerHTML = '';
+      
+      for (let week = 0; week < 6; week++) {
+        for (let day = 0; day < 7; day++) {
+          const currentDay = new Date(startDate);
+          currentDay.setDate(startDate.getDate() + week * 7 + day);
+          
+          const isCurrentMonth = currentDay.getMonth() === month;
+          const isToday = currentDay.toDateString() === new Date().toDateString();
+          const isPastDate = currentDay < today; // 檢查是否為過去的日期
+          // 使用本地時間格式，避免時區問題
+          const dateString = currentDay.getFullYear() + '-' + 
+                           String(currentDay.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(currentDay.getDate()).padStart(2, '0');
+          
+          const dayElement = document.createElement('div');
+          dayElement.className = `calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isPastDate ? 'past-date' : ''}`;
+          dayElement.setAttribute('data-date', dateString);
+          
+                     const dayEvents = getDayEvents(dateString);
+           const eventCount = dayEvents.length;
+           
+           dayElement.innerHTML = `
+             <div class="day-number">${currentDay.getDate()}</div>
+             ${eventCount > 0 ? `<div class="event-count-badge">${eventCount}</div>` : ''}
+             <div class="day-events" id="events-${dateString}">
+               ${getDayEventsHTML(dateString)}
+             </div>
+           `;
+          
+          // 只有非過去的日期才能點擊
+          if (!isPastDate) {
+            dayElement.style.cursor = 'pointer';
+            dayElement.addEventListener('click', function() {
+              openTimeSlotSelector(dateString);
+            });
+          } else {
+            dayElement.style.cursor = 'not-allowed';
+            dayElement.style.opacity = '0.6';
+          }
+          
+          calendarBody.appendChild(dayElement);
+        }
+      }
+    }
+    
+         function renderWeekView() {
+       const today = new Date();
+       const currentHour = today.getHours();
+       const currentMinute = today.getMinutes();
+       
+       // 計算當前時間在時間槽中的位置
+       const currentTimeSlot = `${currentHour.toString().padStart(2, '0')}:${Math.floor(currentMinute / 30) * 30 === 0 ? '00' : '30'}`;
+      
+      // 計算本週的開始日期（星期日）
+      const weekStart = new Date(currentDate);
+      weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+      
+      // 更新週視圖標題列，顯示具體日期
+      const weekHeader = document.getElementById('weekHeader');
+      const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      weekHeader.innerHTML = '';
+      
+      // 時間標題
+      const timeHeader = document.createElement('div');
+      timeHeader.textContent = '時間';
+      timeHeader.style.display = 'flex';
+      timeHeader.style.alignItems = 'center';
+      timeHeader.style.justifyContent = 'center';
+      weekHeader.appendChild(timeHeader);
+      
+      for (let i = 0; i < 7; i++) {
+        const currentDay = new Date(weekStart);
+        currentDay.setDate(weekStart.getDate() + i);
+        const isToday = currentDay.toDateString() === today.toDateString();
+        
+        const headerCell = document.createElement('div');
+        headerCell.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 2px;">${dayNames[i]}</div>
+          <div style="font-size: 0.9rem; opacity: 0.9; ${isToday ? 'color: #ffc107; font-weight: 600;' : ''}">
+            ${currentDay.getMonth() + 1}/${currentDay.getDate()}
+          </div>
+        `;
+        weekHeader.appendChild(headerCell);
+      }
+      
+      const calendarBody = document.getElementById('weekCalendarBody');
+      calendarBody.innerHTML = '';
+      
+      // 生成時間槽（每30分鐘一個）
+      const timeSlots = [];
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          timeSlots.push(timeString);
+        }
+      }
+      
+      // 為每個時間槽創建一行
+      timeSlots.forEach(timeSlot => {
+        const row = document.createElement('div');
+        row.className = 'week-row';
+        
+                 // 時間列
+         const timeCell = document.createElement('div');
+         timeCell.className = 'time-cell';
+         timeCell.style.cssText = `
+           padding: 4px 6px;
+           border-right: 1px solid #eee;
+           background-color: #f8f9fa;
+           font-size: 0.75rem;
+           font-weight: 600;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           min-width: 80px;
+           max-width: 80px;
+           box-sizing: border-box;
+         `;
+         timeCell.textContent = timeSlot;
+        
+        // 檢查是否為過去時間（今天）
+        const hour = parseInt(timeSlot.split(':')[0]);
+        const minute = parseInt(timeSlot.split(':')[1]);
+        const isPastTime = today.toDateString() === currentDate.toDateString() && 
+                          (hour < currentHour || (hour === currentHour && minute <= currentMinute));
+        
+                 if (isPastTime) {
+           timeCell.style.color = '#999';
+           timeCell.style.backgroundColor = '#f5f5f5';
+         }
+         
+         // 如果是當前時間槽，添加特殊標記
+         if (timeSlot === currentTimeSlot && today.toDateString() === currentDate.toDateString()) {
+           timeCell.style.color = '#2b71d2';
+           timeCell.style.fontWeight = '700';
+           timeCell.style.borderLeft = '3px solid #2b71d2';
+         }
+         
+         row.appendChild(timeCell);
+        
+        // 為每一天創建一個單元格
+                 for (let day = 0; day < 7; day++) {
+           const currentDay = new Date(weekStart);
+           currentDay.setDate(weekStart.getDate() + day);
+           // 使用本地時間格式，避免時區問題
+           const dateString = currentDay.getFullYear() + '-' + 
+                            String(currentDay.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(currentDay.getDate()).padStart(2, '0');
+           const isToday = currentDay.toDateString() === today.toDateString();
+          
+                     const dayCell = document.createElement('div');
+           dayCell.className = 'day-cell';
+           dayCell.style.cssText = `
+             padding: 2px;
+             border-right: 1px solid #eee;
+             min-height: 30px;
+             max-height: 60px;
+             overflow: hidden;
+             position: relative;
+             background: white;
+           `;
+          
+          // 如果是第一行（00:00），顯示日期標籤
+          if (timeSlot === '00:00') {
+            const dateLabel = document.createElement('div');
+            dateLabel.style.cssText = `
+              position: absolute;
+              top: 2px;
+              left: 2px;
+              font-size: 0.7rem;
+              font-weight: 600;
+              color: ${isToday ? '#ffc107' : '#666'};
+              background: ${isToday ? 'rgba(255, 193, 7, 0.1)' : 'rgba(0, 0, 0, 0.05)'};
+              padding: 1px 4px;
+              border-radius: 3px;
+              z-index: 1;
+            `;
+            dateLabel.textContent = `${currentDay.getMonth() + 1}/${currentDay.getDate()}`;
+            dayCell.appendChild(dateLabel);
+          }
+        
+          // 檢查是否為過去時間或過去日期
+          const isPastDate = currentDay < today;
+          const isPastTimeToday = currentDay.toDateString() === today.toDateString() && isPastTime;
+          const isPastTimeOrDate = isPastDate || isPastTimeToday;
+          
+          if (isPastTimeOrDate) {
+            dayCell.style.backgroundColor = '#f5f5f5';
+            dayCell.style.opacity = '0.6';
+            dayCell.style.cursor = 'not-allowed';
+          } else {
+            dayCell.style.cursor = 'pointer';
+            dayCell.addEventListener('click', function() {
+              openEventModal(dateString, timeSlot);
+            });
+          }
+          
+          // 顯示該時間槽的節目
+          const events = getDayEvents(dateString);
+          const timeSlotEvents = events.filter(event => event.time === timeSlot);
+          
+                     timeSlotEvents.forEach(event => {
+             const eventDiv = document.createElement('div');
+             eventDiv.className = `event ${event.status === '首播' ? 'first-air' : ''} ${isPrimeTime(hour) ? 'prime-time' : ''}`;
+             eventDiv.style.cssText = `
+               font-size: 0.7rem;
+               padding: 2px 4px;
+               margin: 1px 0;
+               border-radius: 3px;
+               overflow: hidden;
+               text-overflow: ellipsis;
+               white-space: nowrap;
+               max-width: 100%;
+               position: relative;
+               transition: all 0.2s ease;
+               cursor: pointer;
+             `;
+             
+             // 智能截斷標題
+             const maxLength = 25;
+             const displayTitle = event.title.length > maxLength ? 
+               event.title.substring(0, maxLength) + '...' : event.title;
+             eventDiv.textContent = displayTitle;
+             
+             // 添加工具提示
+             if (event.title.length > maxLength || event.description) {
+               const tooltip = document.createElement('div');
+               tooltip.className = 'event-tooltip';
+               tooltip.style.cssText = `
+                 position: absolute;
+                 background: rgba(0,0,0,0.9);
+                 color: white;
+                 padding: 8px 12px;
+                 border-radius: 6px;
+                 font-size: 0.8rem;
+                 z-index: 1000;
+                 pointer-events: none;
+                 opacity: 0;
+                 transition: opacity 0.3s ease;
+                 max-width: 300px;
+                 word-wrap: break-word;
+                 white-space: normal;
+                 top: 100%;
+                 left: 0;
+                 margin-top: 5px;
+               `;
+               
+               let tooltipContent = `<strong>${event.title}</strong>`;
+               if (event.description) {
+                 tooltipContent += `<br><small>${event.description}</small>`;
+               }
+               tooltipContent += `<br><small>${event.time} | ${event.category} | ${event.duration}分鐘</small>`;
+               tooltip.innerHTML = tooltipContent;
+               
+               eventDiv.appendChild(tooltip);
+               
+               // 懸停顯示工具提示
+               eventDiv.addEventListener('mouseenter', function() {
+                 tooltip.style.opacity = '1';
+               });
+               
+               eventDiv.addEventListener('mouseleave', function() {
+                 tooltip.style.opacity = '0';
+               });
+             }
+             
+             // 點擊編輯節目
+             eventDiv.addEventListener('click', function(e) {
+               e.stopPropagation();
+               openEventModal(dateString, timeSlot);
+             });
+             
+             dayCell.appendChild(eventDiv);
+           });
+          
+                     // 如果沒有節目，顯示空閒提示
+           if (timeSlotEvents.length === 0 && !isPastTimeOrDate) {
+             const emptyDiv = document.createElement('div');
+             emptyDiv.style.cssText = `
+               color: #ccc;
+               font-size: 0.6rem;
+               font-style: italic;
+               text-align: center;
+               padding: 2px;
+               opacity: 0.7;
+             `;
+             emptyDiv.textContent = '+';
+             dayCell.appendChild(emptyDiv);
+           }
+           
+           row.appendChild(dayCell);
+         }
+         
+         calendarBody.appendChild(row);
+       });
+    }
+    
+    function renderDayView() {
+      const today = new Date();
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
+             // 使用本地時間格式，避免時區問題
+       const dateString = currentDate.getFullYear() + '-' + 
+                        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(currentDate.getDate()).padStart(2, '0');
+      const isToday = currentDate.toDateString() === today.toDateString();
+      
+      // 更新日視圖標題，顯示具體日期
+      const dayHeader = document.getElementById('dayHeader');
+      const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const dayOfWeek = currentDate.getDay();
+      
+      dayHeader.innerHTML = `
+        <div>時間</div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="font-weight: 600; margin-bottom: 2px;">節目安排</div>
+          <div style="font-size: 0.9rem; opacity: 0.9; ${isToday ? 'color: #ffc107; font-weight: 600;' : ''}">
+            ${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日 ${dayNames[dayOfWeek]}
+          </div>
+        </div>
+      `;
+      
+      const calendarBody = document.getElementById('dayCalendarBody');
+      calendarBody.innerHTML = '';
+      
+      // 生成時間槽（每30分鐘一個）
+      const timeSlots = [];
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          timeSlots.push(timeString);
+        }
+      }
+      
+      // 為每個時間槽創建一行
+      timeSlots.forEach(timeSlot => {
+        const row = document.createElement('div');
+        row.className = 'day-row';
+        
+        // 時間列
+        const timeCell = document.createElement('div');
+        timeCell.className = 'time-cell';
+        timeCell.style.cssText = `
+          padding: 12px 8px;
+          border-right: 1px solid #eee;
+          background-color: #f8f9fa;
+          font-size: 0.9rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 80px;
+        `;
+        timeCell.textContent = timeSlot;
+        
+        // 檢查是否為過去時間或過去日期
+        const hour = parseInt(timeSlot.split(':')[0]);
+        const minute = parseInt(timeSlot.split(':')[1]);
+        const isPastDate = currentDate < today;
+        const isPastTime = today.toDateString() === currentDate.toDateString() && 
+                          (hour < currentHour || (hour === currentHour && minute <= currentMinute));
+        const isPastTimeOrDate = isPastDate || isPastTime;
+        
+        if (isPastTimeOrDate) {
+          timeCell.style.color = '#999';
+          timeCell.style.backgroundColor = '#f5f5f5';
+        }
+        
+        row.appendChild(timeCell);
+        
+        // 節目安排列
+        const eventCell = document.createElement('div');
+        eventCell.className = 'event-cell';
+        eventCell.style.cssText = `
+          padding: 8px;
+          position: relative;
+          min-height: 60px;
+          display: flex;
+          align-items: center;
+        `;
+        
+        // 檢查是否為過去時間或過去日期
+        if (isPastTimeOrDate) {
+          eventCell.style.backgroundColor = '#f5f5f5';
+          eventCell.style.opacity = '0.6';
+          eventCell.style.cursor = 'not-allowed';
+        } else {
+          eventCell.style.cursor = 'pointer';
+          eventCell.addEventListener('click', function() {
+            openEventModal(dateString, timeSlot);
+          });
+        }
+        
+        // 顯示該時間槽的節目
+        const events = getDayEvents(dateString);
+        const timeSlotEvents = events.filter(event => event.time === timeSlot);
+        
+        if (timeSlotEvents.length > 0) {
+          timeSlotEvents.forEach(event => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event ${event.status === '首播' ? 'first-air' : ''} ${isPrimeTime(hour) ? 'prime-time' : ''}`;
+            eventDiv.style.cssText = `
+              padding: 8px;
+              margin: 4px 0;
+              border-radius: 6px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              background: #e8f5e8;
+              border: 1px solid #4caf50;
+              width: 100%;
+              box-sizing: border-box;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+            `;
+            
+            eventDiv.innerHTML = `
+              <div style="font-weight: 600; margin-bottom: 4px; word-break: break-word;">${event.title}</div>
+              <div style="font-size: 0.8rem; color: #666;">
+                <span style="background: ${event.status === '首播' ? '#ffc107' : '#28a745'}; color: white; padding: 2px 6px; border-radius: 3px; margin-right: 8px;">
+                  ${event.status}
+                </span>
+                <span>${event.category}</span>
+                <span style="margin-left: 8px;">${event.duration}分鐘</span>
+              </div>
+              ${event.description ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px; word-break: break-word;">${event.description}</div>` : ''}
+            `;
+            
+            eventCell.appendChild(eventDiv);
+          });
+        } else {
+          // 顯示空閒時間提示
+          const emptyDiv = document.createElement('div');
+          emptyDiv.style.cssText = `
+            color: #999;
+            font-size: 0.8rem;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+          `;
+          emptyDiv.textContent = '點擊新增節目';
+          eventCell.appendChild(emptyDiv);
+        }
+        
+        row.appendChild(eventCell);
+        calendarBody.appendChild(row);
+      });
+    }
+    
+    function getDayEvents(dateString) {
+      const dayEvents = events[dateString] || [];
+      return dayEvents;
+    }
+    
+         function getDayEventsHTML(dateString) {
+       const dayEvents = events[dateString] || [];
+       // 調試：檢查節目資料
+       if (dayEvents.length > 0) {
+         console.log(`日期 ${dateString} 的節目:`, dayEvents);
+       }
+       
+       if (dayEvents.length === 0) {
+         return '';
+       }
+       
+       // Google 日曆風格：最多顯示3個節目，超過則顯示"更多"
+       const maxVisibleEvents = 3;
+       const visibleEvents = dayEvents.slice(0, maxVisibleEvents);
+       const hiddenEventsCount = dayEvents.length - maxVisibleEvents;
+       
+       let html = '';
+       
+       // 顯示可見的節目
+       visibleEvents.forEach(event => {
+         const maxTitleLength = 20;
+         const displayTitle = event.title.length > maxTitleLength ? 
+           event.title.substring(0, maxTitleLength) + '...' : event.title;
+         
+         html += `
+           <div class="event ${event.status === '首播' ? 'first-air' : ''} ${isPrimeTime(parseInt(event.time.split(':')[0])) ? 'prime-time' : ''}" 
+                onclick="openEventModal('${dateString}', '${event.time}')">
+             <span class="event-time-label">${event.time}</span>${displayTitle}
+             ${event.title.length > maxTitleLength || event.description ? `
+               <div class="event-tooltip">
+                 <strong>${event.title}</strong>
+                 ${event.description ? `<br><small>${event.description}</small>` : ''}
+                 <br><small>${event.time} | ${event.category} | ${event.duration}分鐘</small>
+               </div>
+             ` : ''}
+           </div>
+         `;
+       });
+       
+       // 如果有隱藏的節目，顯示"更多"指示器
+       if (hiddenEventsCount > 0) {
+         html += `
+           <div class="more-events-indicator" onclick="showAllEventsForDay('${dateString}')">
+             +${hiddenEventsCount} 更多節目
+           </div>
+         `;
+       }
+       
+       return html;
+     }
+    
+    function isPrimeTime(hour) {
+      return hour >= 12 && hour < 18;
+    }
+    
+    function previousPeriod() {
+      switch(currentView) {
+        case 'month': currentDate.setMonth(currentDate.getMonth() - 1); break;
+        case 'week': currentDate.setDate(currentDate.getDate() - 7); break;
+        case 'day': currentDate.setDate(currentDate.getDate() - 1); break;
+      }
+      renderCurrentView();
+      updateCurrentDateDisplay();
+    }
+    
+    function nextPeriod() {
+      switch(currentView) {
+        case 'month': currentDate.setMonth(currentDate.getMonth() + 1); break;
+        case 'week': currentDate.setDate(currentDate.getDate() + 7); break;
+        case 'day': currentDate.setDate(currentDate.getDate() + 1); break;
+      }
+      renderCurrentView();
+      updateCurrentDateDisplay();
+    }
+    
+    function goToToday() {
+      currentDate = new Date();
+      renderCurrentView();
+      updateCurrentDateDisplay();
+    }
+    
+    function updateCurrentDateDisplay() {
+      const dateElement = document.getElementById('currentDate');
+      switch(currentView) {
+        case 'month':
+          dateElement.textContent = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`;
+          break;
+        case 'week':
+          const weekStart = new Date(currentDate);
+          weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          dateElement.textContent = `${weekStart.getFullYear()}年${weekStart.getMonth() + 1}月${weekStart.getDate()}日 - ${weekEnd.getMonth() + 1}月${weekEnd.getDate()}日`;
+          break;
+        case 'day':
+          dateElement.textContent = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日`;
+          break;
+      }
+    }
+    
+    function openEventModal(date, time = '') {
+      // 檢查是否為過去的日期或時間
+      const today = new Date();
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
+      // 使用本地時間格式比較
+      const todayString = today.getFullYear() + '-' + 
+                         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(today.getDate()).padStart(2, '0');
+      const isPastDate = date < todayString;
+      const isPastTime = date === todayString && 
+                        (parseInt(time.split(':')[0]) < currentHour || 
+                         (parseInt(time.split(':')[0]) === currentHour && parseInt(time.split(':')[1]) <= currentMinute));
+      
+      if (isPastDate || isPastTime) {
+        showStatus('無法編輯過去的日期或時間', 'warning');
+        return;
+      }
+      
+      document.getElementById('editDate').value = date;
+      document.getElementById('editTime').value = time;
+      document.getElementById('airTime').value = time;
+      
+      const existingEvent = getEvent(date, time);
+      if (existingEvent) {
+        document.getElementById('modalTitle').textContent = '編輯節目';
+        document.getElementById('title').value = existingEvent.title;
+        document.getElementById('duration').value = existingEvent.duration;
+        document.getElementById('category').value = existingEvent.category;
+        document.getElementById('description').value = existingEvent.description;
+        document.getElementById('status').value = existingEvent.status;
+        document.getElementById('videoType').value = existingEvent.videoType || '';
+        document.getElementById('youtubeId').value = existingEvent.youtubeId || '';
+        toggleVideoFields();
+      } else {
+        document.getElementById('modalTitle').textContent = '新增節目';
+        document.getElementById('eventForm').reset();
+        document.getElementById('airTime').value = time;
+      }
+      
+      document.getElementById('eventModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+      document.getElementById('eventModal').style.display = 'none';
+    }
+    
+    function openTimeSlotSelector(date) {
+      const today = new Date();
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
+      // 使用本地時間格式比較
+      const todayString = today.getFullYear() + '-' + 
+                         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(today.getDate()).padStart(2, '0');
+      const isToday = date === todayString;
+      
+      const timeSlotGrid = document.getElementById('timeSlotGrid');
+      timeSlotGrid.innerHTML = '';
+      
+      // 生成時間槽（每30分鐘一個）
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          
+          // 檢查是否為過去時間（今天）
+          const isPastTime = isToday && (hour < currentHour || (hour === currentHour && minute <= currentMinute));
+          
+          const timeSlot = document.createElement('div');
+          timeSlot.className = 'time-slot-btn';
+          timeSlot.style.cssText = `
+            padding: 15px 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: ${isPastTime ? 'not-allowed' : 'pointer'};
+            background: ${isPastTime ? '#f5f5f5' : '#fff'};
+            color: ${isPastTime ? '#999' : '#333'};
+            font-weight: 600;
+            transition: all 0.3s ease;
+          `;
+          
+          if (!isPastTime) {
+            timeSlot.addEventListener('mouseenter', function() {
+              this.style.borderColor = '#2b71d2';
+              this.style.backgroundColor = '#e3f2fd';
+            });
+            
+            timeSlot.addEventListener('mouseleave', function() {
+              this.style.borderColor = '#e9ecef';
+              this.style.backgroundColor = '#fff';
+            });
+            
+            timeSlot.addEventListener('click', function() {
+              openEventModal(date, timeString);
+              closeTimeSlotModal();
+            });
+          }
+          
+          timeSlot.textContent = timeString;
+          timeSlotGrid.appendChild(timeSlot);
+        }
+      }
+      
+      document.getElementById('timeSlotModal').style.display = 'block';
+    }
+    
+    function closeTimeSlotModal() {
+      document.getElementById('timeSlotModal').style.display = 'none';
+    }
+    
+    function toggleVideoFields() {
+      const videoType = document.getElementById('videoType').value;
+      const youtubeIdGroup = document.getElementById('youtubeIdGroup');
+      const mp4FileGroup = document.getElementById('mp4FileGroup');
+      
+      youtubeIdGroup.style.display = videoType === 'YouTube' ? 'block' : 'none';
+      mp4FileGroup.style.display = videoType === 'MP4' ? 'block' : 'none';
+    }
+    
+    async function fetchYouTubeInfo() {
+      const youtubeId = document.getElementById('youtubeId').value.trim();
+      if (!youtubeId) return;
+      
+      try {
+        const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${youtubeId}&format=json`);
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('title').value = data.title;
+          showStatus('YouTube 資訊已自動填入', 'success');
+        } else {
+          showStatus('無法獲取 YouTube 資訊，請檢查 ID 是否正確', 'warning');
+        }
+      } catch (error) {
+        showStatus('獲取 YouTube 資訊時發生錯誤', 'error');
+      }
+    }
+    
+    function handleFileUpload() {
+      const fileInput = document.getElementById('mp4File');
+      const file = fileInput.files[0];
+      
+      if (file) {
+        const fileName = file.name.replace('.mp4', '');
+        document.getElementById('title').value = fileName;
+        showStatus('檔案名稱已自動填入為標題', 'success');
+      }
+    }
+    
+    function getEvent(date, time) {
+      const dayEvents = events[date] || [];
+      return dayEvents.find(event => event.time === time);
+    }
+    
+    document.getElementById('eventForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const date = document.getElementById('editDate').value;
+      const time = document.getElementById('airTime').value;
+      
+      // 檢查是否為過去的日期或時間
+      const today = new Date();
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
+      // 使用本地時間格式比較
+      const todayString = today.getFullYear() + '-' + 
+                         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(today.getDate()).padStart(2, '0');
+      const isPastDate = date < todayString;
+      const isPastTime = date === todayString && 
+                        (parseInt(time.split(':')[0]) < currentHour || 
+                         (parseInt(time.split(':')[0]) === currentHour && parseInt(time.split(':')[1]) <= currentMinute));
+      
+      if (isPastDate || isPastTime) {
+        showStatus('無法在過去的日期或時間安排節目', 'warning');
+        return;
+      }
+      
+      const videoType = document.getElementById('videoType').value;
+      const videoId = videoType === 'YouTube' 
+        ? document.getElementById('youtubeId').value 
+        : document.getElementById('mp4File').files[0] ? document.getElementById('mp4File').files[0].name : null;
+      
+      const event = {
+        date: date,
+        time: time,
+        title: document.getElementById('title').value,
+        duration: parseInt(document.getElementById('duration').value),
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        status: document.getElementById('status').value,
+        videoType: videoType,
+        youtubeId: videoType === 'YouTube' ? document.getElementById('youtubeId').value : null,
+        mp4File: videoType === 'MP4' ? (document.getElementById('mp4File').files[0] ? document.getElementById('mp4File').files[0].name : null) : null
+      };
+      
+      if (!events[date]) {
+        events[date] = [];
+      }
+      
+      events[date] = events[date].filter(e => e.time !== time);
+      events[date].push(event);
+      events[date].sort((a, b) => a.time.localeCompare(b.time));
+      
+      saveEvents();
+      renderCurrentView();
+      closeModal();
+      showStatus('節目已儲存', 'success');
+    });
+    
+    function deleteEvent() {
+      const date = document.getElementById('editDate').value;
+      const time = document.getElementById('editTime').value;
+      
+      if (events[date]) {
+        events[date] = events[date].filter(event => event.time !== time);
+        if (events[date].length === 0) {
+          delete events[date];
+        }
+      }
+      
+      saveEvents();
+      renderCurrentView();
+      closeModal();
+      showStatus('節目已刪除', 'success');
+    }
+    
+    function saveEvents() {
+      localStorage.setItem('calendar_events', JSON.stringify(events));
+    }
+    
+         function loadEvents() {
+       const saved = localStorage.getItem('calendar_events');
+       if (saved) {
+         events = JSON.parse(saved);
+       }
+     }
+     
+     // 調試函數：檢查所有節目資料
+     function debugEvents() {
+       console.log('=== 節目資料調試 ===');
+       console.log('所有節目資料:', events);
+       
+       const eventDates = Object.keys(events);
+       console.log('有節目的日期:', eventDates);
+       
+       eventDates.forEach(date => {
+         const dayEvents = events[date];
+         console.log(`日期 ${date} (${new Date(date).toLocaleDateString('zh-TW')}):`, dayEvents);
+       });
+       
+       // 檢查當前日期
+       const today = new Date();
+       const todayString = today.getFullYear() + '-' + 
+                          String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(today.getDate()).padStart(2, '0');
+       const currentDateString = currentDate.getFullYear() + '-' + 
+                               String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                               String(currentDate.getDate()).padStart(2, '0');
+       console.log('今天日期:', todayString);
+       console.log('當前顯示日期:', currentDateString);
+       
+       showStatus('調試資訊已輸出到控制台', 'info');
+     }
+     
+     // 批量同步所有節目到 Contentful
+     async function syncAllToContentful() {
+       try {
+         showStatus('正在檢查 Contentful 連接...', 'info');
+         
+         // 測試連接
+                   const connectionTest = await window.contentfulSyncFixed.testConnection();
+         if (!connectionTest.success) {
+           showStatus('❌ Contentful 連接失敗：' + connectionTest.error, 'error');
+           return;
+         }
+         
+         showStatus('✅ Contentful 連接成功，開始同步...', 'success');
+         
+         // 獲取所有節目
+         const calendarEvents = JSON.parse(localStorage.getItem('calendar_events') || '{}');
+         const allPrograms = [];
+         
+         Object.keys(calendarEvents).forEach(date => {
+           calendarEvents[date].forEach(event => {
+             allPrograms.push({
+               title: event.title,
+               airDate: date,
+               airTime: event.time,
+               duration: event.duration,
+               category: event.category,
+               description: event.description || '',
+               status: event.status,
+               videoType: event.videoType || '',
+               youtubeId: event.youtubeId || '',
+               mp4File: event.mp4File || ''
+             });
+           });
+         });
+         
+         if (allPrograms.length === 0) {
+           showStatus('沒有節目需要同步', 'warning');
+           return;
+         }
+         
+         showStatus(`開始同步 ${allPrograms.length} 個節目到 Contentful...`, 'info');
+         
+         // 批量同步
+                   const results = await window.contentfulSyncFixed.syncAllPrograms();
+         
+         // 統計結果
+         const successCount = results.filter(r => r.success).length;
+         const failCount = results.filter(r => !r.success).length;
+         
+         if (failCount === 0) {
+           showStatus(`✅ 所有 ${successCount} 個節目同步成功！`, 'success');
+         } else {
+           showStatus(`⚠️ 同步完成：${successCount} 成功，${failCount} 失敗`, 'warning');
+         }
+         
+         // 顯示詳細結果
+         console.log('同步結果:', results);
+         
+       } catch (error) {
+         console.error('批量同步失敗:', error);
+         showStatus('❌ 批量同步失敗：' + error.message, 'error');
+       }
+     }
+     
+     // 顯示某一天的所有節目
+     function showAllEventsForDay(dateString) {
+       const dayEvents = events[dateString] || [];
+       if (dayEvents.length === 0) {
+         showStatus('該日期沒有節目', 'info');
+         return;
+       }
+       
+       // 創建節目列表模態框
+       const modal = document.createElement('div');
+       modal.className = 'modal';
+       modal.style.display = 'block';
+       
+       const date = new Date(dateString);
+       const dateDisplay = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+       
+       modal.innerHTML = `
+         <div class="modal-content" style="max-width: 600px;">
+           <div class="modal-header">
+             <h3>${dateDisplay} 的所有節目</h3>
+             <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+           </div>
+           <div style="max-height: 400px; overflow-y: auto;">
+             ${dayEvents.map(event => `
+               <div style="border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; background: white;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                   <span style="font-weight: 600; color: #2b71d2;">${event.time}</span>
+                   <span style="background: ${event.status === '首播' ? '#ffc107' : '#28a745'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">
+                     ${event.status}
+                   </span>
+                 </div>
+                 <div style="font-weight: 600; margin-bottom: 5px;">${event.title}</div>
+                 <div style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">
+                   <span>${event.category}</span> • <span>${event.duration}分鐘</span>
+                   ${event.videoType ? ` • <span>${event.videoType}</span>` : ''}
+                 </div>
+                 ${event.description ? `<div style="color: #666; font-size: 0.9rem; margin-bottom: 8px;">${event.description}</div>` : ''}
+                 <button class="btn" style="padding: 5px 12px; font-size: 0.8rem;" onclick="openEventModal('${dateString}', '${event.time}')">
+                   編輯節目
+                 </button>
+               </div>
+             `).join('')}
+           </div>
+         </div>
+       `;
+       
+       document.body.appendChild(modal);
+       
+       // 點擊背景關閉模態框
+       modal.addEventListener('click', function(e) {
+         if (e.target === modal) {
+           modal.remove();
+         }
+       });
+     }
+    
+         function showStatus(message, type) {
+       const statusBar = document.getElementById('statusBar');
+       const statusMessage = document.getElementById('statusMessage');
+       
+       statusMessage.textContent = message;
+       statusBar.style.display = 'block';
+       
+       statusBar.style.backgroundColor = type === 'success' ? '#4caf50' : 
+                                       type === 'error' ? '#f44336' : 
+                                       type === 'warning' ? '#ff9800' : '#333';
+       
+       setTimeout(() => {
+         statusBar.style.display = 'none';
+       }, 3000);
+     }
+     
+           // 上架節目到 Contentful
+      async function publishToContentful() {
+        const date = document.getElementById('editDate').value;
+        const time = document.getElementById('airTime').value;
+        const title = document.getElementById('title').value;
+        const duration = document.getElementById('duration').value;
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description').value;
+        const status = document.getElementById('status').value;
+        
+        if (!title || !date || !time) {
+          showStatus('請先填寫完整的節目資訊', 'warning');
+          return;
+        }
+        
+        // 檢查是否為過去的日期或時間
+        const today = new Date();
+        const currentHour = today.getHours();
+        const currentMinute = today.getMinutes();
+        const todayString = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0');
+        const isPastDate = date < todayString;
+        const isPastTime = date === todayString && 
+                          (parseInt(time.split(':')[0]) < currentHour || 
+                           (parseInt(time.split(':')[0]) === currentHour && parseInt(time.split(':')[1]) <= currentMinute));
+        
+        if (isPastDate || isPastTime) {
+          showStatus('無法上架過去的日期或時間的節目', 'warning');
+          return;
+        }
+        
+        showStatus('正在上架節目到 Contentful...', 'info');
+        
+        try {
+          // 準備節目資料
+          const programData = {
+            title: title,
+            airDate: date,
+            airTime: time,
+            duration: parseInt(duration),
+            category: category,
+            description: description,
+            status: status,
+            videoType: document.getElementById('videoType').value,
+            youtubeId: document.getElementById('videoType').value === 'YouTube' ? document.getElementById('youtubeId').value : null,
+            mp4File: document.getElementById('videoType').value === 'MP4' ? (document.getElementById('mp4File').files[0] ? document.getElementById('mp4File').files[0].name : null) : null
+          };
+          
+          // 調用真正的 Contentful API
+                     const result = await window.contentfulSyncFixed.syncProgramToContentful(programData);
+          
+          // 儲存到本地儲存
+          const publishedPrograms = JSON.parse(localStorage.getItem('published_programs') || '[]');
+          publishedPrograms.push({
+            ...programData,
+            publishedAt: new Date().toISOString(),
+            contentfulId: result.sys.id
+          });
+          localStorage.setItem('published_programs', JSON.stringify(publishedPrograms));
+          
+          showStatus('✅ 節目已成功上架到 Contentful！', 'success');
+          
+          // 更新節目狀態
+          const event = getEvent(date, time);
+          if (event) {
+            event.published = true;
+            event.publishedAt = new Date().toISOString();
+            event.contentfulId = result.sys.id;
+            saveEvents();
+            renderCurrentView();
+          }
+          
+        } catch (error) {
+          console.error('上架失敗:', error);
+          showStatus('❌ 上架失敗：' + error.message, 'error');
+        }
+      }
+    
+    window.addEventListener('click', function(e) {
+      const eventModal = document.getElementById('eventModal');
+      const timeSlotModal = document.getElementById('timeSlotModal');
+      
+      if (e.target === eventModal) {
+        closeModal();
+      }
+      
+      if (e.target === timeSlotModal) {
+        closeTimeSlotModal();
+      }
+    });
+  </script>
+</body>
+</html>

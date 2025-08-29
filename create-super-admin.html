@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>創建超級管理員 - 航向世界旅遊頻道</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <script src="email-verification-system.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .title {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+    
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ffeaa7;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+    
+    .password-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .password-input-container input {
+      flex: 1;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .password-toggle {
+      background: #f8f9fa;
+      border: 2px solid #e1e5e9;
+      border-left: none;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      padding: 12px 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+    
+    .password-toggle:hover {
+      background: #e9ecef;
+      border-color: #dc3545;
+    }
+    
+    .password-toggle:focus {
+      outline: none;
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+    
+    .password-requirements {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
+    .password-requirements small {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .password-requirements ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 5px;
+    }
+    
+    .password-requirements li {
+      margin-bottom: 3px;
+      padding-left: 20px;
+      position: relative;
+      color: #999;
+    }
+    
+    .password-requirements li:before {
+      content: "✗";
+      position: absolute;
+      left: 0;
+      color: #dc3545;
+      font-weight: bold;
+    }
+    
+    .password-requirements li.valid {
+      color: #28a745;
+    }
+    
+    .password-requirements li.valid:before {
+      content: "✓";
+      color: #28a745;
+    }
+    
+    .create-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+    
+    .create-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+    }
+    
+    .create-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .message {
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ffffff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .back-link {
+      color: #2b71d2;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 20px;
+      display: inline-block;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    
+    .info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .info h3 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .info li {
+      margin-bottom: 5px;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .info li:before {
+      content: "⚠️";
+      position: absolute;
+      left: 0;
+      color: #dc3545;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">👑</div>
+    <h1 class="title">創建超級管理員</h1>
+    <p class="subtitle">航向世界旅遊頻道 - 節目管理系統</p>
+    
+    <div class="warning">
+      <strong>⚠️ 重要提醒：</strong><br>
+      超級管理員擁有系統最高權限，只能創建一個。請確保在安全的環境中操作。
+    </div>
+    
+    <div id="message" class="message" style="display: none;"></div>
+    
+    <form id="createSuperAdminForm">
+      <div class="form-group">
+        <label for="email">電子郵件 *</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="name">姓名 *</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">密碼 *</label>
+        <div class="password-input-container">
+          <input type="password" id="password" name="password" required>
+          <button type="button" id="togglePassword" class="password-toggle">
+            <span id="toggleIcon">👁️</span>
+          </button>
+        </div>
+        <div class="password-requirements">
+          <small>密碼要求：</small>
+          <ul>
+            <li id="length-check">至少 8 個字元</li>
+            <li id="uppercase-check">包含大寫字母</li>
+            <li id="lowercase-check">包含小寫字母</li>
+            <li id="number-check">包含數字</li>
+            <li id="special-check">包含特殊符號 (!@#$%^&*)</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">確認密碼 *</label>
+        <div class="password-input-container">
+          <input type="password" id="confirmPassword" name="confirmPassword" required>
+          <button type="button" id="toggleConfirmPassword" class="password-toggle">
+            <span id="toggleConfirmIcon">👁️</span>
+          </button>
+        </div>
+        <div class="password-match" id="passwordMatch" style="display: none;">
+          <small style="color: #dc3545;">❌ 密碼不匹配</small>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="securityCode">安全驗證碼 *</label>
+        <input type="text" id="securityCode" name="securityCode" required placeholder="請輸入系統安全驗證碼">
+        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
+          此驗證碼用於確認超級管理員創建權限
+        </small>
+      </div>
+      
+      <button type="submit" class="create-btn" id="createBtn">
+        <span class="spinner" id="spinner"></span>
+        <span id="createText">創建超級管理員</span>
+      </button>
+    </form>
+    
+    <a href="admin-login.html" class="back-link">← 返回登入頁面</a>
+    
+    <div class="info">
+      <h3>🔒 超級管理員權限</h3>
+      <ul>
+        <li>擁有系統最高管理權限</li>
+        <li>可以創建和管理其他管理員</li>
+        <li>可以管理所有系統設定</li>
+        <li>可以查看所有用戶活動記錄</li>
+        <li>系統中只能存在一個超級管理員</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // 電子郵件驗證系統
+    const emailSystem = new EmailVerificationSystem();
+    
+    // 密碼驗證規則
+    function validatePassword(password) {
+      const checks = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*]/.test(password)
+      };
+      
+      // 更新視覺指示器
+      document.getElementById('length-check').classList.toggle('valid', checks.length);
+      document.getElementById('uppercase-check').classList.toggle('valid', checks.uppercase);
+      document.getElementById('lowercase-check').classList.toggle('valid', checks.lowercase);
+      document.getElementById('number-check').classList.toggle('valid', checks.number);
+      document.getElementById('special-check').classList.toggle('valid', checks.special);
+      
+      return Object.values(checks).every(check => check);
+    }
+    
+    // 檢查密碼匹配
+    function checkPasswordMatch() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const matchDiv = document.getElementById('passwordMatch');
+      
+      if (confirmPassword.length > 0) {
+        if (password === confirmPassword) {
+          matchDiv.innerHTML = '<small style="color: #28a745;">✅ 密碼匹配</small>';
+          matchDiv.style.display = 'block';
+        } else {
+          matchDiv.innerHTML = '<small style="color: #dc3545;">❌ 密碼不匹配</small>';
+          matchDiv.style.display = 'block';
+        }
+      } else {
+        matchDiv.style.display = 'none';
+      }
+    }
+    
+    // 頁面載入時初始化所有功能
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Super Admin Creation - DOM Content Loaded');
+      
+      // 密碼輸入監聽
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
+      
+      if (passwordInput) {
+        passwordInput.addEventListener('input', function(e) {
+          validatePassword(e.target.value);
+          checkPasswordMatch();
+        });
+      }
+      
+      if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function(e) {
+          checkPasswordMatch();
+        });
+      }
+      
+      // 密碼顯示/隱藏切換
+      const togglePassword = document.getElementById('togglePassword');
+      const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+      
+      if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+          const passwordInput = document.getElementById('password');
+          const toggleIcon = document.getElementById('toggleIcon');
+          
+          if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.textContent = '🙈';
+            toggleIcon.title = '隱藏密碼';
+          } else {
+            passwordInput.type = 'password';
+            toggleIcon.textContent = '👁️';
+            toggleIcon.title = '顯示密碼';
+          }
+        });
+      }
+      
+      if (toggleConfirmPassword) {
+        toggleConfirmPassword.addEventListener('click', function() {
+          const confirmPasswordInput = document.getElementById('confirmPassword');
+          const toggleConfirmIcon = document.getElementById('toggleConfirmIcon');
+          
+          if (confirmPasswordInput.type === 'password') {
+            confirmPasswordInput.type = 'text';
+            toggleConfirmIcon.textContent = '🙈';
+            toggleConfirmIcon.title = '隱藏密碼';
+          } else {
+            confirmPasswordInput.type = 'password';
+            toggleConfirmIcon.textContent = '👁️';
+            toggleConfirmIcon.title = '顯示密碼';
+          }
+        });
+      }
+      
+      console.log('Super Admin Creation - 初始化完成');
+    });
+    
+    // 創建超級管理員表單處理
+    document.getElementById('createSuperAdminForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const securityCode = document.getElementById('securityCode').value;
+      
+      // 驗證密碼強度
+      if (!validatePassword(password)) {
+        showError('密碼不符合安全要求，請檢查密碼規則');
+        return;
+      }
+      
+      // 驗證密碼匹配
+      if (password !== confirmPassword) {
+        showError('密碼與確認密碼不匹配');
+        return;
+      }
+      
+      // 驗證安全碼 (這裡可以設定為任何您想要的驗證碼)
+      if (securityCode !== 'SUPER_ADMIN_2024') {
+        showError('安全驗證碼錯誤');
+        return;
+      }
+      
+      // 顯示載入狀態
+      showLoading(true);
+      hideMessage();
+      
+      try {
+        // 創建超級管理員
+        const user = await emailSystem.createSuperAdmin({
+          email: email,
+          name: name,
+          password: password
+        });
+        
+        if (user) {
+          showSuccess('超級管理員創建成功！驗證郵件已發送，請檢查您的電子郵件並完成驗證。');
+          document.getElementById('createSuperAdminForm').reset();
+        } else {
+          showError('創建超級管理員失敗，請檢查輸入資料');
+        }
+        
+      } catch (error) {
+        console.error('創建超級管理員錯誤:', error);
+        showError('創建超級管理員失敗：' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    });
+    
+    // 顯示載入狀態
+    function showLoading(show) {
+      const spinner = document.getElementById('spinner');
+      const createText = document.getElementById('createText');
+      const createBtn = document.getElementById('createBtn');
+      
+      if (show) {
+        spinner.style.display = 'inline-block';
+        createText.textContent = '創建中...';
+        createBtn.disabled = true;
+      } else {
+        spinner.style.display = 'none';
+        createText.textContent = '創建超級管理員';
+        createBtn.disabled = false;
+      }
+    }
+    
+    // 顯示成功訊息
+    function showSuccess(message) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.className = 'message success';
+      messageDiv.textContent = message;
+      messageDiv.style.display = 'block';
+    }
+    
+    // 顯示錯誤訊息
+    function showError(message) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.className = 'message error';
+      messageDiv.textContent = message;
+      messageDiv.style.display = 'block';
+    }
+    
+    // 隱藏訊息
+    function hideMessage() {
+      const messageDiv = document.getElementById('message');
+      messageDiv.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員系統調試 - 旅遊影片管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .debug-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+        }
+
+        .debug-section h3 {
+            color: #2b71d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value {
+            color: #666;
+            font-family: monospace;
+        }
+
+        .status-success {
+            color: #28a745;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .json-display {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 管理員系統調試</h1>
+            <p>檢查系統狀態和診斷問題</p>
+        </div>
+
+        <!-- 系統狀態 -->
+        <div class="debug-section">
+            <h3>📊 系統狀態</h3>
+            <div class="status-item">
+                <span class="status-label">當前用戶：</span>
+                <span class="status-value" id="currentUser">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">登入狀態：</span>
+                <span class="status-value" id="loginStatus">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">最高管理者：</span>
+                <span class="status-value" id="superAdminStatus">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">管理員數量：</span>
+                <span class="status-value" id="adminCount">檢查中...</span>
+            </div>
+        </div>
+
+        <!-- 權限檢查 -->
+        <div class="debug-section">
+            <h3>🔐 權限檢查</h3>
+            <div class="status-item">
+                <span class="status-label">是否為最高管理者：</span>
+                <span class="status-value" id="isSuperAdmin">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">創建管理員權限：</span>
+                <span class="status-value" id="createPermission">檢查中...</span>
+            </div>
+        </div>
+
+        <!-- 資料檢查 -->
+        <div class="debug-section">
+            <h3>💾 資料檢查</h3>
+            <div class="status-item">
+                <span class="status-label">sessionStorage 支援：</span>
+                <span class="status-value" id="storageSupport">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">最高管理者資料：</span>
+                <span class="status-value" id="superAdminData">檢查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">管理員列表：</span>
+                <span class="status-value" id="adminList">檢查中...</span>
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="debug-section">
+            <h3>⚡ 操作</h3>
+            <button class="btn" onclick="refreshStatus()">🔄 重新檢查</button>
+            <button class="btn btn-success" onclick="testCreateAdmin()">🧪 測試創建管理員</button>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清除所有資料</button>
+            <button class="btn" onclick="showSessionStorage()">📋 顯示 sessionStorage</button>
+        </div>
+
+        <!-- 詳細資料顯示 -->
+        <div class="debug-section" id="detailsSection" style="display: none;">
+            <h3>📋 詳細資料</h3>
+            <div class="json-display" id="jsonDisplay"></div>
+        </div>
+
+        <div class="back-link">
+            <a href="admin-dashboard.html">← 返回主控台</a>
+        </div>
+    </div>
+
+    <script>
+        // 檢查系統狀態
+        function checkSystemStatus() {
+            // 檢查 sessionStorage 支援
+            const storageSupport = typeof(Storage) !== "undefined";
+            document.getElementById('storageSupport').textContent = storageSupport ? '✅ 支援' : '❌ 不支援';
+            document.getElementById('storageSupport').className = storageSupport ? 'status-value status-success' : 'status-value status-error';
+
+            // 檢查當前用戶
+            const currentUser = sessionStorage.getItem('adminUser');
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    document.getElementById('currentUser').textContent = `${user.name} (${user.email})`;
+                    document.getElementById('currentUser').className = 'status-value status-success';
+                    
+                    // 檢查登入狀態
+                    const loginTime = sessionStorage.getItem('loginTime');
+                    if (loginTime) {
+                        const loginDate = new Date(loginTime);
+                        const now = new Date();
+                        const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+                        
+                        if (hoursDiff < 8) {
+                            document.getElementById('loginStatus').textContent = `✅ 已登入 (${hoursDiff.toFixed(1)}小時前)`;
+                            document.getElementById('loginStatus').className = 'status-value status-success';
+                        } else {
+                            document.getElementById('loginStatus').textContent = '❌ 登入已過期';
+                            document.getElementById('loginStatus').className = 'status-value status-error';
+                        }
+                    } else {
+                        document.getElementById('loginStatus').textContent = '❌ 無登入時間記錄';
+                        document.getElementById('loginStatus').className = 'status-value status-error';
+                    }
+
+                    // 檢查是否為最高管理者
+                    const isSuperAdmin = user.role === 'super_admin';
+                    document.getElementById('isSuperAdmin').textContent = isSuperAdmin ? '✅ 是' : '❌ 否';
+                    document.getElementById('isSuperAdmin').className = isSuperAdmin ? 'status-value status-success' : 'status-value status-error';
+                    
+                    document.getElementById('createPermission').textContent = isSuperAdmin ? '✅ 有權限' : '❌ 無權限';
+                    document.getElementById('createPermission').className = isSuperAdmin ? 'status-value status-success' : 'status-value status-error';
+                } catch (error) {
+                    document.getElementById('currentUser').textContent = '❌ 資料格式錯誤';
+                    document.getElementById('currentUser').className = 'status-value status-error';
+                }
+            } else {
+                document.getElementById('currentUser').textContent = '❌ 未登入';
+                document.getElementById('currentUser').className = 'status-value status-error';
+                document.getElementById('loginStatus').textContent = '❌ 未登入';
+                document.getElementById('loginStatus').className = 'status-value status-error';
+                document.getElementById('isSuperAdmin').textContent = '❌ 未登入';
+                document.getElementById('isSuperAdmin').className = 'status-value status-error';
+                document.getElementById('createPermission').textContent = '❌ 未登入';
+                document.getElementById('createPermission').className = 'status-value status-error';
+            }
+
+            // 檢查最高管理者
+            const superAdmin = sessionStorage.getItem('superAdmin');
+            if (superAdmin) {
+                try {
+                    const admin = JSON.parse(superAdmin);
+                    document.getElementById('superAdminStatus').textContent = `✅ 已創建 (${admin.name})`;
+                    document.getElementById('superAdminStatus').className = 'status-value status-success';
+                    document.getElementById('superAdminData').textContent = '✅ 資料完整';
+                    document.getElementById('superAdminData').className = 'status-value status-success';
+                } catch (error) {
+                    document.getElementById('superAdminStatus').textContent = '❌ 資料格式錯誤';
+                    document.getElementById('superAdminStatus').className = 'status-value status-error';
+                    document.getElementById('superAdminData').textContent = '❌ 資料格式錯誤';
+                    document.getElementById('superAdminData').className = 'status-value status-error';
+                }
+            } else {
+                document.getElementById('superAdminStatus').textContent = '❌ 未創建';
+                document.getElementById('superAdminStatus').className = 'status-value status-error';
+                document.getElementById('superAdminData').textContent = '❌ 無資料';
+                document.getElementById('superAdminData').className = 'status-value status-error';
+            }
+
+            // 檢查管理員列表
+            const admins = sessionStorage.getItem('admins');
+            if (admins) {
+                try {
+                    const adminList = JSON.parse(admins);
+                    document.getElementById('adminCount').textContent = `${adminList.length} 個管理員`;
+                    document.getElementById('adminCount').className = 'status-value status-success';
+                    document.getElementById('adminList').textContent = '✅ 資料完整';
+                    document.getElementById('adminList').className = 'status-value status-success';
+                } catch (error) {
+                    document.getElementById('adminCount').textContent = '❌ 資料格式錯誤';
+                    document.getElementById('adminCount').className = 'status-value status-error';
+                    document.getElementById('adminList').textContent = '❌ 資料格式錯誤';
+                    document.getElementById('adminList').className = 'status-value status-error';
+                }
+            } else {
+                document.getElementById('adminCount').textContent = '0 個管理員';
+                document.getElementById('adminCount').className = 'status-value status-success';
+                document.getElementById('adminList').textContent = '✅ 空列表';
+                document.getElementById('adminList').className = 'status-value status-success';
+            }
+        }
+
+        // 重新檢查狀態
+        function refreshStatus() {
+            checkSystemStatus();
+        }
+
+        // 測試創建管理員
+        function testCreateAdmin() {
+            const currentUser = sessionStorage.getItem('adminUser');
+            if (!currentUser) {
+                alert('請先登入系統');
+                return;
+            }
+
+            try {
+                const user = JSON.parse(currentUser);
+                if (user.role !== 'super_admin') {
+                    alert('只有最高管理者才能創建管理員');
+                    return;
+                }
+
+                // 創建測試管理員
+                const testAdmin = {
+                    id: `admin-test-${Date.now()}`,
+                    email: 'test@example.com',
+                    name: '測試管理員',
+                    password: 'Test123!',
+                    role: 'admin',
+                    permissions: ['programs', 'schedule'],
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    lastLogin: null,
+                    lastLoginIP: null
+                };
+
+                const existingAdmins = JSON.parse(sessionStorage.getItem('admins') || '[]');
+                existingAdmins.push(testAdmin);
+                sessionStorage.setItem('admins', JSON.stringify(existingAdmins));
+
+                alert('測試管理員創建成功！');
+                refreshStatus();
+            } catch (error) {
+                alert('創建測試管理員失敗：' + error.message);
+            }
+        }
+
+        // 清除所有資料
+        function clearAllData() {
+            if (confirm('確定要清除所有資料嗎？這將刪除所有用戶資料。')) {
+                sessionStorage.clear();
+                alert('所有資料已清除');
+                refreshStatus();
+            }
+        }
+
+        // 顯示 sessionStorage 內容
+        function showSessionStorage() {
+            const data = {};
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                try {
+                    data[key] = JSON.parse(value);
+                } catch (error) {
+                    data[key] = value;
+                }
+            }
+
+            document.getElementById('jsonDisplay').textContent = JSON.stringify(data, null, 2);
+            document.getElementById('detailsSection').style.display = 'block';
+        }
+
+        // 頁面載入時檢查狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html>

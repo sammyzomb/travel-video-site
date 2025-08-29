@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電子郵件驗證 - 航向世界旅遊頻道</title>
+  <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+  <script src="email-verification-system.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .title {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+    
+    .status {
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .loading {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #2b71d2, #1e5bb8);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin: 10px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(43, 113, 210, 0.3);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .info h3 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .info li {
+      margin-bottom: 5px;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .info li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #2b71d2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">📺</div>
+    <h1 class="title">電子郵件驗證</h1>
+    <p class="subtitle">航向世界旅遊頻道 - 節目管理系統</p>
+    
+    <div id="status" class="status loading" style="display: none;">
+      <span class="spinner" id="spinner"></span>
+      <span id="statusText">正在驗證您的電子郵件...</span>
+    </div>
+    
+    <div id="actions" style="display: none;">
+      <a href="admin-login.html" class="btn">前往登入</a>
+      <a href="admin-dashboard.html" class="btn">進入管理系統</a>
+    </div>
+    
+    <div class="info">
+      <h3>🔒 驗證說明</h3>
+      <ul>
+        <li>點擊郵件中的驗證連結完成帳號啟用</li>
+        <li>驗證成功後即可使用所有系統功能</li>
+        <li>如果沒有收到驗證郵件，請檢查垃圾郵件夾</li>
+        <li>驗證連結將在 24 小時後自動失效</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // 電子郵件驗證系統
+    const emailSystem = new EmailVerificationSystem();
+    
+    // 頁面載入時自動驗證
+    document.addEventListener('DOMContentLoaded', async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      const email = urlParams.get('email');
+      
+      const statusDiv = document.getElementById('status');
+      const statusText = document.getElementById('statusText');
+      const actionsDiv = document.getElementById('actions');
+      
+      // 顯示載入狀態
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'status loading';
+      
+      if (!token || !email) {
+        // 缺少必要參數
+        statusDiv.className = 'status error';
+        statusText.textContent = '無效的驗證連結，缺少必要參數';
+        return;
+      }
+      
+      try {
+        // 驗證電子郵件
+        await emailSystem.verifyEmail(token, email);
+        
+        // 驗證成功
+        statusDiv.className = 'status success';
+        statusText.textContent = '✅ 電子郵件驗證成功！您的帳號已啟用';
+        
+        // 顯示操作按鈕
+        actionsDiv.style.display = 'block';
+        
+        // 記錄驗證成功
+        console.log('電子郵件驗證成功:', email);
+        
+      } catch (error) {
+        // 驗證失敗
+        statusDiv.className = 'status error';
+        statusText.textContent = `❌ 驗證失敗：${error.message}`;
+        
+        console.error('電子郵件驗證失敗:', error);
+      }
+    });
+  </script>
+</body>
+</html>

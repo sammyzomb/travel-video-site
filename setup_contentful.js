@@ -4,7 +4,7 @@
 class ContentfulSetup {
   constructor() {
     this.spaceId = 'os5wf90ljenp';
-    this.deliveryToken = 'lODH-WLwHwVZv7O4rFdBWjSnrzaQWGD4koeOZ1Dypj0';
+    this.deliveryToken = 'YOUR_DELIVERY_TOKEN';
     
     // 初始化 Contentful 客戶端
     this.client = contentful.createClient({

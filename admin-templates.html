@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>節目範本管理 - 航向世界旅遊頻道</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header h1 { color: #2b71d2; margin-bottom: 10px; }
+    
+    .controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    
+    .btn { background: #2b71d2; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    .btn:hover { background: #1e5bb8; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    
+    .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    
+    .template-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 2px solid transparent; transition: all 0.3s ease; }
+    .template-card:hover { border-color: #2b71d2; transform: translateY(-2px); }
+    
+    .template-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .template-title { font-size: 1.2rem; font-weight: 600; color: #333; }
+    .template-category { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+    
+    .template-duration { color: #666; margin-bottom: 10px; }
+    .template-description { color: #666; line-height: 1.5; margin-bottom: 15px; }
+    
+    .template-actions { display: flex; gap: 10px; }
+    .template-actions .btn { margin: 0; padding: 8px 15px; font-size: 12px; }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+    .form-group textarea { height: 80px; resize: vertical; }
+    
+    .status-bar { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1001; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 節目範本管理</h1>
+      <p>管理節目範本庫，建立標準化節目格式</p>
+    </div>
+    
+    <div class="controls">
+      <div>
+        <button class="btn btn-success" onclick="openTemplateModal()">➕ 新增範本</button>
+        <button class="btn btn-secondary" onclick="window.location.href='admin-dashboard.html'">🏠 返回主控台</button>
+      </div>
+      <div>
+        <span id="templateCount">總計 0 個範本</span>
+      </div>
+    </div>
+    
+    <div class="templates-grid" id="templatesGrid">
+      <!-- 範本卡片將由 JavaScript 動態生成 -->
+    </div>
+  </div>
+  
+  <!-- 範本編輯模態框 -->
+  <div class="modal" id="templateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">新增範本</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      
+      <form id="templateForm">
+        <input type="hidden" id="editId">
+        
+        <div class="form-group">
+          <label>範本名稱：</label>
+          <input type="text" id="title" placeholder="例如：早安世界" required>
+        </div>
+        
+        <div class="form-group">
+          <label>節目分類：</label>
+          <select id="category" required>
+            <option value="">-- 選擇分類 --</option>
+            <option value="亞洲旅遊">亞洲旅遊</option>
+            <option value="歐洲旅遊">歐洲旅遊</option>
+            <option value="美洲旅遊">美洲旅遊</option>
+            <option value="美食旅遊">美食旅遊</option>
+            <option value="極地旅遊">極地旅遊</option>
+            <option value="自然旅遊">自然旅遊</option>
+            <option value="文化旅遊">文化旅遊</option>
+            <option value="冒險旅遊">冒險旅遊</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>節目時長：</label>
+          <select id="duration" required>
+            <option value="30">30分鐘</option>
+            <option value="60">60分鐘</option>
+            <option value="90">90分鐘</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>範本描述：</label>
+          <textarea id="description" placeholder="描述這個範本的特點和用途..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>預設狀態：</label>
+          <select id="status" required>
+            <option value="重播">重播</option>
+            <option value="首播">首播</option>
+            <option value="特別節目">特別節目</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn btn-success">💾 儲存範本</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="status-bar" id="statusBar">
+    <span id="statusMessage"></span>
+  </div>
+
+  <script>
+    let templates = [];
+    let editingId = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTemplates();
+      renderTemplates();
+    });
+    
+    function loadTemplates() {
+      const saved = localStorage.getItem('program_templates');
+      if (saved) {
+        templates = JSON.parse(saved);
+      } else {
+        // 預設範本
+        templates = [
+          {
+            id: '1',
+            title: '早安世界',
+            category: '亞洲旅遊',
+            duration: 60,
+            description: '跟著我們一起探索各地的早晨，從當地市場到著名景點的寧靜時光',
+            status: '首播'
+          },
+          {
+            id: '2',
+            title: '世界廚房',
+            category: '美食旅遊',
+            duration: 45,
+            description: '深入各地，品嚐最道地的當地美食與特色料理',
+            status: '重播'
+          },
+          {
+            id: '3',
+            title: '極地探險',
+            category: '極地旅遊',
+            duration: 60,
+            description: '追尋極光的神秘蹤跡，體驗極地探險的刺激',
+            status: '特別節目'
+          }
+        ];
+        saveTemplates();
+      }
+    }
+    
+    function saveTemplates() {
+      localStorage.setItem('program_templates', JSON.stringify(templates));
+    }
+    
+    function renderTemplates() {
+      const grid = document.getElementById('templatesGrid');
+      const count = document.getElementById('templateCount');
+      
+      grid.innerHTML = templates.map(template => `
+        <div class="template-card">
+          <div class="template-header">
+            <div class="template-title">${template.title}</div>
+            <div class="template-category">${template.category}</div>
+          </div>
+          <div class="template-duration">⏱️ ${template.duration}分鐘</div>
+          <div class="template-description">${template.description}</div>
+          <div class="template-actions">
+            <button class="btn btn-secondary" onclick="editTemplate('${template.id}')">✏️ 編輯</button>
+            <button class="btn" onclick="useTemplate('${template.id}')">📅 使用範本</button>
+            <button class="btn btn-secondary" onclick="deleteTemplate('${template.id}')">🗑️ 刪除</button>
+          </div>
+        </div>
+      `).join('');
+      
+      count.textContent = `總計 ${templates.length} 個範本`;
+    }
+    
+    function openTemplateModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = '新增範本';
+      document.getElementById('templateForm').reset();
+      document.getElementById('templateModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+      document.getElementById('templateModal').style.display = 'none';
+    }
+    
+    function editTemplate(id) {
+      const template = templates.find(t => t.id === id);
+      if (template) {
+        editingId = id;
+        document.getElementById('modalTitle').textContent = '編輯範本';
+        document.getElementById('editId').value = id;
+        document.getElementById('title').value = template.title;
+        document.getElementById('category').value = template.category;
+        document.getElementById('duration').value = template.duration;
+        document.getElementById('description').value = template.description;
+        document.getElementById('status').value = template.status;
+        document.getElementById('templateModal').style.display = 'block';
+      }
+    }
+    
+    function deleteTemplate(id) {
+      if (confirm('確定要刪除這個範本嗎？')) {
+        templates = templates.filter(t => t.id !== id);
+        saveTemplates();
+        renderTemplates();
+        showStatus('範本已刪除', 'success');
+      }
+    }
+    
+    function useTemplate(id) {
+      const template = templates.find(t => t.id === id);
+      if (template) {
+        // 將範本資料傳遞到統一管理系統
+        localStorage.setItem('selected_template', JSON.stringify(template));
+        window.location.href = 'admin-calendar-unified.html';
+      }
+    }
+    
+    document.getElementById('templateForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const template = {
+        id: editingId || Date.now().toString(),
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        duration: parseInt(document.getElementById('duration').value),
+        description: document.getElementById('description').value,
+        status: document.getElementById('status').value
+      };
+      
+      if (editingId) {
+        // 編輯現有範本
+        const index = templates.findIndex(t => t.id === editingId);
+        if (index !== -1) {
+          templates[index] = template;
+        }
+      } else {
+        // 新增範本
+        templates.push(template);
+      }
+      
+      saveTemplates();
+      renderTemplates();
+      closeModal();
+      showStatus(editingId ? '範本已更新' : '範本已新增', 'success');
+    });
+    
+    function showStatus(message, type) {
+      const statusBar = document.getElementById('statusBar');
+      const statusMessage = document.getElementById('statusMessage');
+      
+      statusMessage.textContent = message;
+      statusBar.style.display = 'block';
+      
+      statusBar.style.backgroundColor = type === 'success' ? '#4caf50' : 
+                                      type === 'error' ? '#f44336' : 
+                                      type === 'warning' ? '#ff9800' : '#333';
+      
+      setTimeout(() => {
+        statusBar.style.display = 'none';
+      }, 3000);
+    }
+    
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('templateModal');
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
